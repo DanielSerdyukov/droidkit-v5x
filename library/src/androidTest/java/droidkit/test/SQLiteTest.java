@@ -1,38 +1,36 @@
-package droidkit.test.sqlite;
+package droidkit.test;
 
 import android.database.Cursor;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
 import android.text.TextUtils;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RuntimeEnvironment;
-import org.robolectric.annotation.Config;
 
-import droidkit.BuildConfig;
 import droidkit.io.IOUtils;
 import droidkit.sqlite.SQLite;
-import droidkit.test.DroidkitTestRunner;
+import droidkit.sqlite.SQLiteConfig;
 
 /**
  * @author Daniel Serdyukov
  */
-@Config(constants = BuildConfig.class)
-@RunWith(DroidkitTestRunner.class)
+@RunWith(AndroidJUnit4.class)
 public class SQLiteTest {
 
     public static final String[] TABLES = new String[]{"'users'"};
 
     static {
-        SQLite.useInMemoryDb();
+        SQLiteConfig.setDatabaseVersion(6);
     }
 
     private SQLite mSQLite;
 
     @Before
     public void setUp() throws Exception {
-        mSQLite = SQLite.of(RuntimeEnvironment.application);
+        mSQLite = SQLite.of(InstrumentationRegistry.getContext());
     }
 
     @Test
