@@ -14,7 +14,11 @@ gen-external-apklibs/**
 local.properties
 
 # Gradle
-gradle-app.setting
-.gradletasknamecache
-.gradle/**
-build/**
+**/gradle-app.setting
+**/.gradletasknamecache
+**/.gradle/**
+**/build/**
+
+# Test Only
+library/src/test/java/droidkit/sqlite/**
+library/src/androidTest/java/droidkit/sqlite/**

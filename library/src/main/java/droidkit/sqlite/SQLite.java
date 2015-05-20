@@ -3,6 +3,7 @@ package droidkit.sqlite;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.util.Collections;
@@ -119,6 +120,11 @@ public final class SQLite {
     @NonNull
     public Cursor rawQuery(@NonNull String sql, String... bindArgs) {
         return mClient.rawQuery(sql, bindArgs);
+    }
+
+    @Nullable
+    public String simpleQueryForString(@NonNull String sql, String... bindArgs) {
+        return mClient.simpleQueryForString(sql, bindArgs);
     }
 
     public void execSQL(@NonNull String sql, Object... bindArgs) {

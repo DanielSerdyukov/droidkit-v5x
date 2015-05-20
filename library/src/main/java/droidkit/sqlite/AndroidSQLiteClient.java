@@ -4,7 +4,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import droidkit.io.IOUtils;
 
@@ -43,6 +45,18 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
     @Override
     public Cursor rawQuery(@NonNull String sql, String... bindArgs) {
         return getReadableDatabase().rawQuery(sql, bindArgs);
+    }
+
+    @Nullable
+    @Override
+    public String simpleQueryForString(@NonNull String sql, String... bindArgs) {
+        final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
+        try {
+            stmt.bindAllArgsAsStrings(bindArgs);
+            return stmt.simpleQueryForString();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
     }
 
     @Override
