@@ -147,7 +147,12 @@ public class SQLiteQuery<T> {
     }
 
     public int remove() {
-        throw new UnsupportedOperationException();
+        final StringBuilder sql = new StringBuilder("DELETE FROM ")
+                .append(getTableName());
+        if (mWhere.length() > 0) {
+            sql.append(" WHERE ").append(mWhere);
+        }
+        return mClient.get().executeUpdateDelete(sql.toString(), bindArgs());
     }
 
     @Override

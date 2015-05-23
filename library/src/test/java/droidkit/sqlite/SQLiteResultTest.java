@@ -72,15 +72,6 @@ public class SQLiteResultTest {
         }
     }
 
-    @Test
-    public void testList() throws Exception {
-        final List<SQLiteUser> users = mSQLite.where(SQLiteUser.class).list();
-        Assert.assertEquals(10, users.size());
-        for (int i = 0; i < 10; ++i) {
-            Assert.assertEquals(("User #" + (i + 1)), users.get(i).getName());
-        }
-    }
-
     @After
     public void tearDown() throws Exception {
         mSQLite.execSQL("DELETE FROM users;");

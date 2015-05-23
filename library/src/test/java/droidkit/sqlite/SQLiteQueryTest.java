@@ -1,11 +1,14 @@
 package droidkit.sqlite;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
+
+import java.util.List;
 
 import droidkit.BuildConfig;
 import droidkit.test.DroidkitTestRunner;
@@ -108,6 +111,42 @@ public class SQLiteQueryTest {
     public void testNotNull() throws Exception {
         final SQLiteQuery<SQLiteUser> query = mSQLite.where(SQLiteUser.class).notNull("name");
         Assert.assertEquals("SELECT * FROM users WHERE name NOT NULL", query.toString());
+    }
+
+    @Test
+    public void testList() throws Exception {
+        mSQLite.beginTransaction();
+        for (int i = 0; i < 10; ++i) {
+            mSQLite.execSQL("INSERT INTO users(name) VALUES(?)", "User #" + i);
+        }
+        mSQLite.endTransaction(true);
+        final List<SQLiteUser> users = mSQLite.where(SQLiteUser.class).list();
+        Assert.assertEquals(10, users.size());
+        for (int i = 0; i < 10; ++i) {
+            Assert.assertEquals(("User #" + i), users.get(i).getName());
+        }
+    }
+
+    @Test
+    public void testRemove() throws Exception {
+        mSQLite.beginTransaction();
+        for (int i = 0; i < 10; ++i) {
+            mSQLite.execSQL("INSERT INTO users(name) VALUES(?)", "User #" + i);
+        }
+        mSQLite.endTransaction(true);
+        final int affectedRows = mSQLite.where(SQLiteUser.class)
+                .equalTo("name", "User #4")
+                .remove();
+        Assert.assertEquals(1, affectedRows);
+        final List<SQLiteUser> users = mSQLite.where(SQLiteUser.class).list();
+        for (final SQLiteUser user : users) {
+            Assert.assertNotEquals("User #4", user.getName());
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mSQLite.execSQL("DELETE FROM users;");
     }
 
 }
