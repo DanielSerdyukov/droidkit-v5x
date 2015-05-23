@@ -2,7 +2,6 @@ package droidkit.util;
 
 import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -34,21 +33,26 @@ public final class Dynamic {
     private Dynamic() {
     }
 
+    @NonNull
+    public static StackTraceElement getCaller() {
+        return new Throwable().fillInStackTrace().getStackTrace()[CALLER_DEPTH];
+    }
+
     public static boolean inClasspath(@NonNull String clazz) {
         try {
-            Class.forName("org.sqlite.database.sqlite.SQLiteDatabase");
+            Class.forName(clazz);
             return true;
         } catch (ClassNotFoundException e) {
             return false;
         }
     }
 
-    @Nullable
-    public static Class<?> forName(@NonNull String clazz) {
+    @NonNull
+    public static Class<?> forName(@NonNull String clazz) throws DynamicException {
         try {
-            return Class.forName("org.sqlite.database.sqlite.SQLiteDatabase");
+            return Class.forName(clazz);
         } catch (ClassNotFoundException e) {
-            return null;
+            throw new DynamicException(e);
         }
     }
 
