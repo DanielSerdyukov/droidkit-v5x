@@ -1,6 +1,7 @@
-package droidkit.test.sqlite;
+package droidkit.sqlite;
 
 import android.database.Cursor;
+import android.os.StrictMode;
 import android.text.TextUtils;
 
 import org.junit.After;
@@ -13,7 +14,6 @@ import org.robolectric.annotation.Config;
 
 import droidkit.BuildConfig;
 import droidkit.io.IOUtils;
-import droidkit.sqlite.SQLite;
 import droidkit.test.DroidkitTestRunner;
 
 /**
@@ -27,6 +27,7 @@ public class SQLiteTest {
 
     static {
         SQLite.useInMemoryDb();
+        StrictMode.enableDefaults();
     }
 
     private SQLite mSQLite;

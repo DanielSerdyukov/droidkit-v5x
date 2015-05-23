@@ -2,16 +2,20 @@ package droidkit.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.util.Dynamic;
+import droidkit.util.Objects;
 
 /**
  * @author Daniel Serdyukov
@@ -22,11 +26,15 @@ public final class SQLite {
 
     static final AtomicInteger DATABASE_VERSION = new AtomicInteger(1);
 
-    static final CopyOnWriteArrayList<String> PRAGMA = new CopyOnWriteArrayList<>();
+    static final List<String> PRAGMA = new CopyOnWriteArrayList<>();
 
-    static final CopyOnWriteArrayList<String> CREATE = new CopyOnWriteArrayList<>();
+    static final List<String> CREATE = new CopyOnWriteArrayList<>();
 
-    static final CopyOnWriteArrayList<String> UPGRADE = new CopyOnWriteArrayList<>();
+    static final List<String> UPGRADE = new CopyOnWriteArrayList<>();
+
+    static final Map<Class<?>, String> TABLES = new ConcurrentHashMap<>();
+
+    private static final Map<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
 
     private static final long AUTO_ID = -1;
 
@@ -69,18 +77,19 @@ public final class SQLite {
         DATABASE_NAME.compareAndSet(DATABASE_NAME.get(), null);
     }
 
-    public static void pragma(@NonNull String... pragma) {
-        Collections.addAll(PRAGMA, pragma);
+    public static void onCreate(@NonNull String... query) {
+        Collections.addAll(CREATE, query);
     }
 
-    public static void createTable(@NonNull String name, @NonNull String... columnDef) {
-        CREATE.add("CREATE TABLE IF NOT EXISTS " + name + "(" + TextUtils.join(", ", columnDef) + ");");
-    }
-
-    public static void alterTable(@NonNull String... query) {
+    public static void onUpgrade(@NonNull String... query) {
         Collections.addAll(UPGRADE, query);
     }
     //endregion
+
+    @NonNull
+    public static String tableOf(@NonNull Class<?> type) {
+        return Objects.requireNonNull(TABLES.get(type), "No such table for " + type);
+    }
 
     static void attach(@NonNull String authority) {
 
@@ -96,7 +105,7 @@ public final class SQLite {
 
     @NonNull
     public <T> SQLiteQuery<T> where(@NonNull Class<T> type) {
-        return new SQLiteQuery<>();
+        return new SQLiteQuery<>(mClient, type);
     }
 
     @NonNull
@@ -127,8 +136,16 @@ public final class SQLite {
         return mClient.simpleQueryForString(sql, bindArgs);
     }
 
+    public long simpleQueryForLong(@NonNull String sql, String... bindArgs) {
+        return mClient.simpleQueryForLong(sql, bindArgs);
+    }
+
     public void execSQL(@NonNull String sql, Object... bindArgs) {
         mClient.execSQL(sql, bindArgs);
+    }
+
+    SQLiteClient getClient() {
+        return mClient;
     }
 
 }

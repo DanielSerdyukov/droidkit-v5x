@@ -2,6 +2,7 @@ package droidkit.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
@@ -20,6 +21,12 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
     public AndroidSQLiteClient(@NonNull Context context) {
         super(context, SQLite.DATABASE_NAME.get(), null, SQLite.DATABASE_VERSION.get());
         mContext = context;
+    }
+
+    @NonNull
+    @Override
+    public Context getContext() {
+        return mContext;
     }
 
     @Override
@@ -43,16 +50,18 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
 
     @NonNull
     @Override
-    public Cursor rawQuery(@NonNull String sql, String... bindArgs) {
+    public Cursor rawQuery(@NonNull String sql, @NonNull String... bindArgs) {
         return getReadableDatabase().rawQuery(sql, bindArgs);
     }
 
     @Nullable
     @Override
-    public String simpleQueryForString(@NonNull String sql, String... bindArgs) {
+    public String simpleQueryForString(@NonNull String sql, @NonNull Object... bindArgs) {
         final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
         try {
-            stmt.bindAllArgsAsStrings(bindArgs);
+            for (int i = 0; i < bindArgs.length; ++i) {
+                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
+            }
             return stmt.simpleQueryForString();
         } finally {
             IOUtils.closeQuietly(stmt);
@@ -60,8 +69,34 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
     }
 
     @Override
-    public void execSQL(@NonNull String sql, Object... bindArgs) {
+    public long simpleQueryForLong(@NonNull String sql, @NonNull Object... bindArgs) {
+        final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
+        try {
+            for (int i = 0; i < bindArgs.length; ++i) {
+                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
+            }
+            return stmt.simpleQueryForLong();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
+    }
+
+    @Override
+    public void execSQL(@NonNull String sql, @NonNull Object... bindArgs) {
         getWritableDatabase().execSQL(sql, bindArgs);
+    }
+
+    @Override
+    public int executeUpdateDelete(@NonNull String sql, @NonNull Object... bindArgs) {
+        final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
+        try {
+            for (int i = 0; i < bindArgs.length; ++i) {
+                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
+            }
+            return stmt.executeUpdateDelete();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
     }
 
     //region SQLiteOpenHelper implementation

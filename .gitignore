@@ -19,6 +19,7 @@ local.properties
 **/.gradle/**
 **/build/**
 
-# Test Only
-library/src/test/java/droidkit/sqlite/**
-library/src/androidTest/java/droidkit/sqlite/**
+# Temporary Test
+library/src/test/java/droidkit/sqlite/SQLite$Gen.java
+library/src/test/java/droidkit/sqlite/SQLiteUser.java
+library/src/androidTest/java/droidkit/sqlite/SQLite$Gen.java

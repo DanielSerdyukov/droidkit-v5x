@@ -6,12 +6,14 @@ package droidkit.sqlite;
 public class SQLite$Gen {
 
     static {
-        SQLite.createTable("users",
-                "_id INTEGER PRIMARY KEY",
-                "name TEXT",
-                "age INTEGER",
-                "weight REAL",
-                "avatar BLOB");
+        SQLite.onCreate("CREATE TABLE IF NOT EXISTS users(" +
+                "_id INTEGER PRIMARY KEY," +
+                " name TEXT," +
+                " age INTEGER," +
+                " weight REAL," +
+                " avatar BLOB);");
+
+        SQLite.TABLES.put(SQLiteUser.class, "users");
     }
 
 }
