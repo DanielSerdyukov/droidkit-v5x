@@ -55,6 +55,8 @@ public class SQLiteQuery<T> {
     private static final String LEFT_PARENTHESIS = "(";
 
     private static final String RIGHT_PARENTHESIS = ")";
+
+    private static final String WHERE = " WHERE ";
     //endregion
 
     private final WeakReference<SQLiteClient> mClient;
@@ -240,12 +242,32 @@ public class SQLiteQuery<T> {
     public int remove() {
         final StringBuilder sql = new StringBuilder("DELETE FROM ")
                 .append(getTableName());
-        if (mWhere.length() > 0) {
+        if (mWhere != null) {
             sql.append(" WHERE ").append(mWhere);
         }
         return mClient.get().executeUpdateDelete(sql.toString(), bindArgs());
     }
     //endregion
+
+    @NonNull
+    public Number min(@NonNull String column) {
+        return applyFunc("MIN", column);
+    }
+
+    @NonNull
+    public Number max(@NonNull String column) {
+        return applyFunc("MAX", column);
+    }
+
+    @NonNull
+    public Number sum(@NonNull String column) {
+        return applyFunc("SUM", column);
+    }
+
+    @NonNull
+    public Number count(@NonNull String column) {
+        return applyFunc("COUNT", column);
+    }
 
     @Override
     public String toString() {
@@ -263,10 +285,7 @@ public class SQLiteQuery<T> {
 
     //region internal
     Object[] bindArgs() {
-        if (!mBindArgs.isEmpty()) {
-            return mBindArgs.toArray(new Object[mBindArgs.size()]);
-        }
-        return null;
+        return mBindArgs.toArray(new Object[mBindArgs.size()]);
     }
 
     @NonNull
@@ -291,6 +310,17 @@ public class SQLiteQuery<T> {
         mWhere.append(column).append(op);
         Collections.addAll(mBindArgs, values);
         return this;
+    }
+
+    @NonNull
+    private Number applyFunc(@NonNull String func, @NonNull String column) {
+        final StringBuilder sql = new StringBuilder("SELECT ").append(func)
+                .append(LEFT_PARENTHESIS).append(column).append(RIGHT_PARENTHESIS)
+                .append(" FROM ").append(getTableName());
+        if (mWhere != null) {
+            sql.append(WHERE).append(mWhere);
+        }
+        return Double.parseDouble(mClient.get().simpleQueryForString(sql.toString(), bindArgs()));
     }
     //endregion
 

@@ -320,6 +320,30 @@ public class SQLiteQueryTest {
         }
     }
 
+    @Test
+    public void testMin() throws Exception {
+        Assert.assertEquals(40.4, mSQLite.where(SQLiteUser.class).min("weight").doubleValue(), .01d);
+    }
+
+    @Test
+    public void testMax() throws Exception {
+        Assert.assertEquals(80.75, mSQLite.where(SQLiteUser.class).max("weight").doubleValue(), .01d);
+    }
+
+    @Test
+    public void testSum() throws Exception {
+        double sum = 0;
+        for (final SQLiteUser user : USERS) {
+            sum += user.getWeight();
+        }
+        Assert.assertEquals(sum, mSQLite.where(SQLiteUser.class).sum("weight").doubleValue(), .01d);
+    }
+
+    @Test
+    public void testCount() throws Exception {
+        Assert.assertEquals(2, mSQLite.where(SQLiteUser.class).isFalse("enabled").count("_id").intValue());
+    }
+
     @After
     public void tearDown() throws Exception {
         mSQLite.execSQL("DELETE FROM users;");
