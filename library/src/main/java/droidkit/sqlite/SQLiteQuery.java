@@ -11,9 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import droidkit.util.DynamicException;
-import droidkit.util.DynamicMethod;
-
 /**
  * @author Daniel Serdyukov
  */
@@ -184,16 +181,6 @@ public class SQLiteQuery<T> {
     }
 
     @NonNull
-    T instantiate(@NonNull Cursor cursor) {
-        try {
-            //noinspection ConstantConditions
-            return DynamicMethod.invokeStatic(mType, "of", mClient.get(), cursor);
-        } catch (DynamicException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    @NonNull
     String getTableName() {
         return SQLite.tableOf(mType);
     }
@@ -201,6 +188,11 @@ public class SQLiteQuery<T> {
     @NonNull
     SQLiteClient getClient() {
         return mClient.get();
+    }
+
+    @NonNull
+    public Class<T> getType() {
+        return mType;
     }
 
     private SQLiteQuery<T> where(@NonNull String column, @NonNull String op, @NonNull Object... values) {
