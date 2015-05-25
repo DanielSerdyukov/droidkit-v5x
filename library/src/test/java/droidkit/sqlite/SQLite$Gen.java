@@ -11,7 +11,8 @@ public class SQLite$Gen {
                 " name TEXT," +
                 " age INTEGER," +
                 " weight REAL," +
-                " avatar BLOB);");
+                " avatar BLOB," +
+                " enabled INTEGER);");
 
         SQLite.TABLES.put(SQLiteUser.class, "users");
     }

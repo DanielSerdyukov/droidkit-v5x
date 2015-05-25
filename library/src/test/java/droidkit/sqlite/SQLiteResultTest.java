@@ -36,8 +36,9 @@ public class SQLiteResultTest {
     public void setUp() throws Exception {
         mSQLite = SQLite.of(RuntimeEnvironment.application);
         mSQLite.beginTransaction();
-        for (int i = 0; i < 10; ++i) {
-            mSQLite.execSQL("INSERT INTO users(name) VALUES(?);", ("User #" + i));
+        for (final SQLiteUser user : SQLiteQueryTest.USERS) {
+            mSQLite.execSQL("INSERT INTO users(name, age, weight, avatar) VALUES(?, ?, ?, ?)",
+                    user.mName, user.mAge, user.mWeight, user.mAvatar);
         }
         mSQLite.endTransaction(true);
     }
@@ -56,16 +57,16 @@ public class SQLiteResultTest {
     public void testRemove() throws Exception {
         final List<SQLiteUser> users = mSQLite.where(SQLiteUser.class).list();
         final SQLiteUser removed = users.remove(4);
-        Assert.assertEquals("User #4", removed.getName());
+        Assert.assertEquals("Ethan", removed.getName());
         Assert.assertEquals(9, users.size());
         for (final SQLiteUser user : users) {
-            Assert.assertNotEquals("User #4", user.getName());
+            Assert.assertNotEquals("Ethan", user.getName());
         }
         final Cursor cursor = mSQLite.rawQuery("SELECT * FROM users;");
         try {
             if (cursor.moveToFirst()) {
                 do {
-                    Assert.assertNotEquals("User #4", CursorUtils.getString(cursor, "name"));
+                    Assert.assertNotEquals("Ethan", CursorUtils.getString(cursor, "name"));
                 } while (cursor.moveToNext());
             }
         } finally {
