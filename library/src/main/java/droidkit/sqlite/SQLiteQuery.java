@@ -3,13 +3,14 @@ package droidkit.sqlite;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import droidkit.util.Iterables;
 
 /**
  * @author Daniel Serdyukov
@@ -50,6 +51,10 @@ public class SQLiteQuery<T> {
     private static final String AND = " AND ";
 
     private static final String OR = " OR ";
+
+    private static final String LEFT_PARENTHESIS = "(";
+
+    private static final String RIGHT_PARENTHESIS = ")";
     //endregion
 
     private final WeakReference<SQLiteClient> mClient;
@@ -186,11 +191,36 @@ public class SQLiteQuery<T> {
         mLimit = offset + COMMA + limit;
         return this;
     }
+
+    @NonNull
+    public SQLiteQuery<T> and() {
+        mWhere.append(AND);
+        return this;
+    }
+
+    @NonNull
+    public SQLiteQuery<T> or() {
+        mWhere.append(OR);
+        return this;
+    }
+
+    @NonNull
+    public SQLiteQuery<T> beginGroup() {
+        mWhere.append(LEFT_PARENTHESIS);
+        return this;
+    }
+
+    @NonNull
+    public SQLiteQuery<T> endGroup() {
+        mWhere.append(RIGHT_PARENTHESIS);
+        return this;
+    }
     //endregion
 
-    @Nullable
+    //region result
+    @NonNull
     public T one() {
-        throw new UnsupportedOperationException();
+        return Iterables.getFirst(limit(1).list());
     }
 
     @NonNull
@@ -215,6 +245,7 @@ public class SQLiteQuery<T> {
         }
         return mClient.get().executeUpdateDelete(sql.toString(), bindArgs());
     }
+    //endregion
 
     @Override
     public String toString() {
@@ -230,7 +261,7 @@ public class SQLiteQuery<T> {
                 mGroupBy, mHaving, orderBy, mLimit);
     }
 
-    //region package internal
+    //region internal
     Object[] bindArgs() {
         if (!mBindArgs.isEmpty()) {
             return mBindArgs.toArray(new Object[mBindArgs.size()]);

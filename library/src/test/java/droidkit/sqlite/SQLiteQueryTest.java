@@ -63,7 +63,7 @@ public class SQLiteQueryTest {
         final SQLiteQuery<SQLiteUser> query = mSQLite.where(SQLiteUser.class)
                 .equalTo("name", "James");
         Assert.assertEquals("SELECT * FROM users WHERE name = ?", query.toString());
-        Assert.assertArrayEquals(new String[]{"James"}, query.bindArgs());
+        Assert.assertArrayEquals(new Object[]{"James"}, query.bindArgs());
         final List<SQLiteUser> users = query.list();
         Assert.assertEquals(1, users.size());
         Assert.assertEquals("James", users.get(0).getName());
@@ -247,7 +247,51 @@ public class SQLiteQueryTest {
         Assert.assertEquals(2, users.size());
         Assert.assertEquals("Mia", users.get(0).getName());
         Assert.assertEquals("Alexander", users.get(1).getName());
+    }
 
+    @Test
+    public void testAnd() throws Exception {
+        final SQLiteQuery<SQLiteUser> query = mSQLite.where(SQLiteUser.class)
+                .equalTo("name", "Mia")
+                .and()
+                .equalTo("age", 23);
+        Assert.assertEquals("SELECT * FROM users WHERE name = ? AND age = ?", query.toString());
+        Assert.assertArrayEquals(new Object[]{"Mia", 23}, query.bindArgs());
+        final List<SQLiteUser> users = query.list();
+        Assert.assertEquals(1, users.size());
+        Assert.assertEquals("Mia", users.get(0).getName());
+    }
+
+    @Test
+    public void testOr() throws Exception {
+        final SQLiteQuery<SQLiteUser> query = mSQLite.where(SQLiteUser.class)
+                .equalTo("name", "Mia")
+                .or()
+                .equalTo("age", 30);
+        Assert.assertEquals("SELECT * FROM users WHERE name = ? OR age = ?", query.toString());
+        Assert.assertArrayEquals(new Object[]{"Mia", 30}, query.bindArgs());
+        final List<SQLiteUser> users = query.list();
+        Assert.assertEquals(2, users.size());
+        Assert.assertEquals("Mia", users.get(0).getName());
+        Assert.assertEquals("Alexander", users.get(1).getName());
+    }
+
+    @Test
+    public void testComplexWhere() throws Exception {
+        final SQLiteQuery<SQLiteUser> query = mSQLite.where(SQLiteUser.class)
+                .equalTo("name", "Mia")
+                .and()
+                .beginGroup()
+                .equalTo("age", 20)
+                .and()
+                .lessThan("weight", 50d)
+                .endGroup()
+                .or()
+                .isTrue("enabled");
+        Assert.assertEquals("SELECT * FROM users WHERE name = ? AND (age = ? AND weight < ?) OR enabled = ?",
+                query.toString());
+        Assert.assertArrayEquals(new Object[]{"Mia", 20, 50d, 1}, query.bindArgs());
+        query.list();
     }
 
     @Test
@@ -257,6 +301,11 @@ public class SQLiteQueryTest {
         for (int i = 0; i < USERS.length; ++i) {
             Assert.assertEquals(USERS[i].mName, users.get(i).getName());
         }
+    }
+
+    @Test
+    public void testOne() throws Exception {
+        Assert.assertEquals("Liam", mSQLite.where(SQLiteUser.class).one().getName());
     }
 
     @Test
