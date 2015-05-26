@@ -28,7 +28,7 @@ public class AsyncQueueTest {
         AsyncQueue.invoke(new Runnable() {
             @Override
             public void run() {
-                Assert.assertNotEquals(Looper.getMainLooper(), Looper.myLooper());
+                Assert.assertNotSame(Looper.getMainLooper(), Looper.myLooper());
                 latch.countDown();
             }
         });
@@ -42,6 +42,7 @@ public class AsyncQueueTest {
         AsyncQueue.invoke(new Runnable() {
             @Override
             public void run() {
+                Assert.assertNotSame(Looper.getMainLooper(), Looper.myLooper());
                 latch.countDown();
             }
         }, 1000);
