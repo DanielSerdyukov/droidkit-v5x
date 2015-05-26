@@ -8,6 +8,8 @@ import android.support.annotation.Nullable;
  */
 public final class Objects {
 
+    private static final String EMPTY_STRING = "";
+
     private Objects() {
     }
 
@@ -29,7 +31,7 @@ public final class Objects {
 
     @NonNull
     public static String stringNonNull(@Nullable String object) {
-        return stringNonNull(object, "");
+        return stringNonNull(object, EMPTY_STRING);
     }
 
     @NonNull

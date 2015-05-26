@@ -1,10 +1,11 @@
 package droidkit.util;
 
-import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,26 +39,26 @@ public final class Dynamic {
         return new Throwable().fillInStackTrace().getStackTrace()[CALLER_DEPTH];
     }
 
-    public static boolean inClasspath(@NonNull String clazz) {
-        try {
-            Class.forName(clazz);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
     @NonNull
-    public static Class<?> forName(@NonNull String clazz) throws DynamicException {
+    @SuppressWarnings("unchecked")
+    public static <T> Class<T> forName(@NonNull String name) throws DynamicException {
         try {
-            return Class.forName(clazz);
+            return (Class<T>) Class.forName(name);
         } catch (ClassNotFoundException e) {
             throw new DynamicException(e);
         }
     }
 
+    public static boolean inClasspath(@NonNull String name) {
+        try {
+            Class.forName(name);
+            return true;
+        } catch (ClassNotFoundException ignored) {
+            return false;
+        }
+    }
+
     @NonNull
-    @SuppressLint("NewApi")
     public static <T> T init(@NonNull Class<? extends T> clazz, Object... args) throws DynamicException {
         try {
             if (args.length == 0) {
@@ -103,6 +104,22 @@ public final class Dynamic {
             }
         }
         throw new DynamicException(new NoSuchMethodException("<init> " + Arrays.toString(argTypes)));
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public static <T> T newProxy(@NonNull InvocationHandler handler, @NonNull Class<T> proxyInterface) {
+        return (T) Proxy.newProxyInstance(proxyInterface.getClassLoader(), new Class<?>[]{proxyInterface}, handler);
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public static <T> T newProxy(@NonNull Object target, @NonNull Class<T> proxyInterface) {
+        return (T) Proxy.newProxyInstance(
+                proxyInterface.getClassLoader(),
+                new Class<?>[]{proxyInterface},
+                new ProxyInstance(target)
+        );
     }
 
 }

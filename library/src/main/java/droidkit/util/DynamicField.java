@@ -81,11 +81,7 @@ public final class DynamicField {
 
     @NonNull
     public static Field find(@NonNull String className, @NonNull String name) throws DynamicException {
-        try {
-            return find(Class.forName(className), name);
-        } catch (ClassNotFoundException e) {
-            throw new DynamicException(e);
-        }
+        return find(Dynamic.forName(className), name);
     }
 
     @NonNull

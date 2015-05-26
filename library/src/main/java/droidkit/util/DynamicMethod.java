@@ -1,6 +1,5 @@
 package droidkit.util;
 
-import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -26,7 +25,6 @@ public final class DynamicMethod {
     }
 
     @Nullable
-    @SuppressLint("NewApi")
     @SuppressWarnings("unchecked")
     public static <T> T invoke(@Nullable Object target, @NonNull Method method, Object... args)
             throws DynamicException {
@@ -44,11 +42,7 @@ public final class DynamicMethod {
     @Nullable
     public static <T> T invokeStatic(@NonNull String className, @NonNull String method, Object... args)
             throws DynamicException {
-        try {
-            return invokeStatic(Class.forName(className), method, args);
-        } catch (ClassNotFoundException e) {
-            throw new DynamicException(e);
-        }
+        return invokeStatic(Dynamic.forName(className), method, args);
     }
 
     @Nullable
@@ -66,11 +60,7 @@ public final class DynamicMethod {
     @NonNull
     public static Method find(@NonNull String className, @NonNull String name, Class<?>... argTypes)
             throws DynamicException {
-        try {
-            return find(Class.forName(className), name, argTypes);
-        } catch (ClassNotFoundException e) {
-            throw new DynamicException(e);
-        }
+        return find(Dynamic.forName(className), name, argTypes);
     }
 
     @NonNull
