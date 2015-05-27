@@ -52,7 +52,7 @@ public final class SQLite {
 
     private SQLite(@NonNull Context context) {
         if (Dynamic.inClasspath("org.sqlite.database.sqlite.SQLiteDatabase")) {
-            throw new IllegalArgumentException("org.sqlite.database.* not supported yet");
+            mClient = new SQLiteOrgClient(context.getApplicationContext());
         } else {
             mClient = new AndroidSQLiteClient(context.getApplicationContext());
         }
@@ -75,6 +75,10 @@ public final class SQLite {
     //region Database Config
     public static void useInMemoryDb() {
         DATABASE_NAME.compareAndSet(DATABASE_NAME.get(), null);
+    }
+
+    public static void useCaseSensitiveLike() {
+        PRAGMA.add("PRAGMA case_sensitive_like=ON;");
     }
 
     public static void onCreate(@NonNull String... query) {

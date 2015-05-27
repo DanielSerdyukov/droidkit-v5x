@@ -1,23 +1,21 @@
 package droidkit.sqlite;
 
+import android.os.StrictMode;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RuntimeEnvironment;
-import org.robolectric.annotation.Config;
 
 import java.util.List;
-
-import droidkit.BuildConfig;
-import droidkit.test.DroidkitTestRunner;
 
 /**
  * @author Daniel Serdyukov
  */
-@Config(constants = BuildConfig.class)
-@RunWith(DroidkitTestRunner.class)
+@RunWith(AndroidJUnit4.class)
 public class SQLiteQueryTest {
 
     static final SQLiteUser[] USERS = new SQLiteUser[]{
@@ -35,13 +33,15 @@ public class SQLiteQueryTest {
 
     static {
         SQLite.useInMemoryDb();
+        SQLite.useCaseSensitiveLike();
+        StrictMode.enableDefaults();
     }
 
     private SQLite mSQLite;
 
     @Before
     public void setUp() throws Exception {
-        mSQLite = SQLite.of(RuntimeEnvironment.application);
+        mSQLite = SQLite.of(InstrumentationRegistry.getContext());
         mSQLite.beginTransaction();
         for (final SQLiteUser user : USERS) {
             mSQLite.execSQL("INSERT INTO users(name, age, weight, avatar, enabled) VALUES(?, ?, ?, ?, ?)",
@@ -77,7 +77,7 @@ public class SQLiteQueryTest {
         final List<SQLiteUser> users = query.list();
         Assert.assertEquals(9, users.size());
         for (final SQLiteUser user : users) {
-            Assert.assertNotEquals(25, user.getAge());
+            Assert.assertNotSame(25, user.getAge());
         }
     }
 
@@ -316,7 +316,7 @@ public class SQLiteQueryTest {
         Assert.assertEquals(1, affectedRows);
         final List<SQLiteUser> users = mSQLite.where(SQLiteUser.class).list();
         for (final SQLiteUser user : users) {
-            Assert.assertNotEquals("Mia", user.getName());
+            Assert.assertFalse("Mia".equals(user.getName()));
         }
     }
 
