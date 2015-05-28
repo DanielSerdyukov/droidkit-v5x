@@ -9,7 +9,7 @@ import org.robolectric.annotation.Config;
 import java.util.Arrays;
 
 import droidkit.BuildConfig;
-import droidkit.test.DroidkitTestRunner;
+import droidkit.DroidkitTestRunner;
 
 /**
  * @author Daniel Serdyukov

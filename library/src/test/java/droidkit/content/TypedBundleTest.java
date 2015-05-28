@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import droidkit.BuildConfig;
-import droidkit.test.DroidkitTestRunner;
+import droidkit.DroidkitTestRunner;
 
 /**
  * @author Daniel Serdyukov

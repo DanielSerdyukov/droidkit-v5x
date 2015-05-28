@@ -5,11 +5,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,15 +26,17 @@ public final class SQLite {
 
     static final AtomicInteger DATABASE_VERSION = new AtomicInteger(1);
 
+    static final AtomicReference<String> AUTHORITY = new AtomicReference<>();
+
     static final List<String> PRAGMA = new CopyOnWriteArrayList<>();
 
     static final List<String> CREATE = new CopyOnWriteArrayList<>();
 
     static final List<String> UPGRADE = new CopyOnWriteArrayList<>();
 
-    static final Map<Class<?>, String> TABLES = new ConcurrentHashMap<>();
+    static final ConcurrentMap<Class<?>, String> TABLES = new ConcurrentHashMap<>();
 
-    private static final Map<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
 
     private static final long AUTO_ID = -1;
 
@@ -72,7 +74,10 @@ public final class SQLite {
         return instance;
     }
 
-    //region Database Config
+    public static void attach(@NonNull String authority) {
+        AUTHORITY.compareAndSet(null, authority);
+    }
+
     public static void useInMemoryDb() {
         DATABASE_NAME.compareAndSet(DATABASE_NAME.get(), null);
     }
@@ -81,22 +86,30 @@ public final class SQLite {
         PRAGMA.add("PRAGMA case_sensitive_like=ON;");
     }
 
-    public static void onCreate(@NonNull String... query) {
-        Collections.addAll(CREATE, query);
-    }
-
-    public static void onUpgrade(@NonNull String... query) {
-        Collections.addAll(UPGRADE, query);
-    }
-    //endregion
-
     @NonNull
     public static String tableOf(@NonNull Class<?> type) {
         return Objects.requireNonNull(TABLES.get(type), "No such table for " + type);
     }
 
-    static void attach(@NonNull String authority) {
-
+    @NonNull
+    public static Uri uriOf(@NonNull Class<?> type) {
+        Uri uri = URIS.get(type);
+        if (uri == null) {
+            final String authority = AUTHORITY.get();
+            if (TextUtils.isEmpty(authority)) {
+                throw new IllegalStateException("SQLite not attached to authority");
+            }
+            final Uri newUri = new Uri.Builder()
+                    .scheme("content")
+                    .authority(authority)
+                    .path(tableOf(type))
+                    .build();
+            uri = URIS.putIfAbsent(type, newUri);
+            if (uri == null) {
+                uri = newUri;
+            }
+        }
+        return uri;
     }
 
     public void beginTransaction() {
@@ -136,11 +149,11 @@ public final class SQLite {
     }
 
     @Nullable
-    public String simpleQueryForString(@NonNull String sql, String... bindArgs) {
+    public String simpleQueryForString(@NonNull String sql, Object... bindArgs) {
         return mClient.simpleQueryForString(sql, bindArgs);
     }
 
-    public long simpleQueryForLong(@NonNull String sql, String... bindArgs) {
+    public long simpleQueryForLong(@NonNull String sql, Object... bindArgs) {
         return mClient.simpleQueryForLong(sql, bindArgs);
     }
 

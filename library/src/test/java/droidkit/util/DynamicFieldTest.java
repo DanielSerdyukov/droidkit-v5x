@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
 import droidkit.BuildConfig;
-import droidkit.test.DroidkitTestRunner;
+import droidkit.DroidkitTestRunner;
 
 /**
  * @author Daniel Serdyukov

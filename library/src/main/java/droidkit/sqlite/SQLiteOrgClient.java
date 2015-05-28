@@ -1,7 +1,9 @@
 package droidkit.sqlite;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -119,6 +121,29 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         } finally {
             IOUtils.closeQuietly(stmt);
         }
+    }
+
+    @NonNull
+    @Override
+    public Cursor query(@NonNull String table, @Nullable String[] columns, @Nullable String where,
+                        @Nullable String[] bindArgs, @Nullable String orderBy) {
+        return getReadableDatabase().query(table, columns, where, bindArgs, null, null, orderBy);
+    }
+
+    @Override
+    public long insert(@NonNull String table, @NonNull ContentValues values) {
+        return getWritableDatabase().insert(table, BaseColumns._ID, values);
+    }
+
+    @Override
+    public int delete(@NonNull String table, @Nullable String where, @Nullable String[] bindArgs) {
+        return getWritableDatabase().delete(table, where, bindArgs);
+    }
+
+    @Override
+    public int update(@NonNull String table, @NonNull ContentValues values, @Nullable String where,
+                      @Nullable String[] bindArgs) {
+        return getWritableDatabase().update(table, values, where, bindArgs);
     }
 
     //region SQLiteOpenHelper implementation

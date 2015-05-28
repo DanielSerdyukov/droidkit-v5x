@@ -1,7 +1,6 @@
 package droidkit.sqlite;
 
 import android.database.Cursor;
-import android.os.StrictMode;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -25,7 +24,6 @@ public class SQLiteResultTest {
     static {
         SQLite.useInMemoryDb();
         SQLite.useCaseSensitiveLike();
-        StrictMode.enableDefaults();
     }
 
     private SQLite mSQLite;

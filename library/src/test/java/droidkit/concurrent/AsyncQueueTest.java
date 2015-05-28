@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import droidkit.BuildConfig;
-import droidkit.test.DroidkitTestRunner;
+import droidkit.DroidkitTestRunner;
 
 /**
  * @author Daniel Serdyukov

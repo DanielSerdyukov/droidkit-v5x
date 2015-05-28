@@ -1,4 +1,4 @@
-package droidkit.test;
+package droidkit;
 
 import android.support.annotation.NonNull;
 
@@ -7,8 +7,6 @@ import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.lang.reflect.Method;
-
-import droidkit.BuildConfig;
 
 /**
  * @author Daniel Serdyukov
@@ -24,13 +22,13 @@ public class DroidkitTestRunner extends RobolectricGradleTestRunner {
     @Override
     public Config getConfig(Method method) {
         Config config = super.getConfig(method);
-        config = new Config.Implementation(ensureSdkLevel(
-                config.emulateSdk()),
+        config = new Config.Implementation(
+                ensureSdkLevel(config.sdk()),
                 config.manifest(),
                 config.qualifiers(),
+                config.packageName(),
                 config.resourceDir(),
                 config.assetDir(),
-                ensureSdkLevel(config.reportSdk()),
                 config.shadows(),
                 config.application(),
                 config.libraries(),
@@ -46,12 +44,9 @@ public class DroidkitTestRunner extends RobolectricGradleTestRunner {
         return constants;
     }
 
-    private int ensureSdkLevel(int sdkLevel) {
-        if (sdkLevel > MAX_SDK_LEVEL) {
-            return MAX_SDK_LEVEL;
-        }
-        if (sdkLevel <= 0) {
-            return MAX_SDK_LEVEL;
+    private int[] ensureSdkLevel(int[] sdkLevel) {
+        if (sdkLevel.length == 0 || sdkLevel[0] > MAX_SDK_LEVEL) {
+            return new int[]{MAX_SDK_LEVEL};
         }
         return sdkLevel;
     }

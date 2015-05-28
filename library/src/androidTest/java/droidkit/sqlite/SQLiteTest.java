@@ -1,6 +1,5 @@
 package droidkit.sqlite;
 
-import android.os.StrictMode;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -19,7 +18,6 @@ public class SQLiteTest {
     static {
         SQLite.useInMemoryDb();
         SQLite.useCaseSensitiveLike();
-        StrictMode.enableDefaults();
     }
 
     private SQLite mSQLite;
@@ -27,6 +25,11 @@ public class SQLiteTest {
     @Before
     public void setUp() throws Exception {
         mSQLite = SQLite.of(InstrumentationRegistry.getContext());
+    }
+
+    @Test
+    public void testUriOf() throws Exception {
+
     }
 
     @Test

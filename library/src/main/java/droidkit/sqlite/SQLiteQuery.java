@@ -2,6 +2,7 @@ package droidkit.sqlite;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -16,6 +17,8 @@ import droidkit.util.Iterables;
  * @author Daniel Serdyukov
  */
 public class SQLiteQuery<T> {
+
+    static final String WHERE_ID_EQ = BaseColumns._ID + " = ?";
 
     //region operators and values
     private static final String EQ = " = ?";

@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import droidkit.BuildConfig;
-import droidkit.test.DroidkitTestRunner;
+import droidkit.DroidkitTestRunner;
 
 /**
  * @author Daniel Serdyukov
