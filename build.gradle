@@ -13,7 +13,7 @@ allprojects {
     }
 }
 
-version = file('version').text.trim()
+version = file('VERSION').text.trim()
 
 ext {
     versionCode = 1

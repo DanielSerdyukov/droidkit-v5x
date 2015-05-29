@@ -21,11 +21,6 @@ import droidkit.io.IOUtils;
 @RunWith(AndroidJUnit4.class)
 public class SQLiteResultTest {
 
-    static {
-        SQLite.useInMemoryDb();
-        SQLite.useCaseSensitiveLike();
-    }
-
     private SQLite mSQLite;
 
     @Before

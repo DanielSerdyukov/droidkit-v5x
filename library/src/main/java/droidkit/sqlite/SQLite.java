@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.util.Dynamic;
@@ -22,13 +21,7 @@ import droidkit.util.Objects;
  */
 public final class SQLite {
 
-    static final AtomicReference<String> DATABASE_NAME = new AtomicReference<>("data.db");
-
-    static final AtomicInteger DATABASE_VERSION = new AtomicInteger(1);
-
     static final AtomicReference<String> AUTHORITY = new AtomicReference<>();
-
-    static final List<String> PRAGMA = new CopyOnWriteArrayList<>();
 
     static final List<String> CREATE = new CopyOnWriteArrayList<>();
 
@@ -46,7 +39,7 @@ public final class SQLite {
         try {
             Class.forName("droidkit.sqlite.SQLite$Gen");
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("droidkit.sqlite.SQLite$Gen not found, try to rebuild project", e);
+            throw new IllegalStateException("Schema class not found, try to rebuild project", e);
         }
     }
 
@@ -54,14 +47,15 @@ public final class SQLite {
 
     private SQLite(@NonNull Context context) {
         if (Dynamic.inClasspath("org.sqlite.database.sqlite.SQLiteDatabase")) {
-            mClient = new SQLiteOrgClient(context.getApplicationContext());
+            mClient = new SQLiteOrgClient(context.getApplicationContext(), SQLiteDbInfo.from(context));
         } else {
-            mClient = new AndroidSQLiteClient(context.getApplicationContext());
+            mClient = new AndroidSQLiteClient(context.getApplicationContext(), SQLiteDbInfo.from(context));
         }
     }
 
     @NonNull
     public static SQLite of(@NonNull Context context) {
+
         SQLite instance = sInstance;
         if (instance == null) {
             synchronized (SQLite.class) {
@@ -76,14 +70,6 @@ public final class SQLite {
 
     public static void attach(@NonNull String authority) {
         AUTHORITY.compareAndSet(null, authority);
-    }
-
-    public static void useInMemoryDb() {
-        DATABASE_NAME.compareAndSet(DATABASE_NAME.get(), null);
-    }
-
-    public static void useCaseSensitiveLike() {
-        PRAGMA.add("PRAGMA case_sensitive_like=ON;");
     }
 
     @NonNull
@@ -151,10 +137,6 @@ public final class SQLite {
     @Nullable
     public String simpleQueryForString(@NonNull String sql, Object... bindArgs) {
         return mClient.simpleQueryForString(sql, bindArgs);
-    }
-
-    public long simpleQueryForLong(@NonNull String sql, Object... bindArgs) {
-        return mClient.simpleQueryForLong(sql, bindArgs);
     }
 
     public void execSQL(@NonNull String sql, Object... bindArgs) {

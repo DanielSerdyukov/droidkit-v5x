@@ -78,7 +78,7 @@ class SQLiteResult<T> extends AbstractList<T> {
     T instantiate(@NonNull SQLiteQuery<T> query, @NonNull Cursor cursor) {
         try {
             //noinspection ConstantConditions
-            return DynamicMethod.invokeStatic(query.getType(), "of", query.getClient(), cursor);
+            return DynamicMethod.invokeStatic(query.getType(), "instantiate", query.getClient(), cursor);
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);
         }

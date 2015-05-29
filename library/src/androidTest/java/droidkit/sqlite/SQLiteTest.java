@@ -15,11 +15,6 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class SQLiteTest {
 
-    static {
-        SQLite.useInMemoryDb();
-        SQLite.useCaseSensitiveLike();
-    }
-
     private SQLite mSQLite;
 
     @Before
@@ -50,15 +45,14 @@ public class SQLiteTest {
         Assert.assertEquals("John", mSQLite.simpleQueryForString("SELECT name FROM users;"));
     }
 
-    @Test
-    public void testInsertUnicode() throws Exception {
+    @Test(expected = RuntimeException.class)
+    public void testUnicode() throws Exception {
         mSQLite.execSQL("INSERT INTO users(name) VALUES('Вася Пупкин');");
-        Assert.assertEquals("Вася Пупкин", mSQLite.simpleQueryForString(
-                "SELECT name FROM users WHERE name LIKE 'Ва%';"));
+        mSQLite.simpleQueryForString("SELECT name FROM users WHERE name LIKE 'ва%';");
     }
 
     @Test
-    public void testInsertUnicodeLower() throws Exception {
+    public void testUnicodeLower() throws Exception {
         mSQLite.execSQL("INSERT INTO users(name) VALUES('Вася Пупкин');");
         Assert.assertEquals("Вася Пупкин", mSQLite.simpleQueryForString(
                 "SELECT name FROM users WHERE LOWER(name) LIKE 'ва%';"));

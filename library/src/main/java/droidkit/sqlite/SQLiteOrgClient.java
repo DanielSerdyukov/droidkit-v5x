@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.sqlite.database.sqlite.SQLiteDatabase;
+import org.sqlite.database.sqlite.SQLiteDoneException;
 import org.sqlite.database.sqlite.SQLiteOpenHelper;
 import org.sqlite.database.sqlite.SQLiteProgram;
 import org.sqlite.database.sqlite.SQLiteStatement;
@@ -19,11 +20,11 @@ import droidkit.io.IOUtils;
  */
 class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
 
-    private final Context mContext;
+    private final SQLiteDbInfo mDbInfo;
 
-    public SQLiteOrgClient(@NonNull Context context) {
-        super(context, SQLite.DATABASE_NAME.get(), null, SQLite.DATABASE_VERSION.get());
-        mContext = context;
+    public SQLiteOrgClient(@NonNull Context context, @NonNull SQLiteDbInfo dbInfo) {
+        super(context, dbInfo.getName(), null, dbInfo.getVersion());
+        mDbInfo = dbInfo;
     }
 
     private static void bindObjectToProgram(SQLiteProgram prog, int index, Object value) {
@@ -45,12 +46,6 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         } else {
             prog.bindString(index, value.toString());
         }
-    }
-
-    @NonNull
-    @Override
-    public Context getContext() {
-        return mContext;
     }
 
     @Override
@@ -87,19 +82,6 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
                 bindObjectToProgram(stmt, i + 1, bindArgs[i]);
             }
             return stmt.simpleQueryForString();
-        } finally {
-            IOUtils.closeQuietly(stmt);
-        }
-    }
-
-    @Override
-    public long simpleQueryForLong(@NonNull String sql, @NonNull Object... bindArgs) {
-        final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
-        try {
-            for (int i = 0; i < bindArgs.length; ++i) {
-                bindObjectToProgram(stmt, i + 1, bindArgs[i]);
-            }
-            return stmt.simpleQueryForLong();
         } finally {
             IOUtils.closeQuietly(stmt);
         }
@@ -149,7 +131,7 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
     //region SQLiteOpenHelper implementation
     @Override
     public void onConfigure(@NonNull SQLiteDatabase db) {
-        for (final String pragma : SQLite.PRAGMA) {
+        for (final String pragma : mDbInfo.getPragma()) {
             db.execSQL(pragma);
         }
     }

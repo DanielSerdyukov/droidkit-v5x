@@ -1,9 +1,12 @@
 package droidkit.sqlite;
 
 import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.net.Uri;
@@ -12,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import droidkit.util.Iterables;
@@ -97,7 +101,7 @@ public class SQLiteProvider extends ContentProvider {
             baseUri = baseUriOf(uri);
         }
         final long rowId = mClient.insert(tableOf(uri), values);
-        onInsert(baseUri, rowId);
+        getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
         return ContentUris.withAppendedId(baseUri, rowId);
     }
 
@@ -113,7 +117,7 @@ public class SQLiteProvider extends ContentProvider {
             affectedRows = mClient.delete(tableOf(uri), where, bindArgs);
         }
         if (affectedRows > 0) {
-            onUpdateDelete(baseUri, affectedRows);
+            getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
         }
         return affectedRows;
     }
@@ -131,17 +135,35 @@ public class SQLiteProvider extends ContentProvider {
             affectedRows = mClient.update(tableOf(uri), values, where, bindArgs);
         }
         if (affectedRows > 0) {
-            onUpdateDelete(baseUri, affectedRows);
+            getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
         }
         return affectedRows;
     }
 
-    protected void onInsert(@NonNull Uri baseUri, long rowId) {
-        getContext().getContentResolver().notifyChange(baseUri, null, false);
+    @Override
+    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] bulkValues) {
+        Uri baseUri = uri;
+        if (matchUri(uri) == URI_MATCH_ID) {
+            baseUri = baseUriOf(uri);
+        }
+        mClient.beginTransaction();
+        final String tableName = tableOf(uri);
+        for (final ContentValues values : bulkValues) {
+            mClient.insert(tableName, values);
+        }
+        mClient.endTransaction(true);
+        getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
+        return bulkValues.length;
     }
 
-    protected void onUpdateDelete(@NonNull Uri baseUri, int affectedRows) {
-        getContext().getContentResolver().notifyChange(baseUri, null, false);
+    @Override
+    public ContentProviderResult[] applyBatch(@NonNull ArrayList<ContentProviderOperation> operations)
+            throws OperationApplicationException {
+        return super.applyBatch(operations);
+    }
+
+    protected boolean shouldSyncToNetwork(@NonNull Uri uri) {
+        return false;
     }
 
 }

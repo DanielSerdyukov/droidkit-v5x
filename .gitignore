@@ -1,14 +1,9 @@
-# built application files
-*.apk
-
-# files for the dex VM
-*.dex
-
 # generated files
 bin/**
 gen/**
 out/**
 gen-external-apklibs/**
+*.hprof
 
 # Local configuration file (sdk path, etc)
 local.properties

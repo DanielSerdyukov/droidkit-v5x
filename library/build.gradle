@@ -31,6 +31,7 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v13:22.1.1'
+    compile fileTree(dir: '../processor/build/libs', include: ['*.jar'])
     provided 'org.sqlite.android:sqlite:3.8.10.2'
     testCompile 'junit:junit:4.12'
     testCompile('org.robolectric:robolectric:3.0-rc3') {

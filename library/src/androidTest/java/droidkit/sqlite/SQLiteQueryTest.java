@@ -18,22 +18,17 @@ import java.util.List;
 public class SQLiteQueryTest {
 
     static final SQLiteUser[] USERS = new SQLiteUser[]{
-            new SQLiteUser("Liam", 20, 70.5, new byte[]{0, 0, 0, 0, 0}),
-            new SQLiteUser("Olivia", 22, 60.5, new byte[]{0, 1, 0, 0, 0}),
-            new SQLiteUser("Jacob", 25, 55.8, new byte[]{0, 0, 1, 0, 0}),
-            new SQLiteUser("Isabella", 21, 45.0, new byte[]{0, 0, 0, 1, 0}),
-            new SQLiteUser("Ethan", 28, 80.75, new byte[]{0, 0, 0, 0, 1}),
-            new SQLiteUser("Mia", 23, 50.3, new byte[]{1, 1, 0, 0, 0}),
-            new SQLiteUser("Alexander", 30, 66.7, new byte[]{0, 1, 1, 0, 0}),
-            new SQLiteUser("Abigail", 19, 45.2, new byte[]{0, 0, 1, 1, 0}),
-            new SQLiteUser("James", 15, 40.4, new byte[]{0, 0, 0, 1, 1}),
-            new SQLiteUser("Charlotte", 18, 48.1, new byte[]{1, 1, 1, 0, 0}),
+            SQLiteUser.forTest("Liam", 20, 70.5, new byte[]{0, 0, 0, 0, 0}),
+            SQLiteUser.forTest("Olivia", 22, 60.5, new byte[]{0, 1, 0, 0, 0}),
+            SQLiteUser.forTest("Jacob", 25, 55.8, new byte[]{0, 0, 1, 0, 0}, SQLiteUser.Role.ADMIN),
+            SQLiteUser.forTest("Isabella", 21, 45.0, new byte[]{0, 0, 0, 1, 0}),
+            SQLiteUser.forTest("Ethan", 28, 80.75, new byte[]{0, 0, 0, 0, 1}),
+            SQLiteUser.forTest("Mia", 23, 50.3, new byte[]{1, 1, 0, 0, 0}),
+            SQLiteUser.forTest("Alexander", 30, 66.7, new byte[]{0, 1, 1, 0, 0}),
+            SQLiteUser.forTest("Abigail", 19, 45.2, new byte[]{0, 0, 1, 1, 0}),
+            SQLiteUser.forTest("James", 15, 40.4, new byte[]{0, 0, 0, 1, 1}),
+            SQLiteUser.forTest("Charlotte", 18, 48.1, new byte[]{1, 1, 1, 0, 0}),
     };
-
-    static {
-        SQLite.useInMemoryDb();
-        SQLite.useCaseSensitiveLike();
-    }
 
     private SQLite mSQLite;
 
@@ -42,8 +37,8 @@ public class SQLiteQueryTest {
         mSQLite = SQLite.of(InstrumentationRegistry.getContext());
         mSQLite.beginTransaction();
         for (final SQLiteUser user : USERS) {
-            mSQLite.execSQL("INSERT INTO users(name, age, weight, avatar, enabled) VALUES(?, ?, ?, ?, ?)",
-                    user.mName, user.mAge, user.mWeight, user.mAvatar, (user.mAge > 18));
+            mSQLite.execSQL("INSERT INTO users(name, age, weight, avatar, enabled, role) VALUES(?, ?, ?, ?, ?, ?)",
+                    user.mName, user.mAge, user.mWeight, user.mAvatar, (user.mAge > 18), user.mRole.name());
         }
         mSQLite.endTransaction(true);
     }

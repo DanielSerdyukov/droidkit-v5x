@@ -18,17 +18,11 @@ import droidkit.io.IOUtils;
  */
 class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
 
-    private final Context mContext;
+    private final SQLiteDbInfo mDbInfo;
 
-    public AndroidSQLiteClient(@NonNull Context context) {
-        super(context, SQLite.DATABASE_NAME.get(), null, SQLite.DATABASE_VERSION.get());
-        mContext = context;
-    }
-
-    @NonNull
-    @Override
-    public Context getContext() {
-        return mContext;
+    public AndroidSQLiteClient(@NonNull Context context, @NonNull SQLiteDbInfo dbInfo) {
+        super(context, dbInfo.getName(), null, dbInfo.getVersion());
+        mDbInfo = dbInfo;
     }
 
     @Override
@@ -65,19 +59,6 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
                 DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
             }
             return stmt.simpleQueryForString();
-        } finally {
-            IOUtils.closeQuietly(stmt);
-        }
-    }
-
-    @Override
-    public long simpleQueryForLong(@NonNull String sql, @NonNull Object... bindArgs) {
-        final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
-        try {
-            for (int i = 0; i < bindArgs.length; ++i) {
-                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
-            }
-            return stmt.simpleQueryForLong();
         } finally {
             IOUtils.closeQuietly(stmt);
         }
@@ -127,7 +108,7 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
     //region SQLiteOpenHelper implementation
     @Override
     public void onConfigure(@NonNull SQLiteDatabase db) {
-        for (final String pragma : SQLite.PRAGMA) {
+        for (final String pragma : mDbInfo.getPragma()) {
             db.execSQL(pragma);
         }
     }

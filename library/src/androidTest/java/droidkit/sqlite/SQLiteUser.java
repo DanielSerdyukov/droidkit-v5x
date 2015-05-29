@@ -1,43 +1,43 @@
 package droidkit.sqlite;
 
-import android.database.Cursor;
-import android.support.annotation.NonNull;
-
-import droidkit.database.CursorUtils;
+import droidkit.annotation.SQLiteColumn;
+import droidkit.annotation.SQLiteObject;
 
 /**
  * @author Daniel Serdyukov
  */
+@SQLiteObject("users")
 public class SQLiteUser {
 
+    @SQLiteColumn("name")
     String mName;
 
+    @SQLiteColumn("age")
     int mAge;
 
+    @SQLiteColumn("weight")
     double mWeight;
 
+    @SQLiteColumn("avatar")
     byte[] mAvatar;
 
+    @SQLiteColumn("enabled")
     boolean mEnabled;
 
-    public SQLiteUser() {
+    @SQLiteColumn("role")
+    Role mRole;
 
+    public static SQLiteUser forTest(String name, int age, double weight, byte[] avatar) {
+        return forTest(name, age, weight, avatar, Role.USER);
     }
 
-    public SQLiteUser(String name, int age, double weight, byte[] avatar) {
-        mName = name;
-        mAge = age;
-        mWeight = weight;
-        mAvatar = avatar;
-    }
-
-    public static SQLiteUser of(@NonNull SQLiteClient client, @NonNull Cursor cursor) {
+    public static SQLiteUser forTest(String name, int age, double weight, byte[] avatar, Role role) {
         final SQLiteUser user = new SQLiteUser();
-        user.mName = CursorUtils.getString(cursor, "name");
-        user.mAge = CursorUtils.getInt(cursor, "age");
-        user.mWeight = CursorUtils.getDouble(cursor, "weight");
-        user.mAvatar = CursorUtils.getBlob(cursor, "avatar");
-        user.mEnabled = CursorUtils.getBoolean(cursor, "enabled");
+        user.mName = name;
+        user.mAge = age;
+        user.mWeight = weight;
+        user.mAvatar = avatar;
+        user.mRole = role;
         return user;
     }
 
@@ -60,4 +60,10 @@ public class SQLiteUser {
     public boolean isEnabled() {
         return mEnabled;
     }
+
+    public enum Role {
+        ADMIN,
+        USER
+    }
+
 }

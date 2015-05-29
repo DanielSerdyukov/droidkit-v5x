@@ -33,11 +33,6 @@ public class SQLiteProviderTest {
 
     private static final Uri FIRST_USER = Uri.parse("content://droidkit.sqlite/users/1");
 
-    static {
-        SQLite.useInMemoryDb();
-        SQLite.useCaseSensitiveLike();
-    }
-
     private ContentResolver mResolver;
 
     @Before
@@ -47,7 +42,7 @@ public class SQLiteProviderTest {
         sqlite.beginTransaction();
         for (int i = 0; i < SQLiteQueryTest.USERS.length; ++i) {
             final SQLiteUser user = SQLiteQueryTest.USERS[i];
-            sqlite.execSQL("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?)",
+            sqlite.execSQL("INSERT INTO users(_id, name, age, weight, avatar, enabled) VALUES(?, ?, ?, ?, ?, ?)",
                     (i + 1), user.mName, user.mAge, user.mWeight, user.mAvatar, (user.mAge > 18));
         }
         sqlite.endTransaction(true);
