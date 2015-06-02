@@ -20,3 +20,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
+
+jar {
+    from configurations.compile.findAll { it.name.contains('javapoet') }.collect { zipTree(it) }
+}

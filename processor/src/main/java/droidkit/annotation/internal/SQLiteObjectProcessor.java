@@ -15,6 +15,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.lang.ref.WeakReference;
 import java.util.*;
 
 /**
@@ -56,6 +57,10 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
 
     private final List<String> mEnumColumns = new ArrayList<>();
 
+    private final ListBuffer<JCTree.JCStatement> mCreateStats = new ListBuffer<>();
+
+    private final SQLiteGenMaker mSQLiteGenMaker;
+
     private final TypeElement mOriginElement;
 
     private final String mTableName;
@@ -64,7 +69,8 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
 
     private String mPkField;
 
-    SQLiteObjectProcessor(TypeElement element) {
+    SQLiteObjectProcessor(SQLiteGenMaker maker, TypeElement element) {
+        mSQLiteGenMaker = maker;
         mOriginElement = element;
         final SQLiteObject annotation = element.getAnnotation(SQLiteObject.class);
         mTableName = annotation.value();
@@ -91,12 +97,14 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
             JCUtils.error("No such field annotated with @SQLitePk", mOriginElement);
         } else {
             JCUtils.getTree(mOriginElement).accept(this);
-            System.out.println(JCUtils.getTree(mOriginElement));
         }
     }
 
     @Override
     public boolean finishProcessing() {
+        final String fqcn = mOriginElement.getQualifiedName().toString();
+        mSQLiteGenMaker.createTable(fqcn, mColumnsDef);
+        mSQLiteGenMaker.bindTableClass(fqcn);
         return false;
     }
 
@@ -106,10 +114,12 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
         if (Objects.equals(jcClassDecl.getSimpleName(), mOriginElement.getSimpleName())) {
             final ListBuffer<JCTree> buffer = new ListBuffer<>();
             buffer.addAll(jcClassDecl.defs);
+            buffer.add(makeStaticFinalTable());
+            buffer.add(makeMClientRef());
+            buffer.add(makeCreate1());
+            buffer.add(makeCreate2());
+            buffer.add(makeSaveToSQLite());
             buffer.add(makeUpdateIfActiveObject());
-            //buffer.add(makeCreate1Method());
-            //buffer.add(makeCreate2Method());
-            //buffer.add(makeSaveToSQLiteMethod());
             jcClassDecl.defs = buffer.toList();
             this.result = jcClassDecl;
         }
@@ -142,8 +152,11 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
             JCUtils.error("@SQLitePk must be long", field);
         }
         final String fieldName = field.getSimpleName().toString();
-        mFields.put("_id", fieldName);
         mColumnsDef.add("_id INTEGER PRIMARY KEY" + CONFLICT_VALUES[pk.value()]);
+        mCreateStats.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                JCUtils.select("object", fieldName),
+                JCCursor.getValue("cursor", "getLong", "_id").expr
+        )));
         processGetterSetter(fieldName, "_id", pk.setter());
         return fieldName;
     }
@@ -157,18 +170,30 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
         if (!JCUtils.isEmpty(sqliteType)) {
             mFields.put(columnName, fieldName);
             mColumnsDef.add(columnName + " " + sqliteType);
+            mCreateStats.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                    JCUtils.select("object", fieldName),
+                    JCCursor.getValue("cursor", CURSOR_TO_JAVA_TYPE.get(typeKind), columnName).expr
+            )));
             processGetterSetter(fieldName, columnName, column.setter());
             return;
         }
         if (Objects.equals(String.class.getName(), type.toString())) {
             mFields.put(columnName, fieldName);
             mColumnsDef.add(columnName + " TEXT");
+            mCreateStats.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                    JCUtils.select("object", fieldName),
+                    JCCursor.getValue("cursor", "getString", columnName).expr
+            )));
             processGetterSetter(fieldName, columnName, column.setter());
             return;
         }
         if (Objects.equals("byte[]", type.toString())) {
             mFields.put(columnName, fieldName);
             mColumnsDef.add(columnName + " BLOB");
+            mCreateStats.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                    JCUtils.select("object", fieldName),
+                    JCCursor.getValue("cursor", "getBlob", columnName).expr
+            )));
             processGetterSetter(fieldName, columnName, column.setter());
             return;
         }
@@ -178,6 +203,10 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
                 mFields.put(columnName, fieldName);
                 mColumnsDef.add(columnName + " TEXT");
                 mEnumColumns.add(columnName);
+                mCreateStats.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                        JCUtils.select("object", fieldName),
+                        JCCursor.getEnumValue(JCUtils.enumClass(typeElement), "cursor", columnName).expr
+                )));
                 processGetterSetter(fieldName, columnName, column.setter());
                 return;
             }
@@ -191,6 +220,155 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
             setter = "set" + normalizedName;
         }
         mSetters.put(setter, columnName);
+    }
+
+    private JCTree.JCVariableDecl makeMClientRef() {
+        return new JCVarSpec("mClientRef")
+                .modifiers(Flags.PRIVATE)
+                .varType(JCUtils.ident(WeakReference.class))
+                .genericTypes(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                .build();
+    }
+
+    private JCTree.JCVariableDecl makeStaticFinalTable() {
+        return new JCVarSpec("_TABLE_")
+                .modifiers(Flags.PUBLIC | Flags.STATIC | Flags.FINAL)
+                .varType(JCUtils.ident(String.class))
+                .init(JCUtils.MAKER.Literal(TypeTag.CLASS, mTableName))
+                .build();
+    }
+
+    private JCTree.JCMethodDecl makeCreate1() {
+        return new JCMethodSpec("create")
+                .modifiers(Flags.PUBLIC | Flags.STATIC)
+                .returnType(JCUtils.ident(mOriginElement))
+                .params(new JCVarSpec("client")
+                        .varType(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                        .modifiers(Flags.PARAMETER)
+                        .build())
+                .statements(new JCVarSpec("object")
+                        .modifiers(Flags.FINAL)
+                        .varType(JCUtils.ident(mOriginElement))
+                        .init(new JCNewSpec(mOriginElement).build())
+                        .build())
+                .statements(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                        JCUtils.select("object", mPkField),
+                        JCUtils.invoke(JCUtils.select("client", "insertRowId"), JCUtils.ident("_TABLE_")).expr
+                )))
+                .statements(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                        JCUtils.select("object", "mClientRef"),
+                        new JCNewSpec(WeakReference.class)
+                                .genericTypes(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                                .args(JCUtils.ident("client"))
+                                .build()
+                )))
+                .statements(JCUtils.invoke(
+                        JCUtils.select(JCUtils.invoke(
+                                JCUtils.select("droidkit.sqlite", "SQLiteCache", "of"),
+                                JCUtils.select(JCUtils.ident(mOriginElement), JCUtils.NAMES._class)
+                        ).expr, "put"),
+                        JCUtils.select("object", mPkField),
+                        JCUtils.ident("object")
+                ))
+                .statements(JCUtils.MAKER.Return(JCUtils.ident("object")))
+                .build();
+    }
+
+    private JCTree.JCMethodDecl makeCreate2() {
+        return new JCMethodSpec("create")
+                .modifiers(Flags.PUBLIC | Flags.STATIC)
+                .returnType(JCUtils.ident(mOriginElement))
+                .params(new JCVarSpec("client")
+                        .varType(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                        .modifiers(Flags.PARAMETER)
+                        .build())
+                .params(new JCVarSpec("cursor")
+                        .varType(JCUtils.select("android.database", "Cursor"))
+                        .modifiers(Flags.PARAMETER)
+                        .build())
+                .statements(new JCVarSpec("object")
+                        .modifiers(Flags.FINAL)
+                        .varType(JCUtils.ident(mOriginElement))
+                        .init(new JCNewSpec(mOriginElement).build())
+                        .build())
+                .statements(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                        JCUtils.select("object", "mClientRef"),
+                        new JCNewSpec(WeakReference.class)
+                                .genericTypes(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                                .args(JCUtils.ident("client"))
+                                .build()
+                )))
+                .statements(mCreateStats.toList())
+                .statements(JCUtils.invoke(
+                        JCUtils.select(JCUtils.invoke(
+                                JCUtils.select("droidkit.sqlite", "SQLiteCache", "of"),
+                                JCUtils.select(JCUtils.ident(mOriginElement), JCUtils.NAMES._class)
+                        ).expr, "put"),
+                        JCUtils.select("object", mPkField),
+                        JCUtils.ident("object")
+                ))
+                .statements(JCUtils.MAKER.Return(JCUtils.ident("object")))
+                .build();
+    }
+
+    private JCTree.JCMethodDecl makeSaveToSQLite() {
+        final JCMethodSpec method = new JCMethodSpec("saveToSQLite")
+                .modifiers(Flags.PUBLIC | Flags.STATIC)
+                .params(new JCVarSpec("client")
+                        .varType(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                        .modifiers(Flags.PARAMETER)
+                        .build())
+                .params(new JCVarSpec("object")
+                        .varType(JCUtils.ident(mOriginElement))
+                        .modifiers(Flags.PARAMETER)
+                        .build());
+        method.statements(new JCVarSpec("values")
+                .modifiers(Flags.FINAL)
+                .varType(JCUtils.select("android.content", "ContentValues"))
+                .init(new JCNewSpec(JCUtils.select("android.content", "ContentValues")).build())
+                .build());
+        method.statements(new JCIfSpec(
+                JCUtils.MAKER.Binary(JCTree.Tag.GT,
+                        JCUtils.select("object", mPkField),
+                        JCUtils.MAKER.Literal(TypeTag.INT, 0)))
+                .thenBlock(JCUtils.invoke(
+                        JCUtils.select("droidkit.database", "DatabaseUtils", "putValue"),
+                        JCUtils.ident("values"),
+                        JCUtils.MAKER.Literal(TypeTag.CLASS, "_id"),
+                        JCUtils.select("object", mPkField)
+                ))
+                .build());
+        for (final Map.Entry<String, String> field : mFields.entrySet()) {
+            method.statements(JCUtils.invoke(
+                    JCUtils.select("droidkit.database", "DatabaseUtils", "putValue"),
+                    JCUtils.ident("values"),
+                    JCUtils.MAKER.Literal(TypeTag.CLASS, field.getKey()),
+                    JCUtils.select("object", field.getValue())
+            ));
+        }
+        method.statements(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                JCUtils.select("object", mPkField),
+                JCUtils.invoke(JCUtils.select("client", "insert"),
+                        JCUtils.ident("_TABLE_"),
+                        JCUtils.ident("values")
+                ).expr
+        )));
+        method.statements(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
+                JCUtils.select("object", "mClientRef"),
+                new JCNewSpec(WeakReference.class)
+                        .genericTypes(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                        .args(JCUtils.ident("client"))
+                        .build()
+        )));
+        method.statements(JCUtils.invoke(
+                JCUtils.select(JCUtils.invoke(
+                        JCUtils.select("droidkit.sqlite", "SQLiteCache", "of"),
+                        JCUtils.select(JCUtils.ident(mOriginElement), JCUtils.NAMES._class)
+                ).expr, "put"),
+                JCUtils.select("object", mPkField),
+                JCUtils.ident("object")
+        ));
+        return method.build();
     }
 
     private JCTree.JCMethodDecl makeUpdateIfActiveObject() {
@@ -225,14 +403,5 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
                         .build())
                 .build();
     }
-
-    /*private void updateIfActiveObject(String column, Object value) {
-        if (mClientRef != null) {
-            final SQLiteClient client = mClientRef.get();
-            if (client != null) {
-                client.executeUpdateDelete("UPDATE " + _TABLE_ + " SET " + column + " = ? WHERE _id = ?;", value, mId);
-            }
-        }
-    }*/
 
 }

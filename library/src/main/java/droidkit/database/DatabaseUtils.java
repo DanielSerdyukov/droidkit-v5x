@@ -77,10 +77,6 @@ public final class DatabaseUtils {
             values.putNull(key);
         } else if (value instanceof String) {
             values.put(key, (String) value);
-        } else if (value instanceof Byte) {
-            values.put(key, (Byte) value);
-        } else if (value instanceof Short) {
-            values.put(key, (Short) value);
         } else if (value instanceof Integer) {
             values.put(key, (Integer) value);
         } else if (value instanceof Long) {
@@ -95,6 +91,8 @@ public final class DatabaseUtils {
             } else {
                 values.put(key, 0);
             }
+        } else if (value instanceof Enum) {
+            values.put(key, ((Enum<?>) value).name());
         } else if (value instanceof byte[]) {
             values.put(key, (byte[]) value);
         } else {

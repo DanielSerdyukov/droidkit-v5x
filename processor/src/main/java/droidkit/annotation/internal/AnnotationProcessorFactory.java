@@ -8,6 +8,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +16,8 @@ import java.util.Map;
  * @author Daniel Serdyukov
  */
 class AnnotationProcessorFactory {
+
+    private final SQLiteGenMaker mSQLiteGenMaker = new SQLiteGenMaker();
 
     private final Map<Element, AnnotationProcessor> mProcessors = new HashMap<>();
 
@@ -45,13 +48,19 @@ class AnnotationProcessorFactory {
         for (final AnnotationProcessor processor : mProcessors.values()) {
             finished |= processor.finishProcessing();
         }
+        try {
+            mSQLiteGenMaker.makeJavaFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+            finished = false;
+        }
         return finished;
     }
 
     private AnnotationProcessor newProcessor(TypeElement annotation, Element element) {
         if (SQLiteObject.class.getName().equals(annotation.getQualifiedName().toString())) {
             checkInNestedClass(annotation, element);
-            return new SQLiteObjectProcessor((TypeElement) element);
+            return new SQLiteObjectProcessor(mSQLiteGenMaker, (TypeElement) element);
         }
         throw new IllegalArgumentException("Unsupported annotation type " + annotation);
     }

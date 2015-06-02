@@ -46,6 +46,10 @@ class JCUtils {
         return string;
     }
 
+    static JCTree.JCExpression ident(Element element) {
+        return ident(element.getSimpleName());
+    }
+
     static JCTree.JCExpression ident(Name ident) {
         return MAKER.Ident(NAMES.fromString(ident.toString()));
     }
@@ -56,6 +60,20 @@ class JCUtils {
 
     static JCTree.JCExpression ident(String ident) {
         return MAKER.Ident(NAMES.fromString(ident));
+    }
+
+    static JCTree.JCExpression select(JCTree.JCExpression expression, String... selectors) {
+        for (final String selector : selectors) {
+            expression = MAKER.Select(expression, NAMES.fromString(selector));
+        }
+        return expression;
+    }
+
+    static JCTree.JCExpression select(JCTree.JCExpression expression, com.sun.tools.javac.util.Name... selectors) {
+        for (final com.sun.tools.javac.util.Name selector : selectors) {
+            expression = MAKER.Select(expression, selector);
+        }
+        return expression;
     }
 
     static JCTree.JCExpression select(String... selectors) {
@@ -74,22 +92,19 @@ class JCUtils {
         return MAKER.Binary(JCTree.Tag.NE, lhs, JCUtils.MAKER.Literal(TypeTag.BOT, "null"));
     }
 
-    static JCTree.JCExpression enumValueOf(Element enumElement, JCTree.JCExpression value) {
+    static JCTree.JCExpression enumClass(Element element) {
         java.util.List<Element> elements = new ArrayList<>();
-        Element enclosingElement = enumElement.getEnclosingElement();
+        Element enclosingElement = element.getEnclosingElement();
         while (ElementKind.PACKAGE != enclosingElement.getKind()) {
             elements.add(enclosingElement);
             enclosingElement = enclosingElement.getEnclosingElement();
         }
         JCTree.JCExpression expression = MAKER.Ident(NAMES.fromString(enclosingElement.toString()));
-        for (final Element element : elements) {
-            expression = MAKER.Select(expression, NAMES.fromString(element.getSimpleName().toString()));
+        for (final Element e : elements) {
+            expression = MAKER.Select(expression, NAMES.fromString(e.getSimpleName().toString()));
         }
-        expression = MAKER.Select(expression, NAMES.fromString(enumElement.getSimpleName().toString()));
-        return JCUtils.MAKER.Exec(JCUtils.MAKER.Apply(
-                List.<JCTree.JCExpression>nil(),
-                MAKER.Select(expression, NAMES.fromString("valueOf")),
-                List.of(value))).getExpression();
+        expression = MAKER.Select(expression, NAMES.fromString(element.getSimpleName().toString()));
+        return MAKER.Select(expression, NAMES._class);
     }
 
     static JCTree getTree(Element element) {
@@ -106,6 +121,10 @@ class JCUtils {
 
     static JCTree.JCExpressionStatement invoke(JCTree.JCExpression method, JCTree.JCExpression... args) {
         return MAKER.Exec(MAKER.Apply(List.<JCTree.JCExpression>nil(), method, List.from(args)));
+    }
+
+    static void error(CharSequence msg) {
+        ENV.getMessager().printMessage(Diagnostic.Kind.ERROR, msg);
     }
 
     static void error(CharSequence msg, Element e) {

@@ -4,7 +4,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.ListBuffer;
 
-import javax.lang.model.element.Name;
+import javax.lang.model.element.Element;
 
 /**
  * @author Daniel Serdyukov
@@ -17,11 +17,11 @@ class JCNewSpec {
 
     private ListBuffer<JCTree.JCExpression> mArguments = new ListBuffer<>();
 
-    JCNewSpec(JCTree.JCExpression name) {
-        mType = name;
+    JCNewSpec(JCTree.JCExpression type) {
+        mType = type;
     }
 
-    JCNewSpec(Name name) {
+    JCNewSpec(Element name) {
         mType = JCUtils.ident(name);
     }
 
