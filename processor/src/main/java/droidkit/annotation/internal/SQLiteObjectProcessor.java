@@ -1,11 +1,12 @@
 package droidkit.annotation.internal;
 
 import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.ListBuffer;
 import droidkit.annotation.SQLiteColumn;
+import droidkit.annotation.SQLiteObject;
 import droidkit.annotation.SQLitePk;
 
 import javax.lang.model.element.Element;
@@ -14,14 +15,12 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
-import java.lang.ref.WeakReference;
 import java.util.*;
 
 /**
  * @author Daniel Serdyukov
  */
-class SQLiteObjectProcessor extends TreeTranslator implements AnnotationProcessor {
+public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationProcessor {
 
     private static final Map<TypeKind, String> JAVA_TO_SQLITE_TYPE = new HashMap<>();
 
@@ -49,17 +48,27 @@ class SQLiteObjectProcessor extends TreeTranslator implements AnnotationProcesso
         CURSOR_TO_JAVA_TYPE.put(TypeKind.BOOLEAN, "getBoolean");
     }
 
+    private final Map<String, String> mFields = new HashMap<>();
+
+    private final Map<String, String> mSetters = new HashMap<>();
+
     private final List<String> mColumnsDef = new ArrayList<>();
 
-    private final ListBuffer<JCTree.JCStatement> mInstantiateBlock = new ListBuffer<>();
-
-    private final JavacProcessingEnvironment mEnv;
+    private final List<String> mEnumColumns = new ArrayList<>();
 
     private final TypeElement mOriginElement;
 
-    SQLiteObjectProcessor(TypeElement element, JavacProcessingEnvironment env) {
-        mEnv = env;
+    private final String mTableName;
+
+    private final String mFieldPrefix;
+
+    private String mPkField;
+
+    SQLiteObjectProcessor(TypeElement element) {
         mOriginElement = element;
+        final SQLiteObject annotation = element.getAnnotation(SQLiteObject.class);
+        mTableName = annotation.value();
+        mFieldPrefix = annotation.fieldPrefix();
     }
 
     @Override
@@ -69,7 +78,7 @@ class SQLiteObjectProcessor extends TreeTranslator implements AnnotationProcesso
             if (ElementKind.FIELD == element.getKind()) {
                 final SQLitePk pk = element.getAnnotation(SQLitePk.class);
                 if (pk != null) {
-                    processPk((VariableElement) element, pk);
+                    mPkField = processPrimaryKey((VariableElement) element, pk);
                     continue;
                 }
                 final SQLiteColumn column = element.getAnnotation(SQLiteColumn.class);
@@ -78,122 +87,152 @@ class SQLiteObjectProcessor extends TreeTranslator implements AnnotationProcesso
                 }
             }
         }
-        JCUtils.getTree(mOriginElement).accept(this);
+        if (JCUtils.isEmpty(mPkField)) {
+            JCUtils.error("No such field annotated with @SQLitePk", mOriginElement);
+        } else {
+            JCUtils.getTree(mOriginElement).accept(this);
+            System.out.println(JCUtils.getTree(mOriginElement));
+        }
     }
 
     @Override
     public boolean finishProcessing() {
-        for (final String columnDef : mColumnsDef) {
-            System.out.println(columnDef);
-        }
         return false;
     }
 
     @Override
     public void visitClassDef(JCTree.JCClassDecl jcClassDecl) {
         super.visitClassDef(jcClassDecl);
-        if (jcClassDecl.getSimpleName().equals(mOriginElement.getSimpleName())) {
+        if (Objects.equals(jcClassDecl.getSimpleName(), mOriginElement.getSimpleName())) {
             final ListBuffer<JCTree> buffer = new ListBuffer<>();
             buffer.addAll(jcClassDecl.defs);
-            buffer.add(makeSQLiteClientRef());
-            buffer.add(makeStaticOfMethod());
+            buffer.add(makeUpdateIfActiveObject());
+            //buffer.add(makeCreate1Method());
+            //buffer.add(makeCreate2Method());
+            //buffer.add(makeSaveToSQLiteMethod());
             jcClassDecl.defs = buffer.toList();
             this.result = jcClassDecl;
-            System.out.println(jcClassDecl);
         }
     }
 
-    private void processPk(VariableElement element, SQLitePk pk) {
-        if (TypeKind.LONG != element.asType().getKind()) {
-            mEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "@SQLitePk must be long", element);
+    @Override
+    public void visitMethodDef(JCTree.JCMethodDecl jcMethodDecl) {
+        super.visitMethodDef(jcMethodDecl);
+        final String columnName = mSetters.get(jcMethodDecl.name.toString());
+        if (!JCUtils.isEmpty(columnName)) {
+            JCTree.JCExpression value = JCUtils.ident(mFields.get(columnName));
+            if (mEnumColumns.contains(columnName)) {
+                value = JCUtils.invoke(JCUtils.MAKER.Select(value, JCUtils.NAMES.fromString("name"))).getExpression();
+            }
+            jcMethodDecl.body = JCUtils.block(JCUtils.MAKER.Try(jcMethodDecl.body,
+                    JCUtils.<JCTree.JCCatch>nilList(),
+                    JCUtils.block(new JCIfSpec(JCUtils.notNull(JCUtils.ident("mClientRef")))
+                            .thenBlock(JCUtils.invoke(
+                                    JCUtils.ident("updateIfActiveObject"),
+                                    JCUtils.MAKER.Literal(TypeTag.CLASS, columnName),
+                                    value
+                            ))
+                            .build())));
+            this.result = jcMethodDecl;
         }
+    }
+
+    private String processPrimaryKey(VariableElement field, SQLitePk pk) {
+        if (TypeKind.LONG != field.asType().getKind()) {
+            JCUtils.error("@SQLitePk must be long", field);
+        }
+        final String fieldName = field.getSimpleName().toString();
+        mFields.put("_id", fieldName);
         mColumnsDef.add("_id INTEGER PRIMARY KEY" + CONFLICT_VALUES[pk.value()]);
-        mInstantiateBlock.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
-                JCUtils.select("instance", element.getSimpleName().toString()),
-                JCCursor.getValue("cursor", "getLong", "_id")
-        )));
+        processGetterSetter(fieldName, "_id", pk.setter());
+        return fieldName;
     }
 
-    private void processColumn(VariableElement element, SQLiteColumn column) {
-        final TypeMirror type = element.asType();
+    private void processColumn(VariableElement field, SQLiteColumn column) {
+        final TypeMirror type = field.asType();
         final TypeKind typeKind = type.getKind();
-        String sqliteType = JAVA_TO_SQLITE_TYPE.get(typeKind);
-        final String columnName = JCUtils.nonEmpty(column.value(), element.getSimpleName());
+        final String sqliteType = JAVA_TO_SQLITE_TYPE.get(typeKind);
+        final String fieldName = field.getSimpleName().toString();
+        final String columnName = JCUtils.nonEmpty(column.value(), fieldName);
         if (!JCUtils.isEmpty(sqliteType)) {
+            mFields.put(columnName, fieldName);
             mColumnsDef.add(columnName + " " + sqliteType);
-            mInstantiateBlock.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
-                    JCUtils.select("instance", element.getSimpleName().toString()),
-                    JCCursor.getValue("cursor", CURSOR_TO_JAVA_TYPE.get(typeKind), columnName)
-            )));
+            processGetterSetter(fieldName, columnName, column.setter());
             return;
         }
         if (Objects.equals(String.class.getName(), type.toString())) {
+            mFields.put(columnName, fieldName);
             mColumnsDef.add(columnName + " TEXT");
-            mInstantiateBlock.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
-                    JCUtils.select("instance", element.getSimpleName().toString()),
-                    JCCursor.getValue("cursor", "getString", columnName)
-            )));
+            processGetterSetter(fieldName, columnName, column.setter());
             return;
         }
         if (Objects.equals("byte[]", type.toString())) {
+            mFields.put(columnName, fieldName);
             mColumnsDef.add(columnName + " BLOB");
-            mInstantiateBlock.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
-                    JCUtils.select("instance", element.getSimpleName().toString()),
-                    JCCursor.getValue("cursor", "getBlob", columnName)
-            )));
+            processGetterSetter(fieldName, columnName, column.setter());
             return;
         }
         if (TypeKind.DECLARED == typeKind) {
-            final Element typeElement = mEnv.getTypeUtils().asElement(element.asType());
+            final Element typeElement = JCUtils.ENV.getTypeUtils().asElement(field.asType());
             if (ElementKind.ENUM == typeElement.getKind()) {
+                mFields.put(columnName, fieldName);
                 mColumnsDef.add(columnName + " TEXT");
-                mInstantiateBlock.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
-                        JCUtils.select("instance", element.getSimpleName().toString()),
-                        JCUtils.enumValueOf(typeElement, JCCursor.getValue("cursor", "getString", columnName))
-                )));
+                mEnumColumns.add(columnName);
+                processGetterSetter(fieldName, columnName, column.setter());
                 return;
             }
         }
-        mEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Unsupported column type " + type, element);
+        JCUtils.error("Unsupported column type " + type, field);
     }
 
-    private JCTree.JCVariableDecl makeSQLiteClientRef() {
-        return new JCVarSpec("mClientRef")
+    private void processGetterSetter(String fieldName, String columnName, String setter) {
+        final String normalizedName = JCUtils.normalize(mFieldPrefix, fieldName);
+        if (JCUtils.isEmpty(setter)) {
+            setter = "set" + normalizedName;
+        }
+        mSetters.put(setter, columnName);
+    }
+
+    private JCTree.JCMethodDecl makeUpdateIfActiveObject() {
+        return new JCMethodSpec("updateIfActiveObject")
                 .modifiers(Flags.PRIVATE)
-                .varType(JCUtils.ident(WeakReference.class))
-                .genericTypes(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                .params(new JCVarSpec("column")
+                        .varType(JCUtils.ident(String.class))
+                        .modifiers(Flags.PARAMETER)
+                        .build())
+                .params(new JCVarSpec("value")
+                        .varType(JCUtils.ident(Object.class))
+                        .modifiers(Flags.PARAMETER)
+                        .build())
+                .statements(new JCIfSpec(JCUtils.notNull(JCUtils.ident("mClientRef")))
+                        .thenBlock(
+                                new JCVarSpec("client")
+                                        .varType(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
+                                        .modifiers(Flags.FINAL)
+                                        .init(JCUtils.invoke(JCUtils.select("mClientRef", "get")).expr)
+                                        .build(),
+                                new JCIfSpec(JCUtils.notNull(JCUtils.ident("client")))
+                                        .thenBlock(JCUtils.invoke(
+                                                JCUtils.select("droidkit.sqlite", "SQLiteClientUtils", "updateColumn"),
+                                                JCUtils.ident("client"),
+                                                JCUtils.ident("_TABLE_"),
+                                                JCUtils.ident(mPkField),
+                                                JCUtils.ident("column"),
+                                                JCUtils.ident("value")
+                                        ))
+                                        .build()
+                        )
+                        .build())
                 .build();
     }
 
-    private JCTree.JCMethodDecl makeStaticOfMethod() {
-        return new JCMethodSpec("instantiate")
-                .modifiers(Flags.PUBLIC | Flags.STATIC)
-                .returnType(JCUtils.ident(mOriginElement.getSimpleName()))
-                .params(new JCVarSpec("client")
-                        .modifiers(Flags.PARAMETER)
-                        .varType(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
-                        .build())
-                .params(new JCVarSpec("cursor")
-                        .modifiers(Flags.PARAMETER)
-                        .varType(JCUtils.select("android.database", "Cursor"))
-                        .build())
-                .statements(new JCVarSpec("instance")
-                        .modifiers(Flags.FINAL)
-                        .varType(JCUtils.ident(mOriginElement.getSimpleName()))
-                        .init(new JCNewSpec(mOriginElement.getSimpleName()).build())
-                        .build())
-                .statements(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
-                        JCUtils.select("instance", "mClientRef"),
-                        new JCNewSpec(WeakReference.class)
-                                .genericTypes(JCUtils.select("droidkit.sqlite", "SQLiteClient"))
-                                .args(JCUtils.ident("client"))
-                                .build()
-                )))
-                .statements(new JCIfSpec(JCUtils.notNull(JCUtils.ident("cursor")))
-                        .thenBlock(mInstantiateBlock)
-                        .build())
-                .statements(JCUtils.MAKER.Return(JCUtils.ident("instance")))
-                .build();
-    }
+    /*private void updateIfActiveObject(String column, Object value) {
+        if (mClientRef != null) {
+            final SQLiteClient client = mClientRef.get();
+            if (client != null) {
+                client.executeUpdateDelete("UPDATE " + _TABLE_ + " SET " + column + " = ? WHERE _id = ?;", value, mId);
+            }
+        }
+    }*/
 
 }

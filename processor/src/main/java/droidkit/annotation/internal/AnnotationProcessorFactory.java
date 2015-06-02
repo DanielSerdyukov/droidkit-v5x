@@ -51,7 +51,7 @@ class AnnotationProcessorFactory {
     private AnnotationProcessor newProcessor(TypeElement annotation, Element element) {
         if (SQLiteObject.class.getName().equals(annotation.getQualifiedName().toString())) {
             checkInNestedClass(annotation, element);
-            return new SQLiteObjectProcessor((TypeElement) element, mEnv);
+            return new SQLiteObjectProcessor((TypeElement) element);
         }
         throw new IllegalArgumentException("Unsupported annotation type " + annotation);
     }

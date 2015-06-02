@@ -20,7 +20,7 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import droidkit.database.CursorUtils;
+import droidkit.database.DatabaseUtils;
 import droidkit.io.IOUtils;
 
 /**
@@ -71,7 +71,7 @@ public class SQLiteProviderTest {
         try {
             Assert.assertTrue(cursor.moveToFirst());
             Assert.assertEquals(1, cursor.getCount());
-            Assert.assertEquals(SQLiteQueryTest.USERS[3].getName(), CursorUtils.getString(cursor, "name"));
+            Assert.assertEquals(SQLiteQueryTest.USERS[3].getName(), DatabaseUtils.getString(cursor, "name"));
         } finally {
             IOUtils.closeQuietly(cursor);
         }
@@ -99,7 +99,7 @@ public class SQLiteProviderTest {
         final Cursor cursor = mResolver.query(ALL_USERS, null, "name = ?", new String[]{"Mia"}, null);
         try {
             Assert.assertTrue(cursor.moveToFirst());
-            Assert.assertEquals(25, CursorUtils.getInt(cursor, "age"));
+            Assert.assertEquals(25, DatabaseUtils.getInt(cursor, "age"));
         } finally {
             IOUtils.closeQuietly(cursor);
         }

@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Daniel Serdyukov
@@ -55,6 +56,19 @@ public final class DynamicMethod {
     public static <T> T invokeStatic(@NonNull Method method, Object... args)
             throws DynamicException {
         return invoke(null, method, args);
+    }
+
+    public static Method find(@NonNull ConcurrentMap<Class<?>, Method> cache, @NonNull Class<?> type,
+                              @NonNull String methodName, Class<?>... argTypes) throws DynamicException {
+        Method method = cache.get(type);
+        if (method == null) {
+            final Method create = DynamicMethod.find(type, methodName, argTypes);
+            method = cache.putIfAbsent(type, create);
+            if (method == null) {
+                method = create;
+            }
+        }
+        return method;
     }
 
     @NonNull

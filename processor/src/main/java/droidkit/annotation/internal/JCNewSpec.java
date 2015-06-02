@@ -17,6 +17,10 @@ class JCNewSpec {
 
     private ListBuffer<JCTree.JCExpression> mArguments = new ListBuffer<>();
 
+    JCNewSpec(JCTree.JCExpression name) {
+        mType = name;
+    }
+
     JCNewSpec(Name name) {
         mType = JCUtils.ident(name);
     }

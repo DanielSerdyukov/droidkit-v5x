@@ -4,11 +4,14 @@ import android.database.Cursor;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
+import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ConcurrentModificationException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import droidkit.database.CursorUtils;
+import droidkit.database.DatabaseUtils;
 import droidkit.io.IOUtils;
 import droidkit.util.DynamicException;
 import droidkit.util.DynamicMethod;
@@ -19,6 +22,8 @@ import droidkit.util.DynamicMethod;
 class SQLiteResult<T> extends AbstractList<T> {
 
     public static final String WHERE_ID = " WHERE _id = ?";
+
+    private static final ConcurrentMap<Class<?>, Method> CREATE_METHODS = new ConcurrentHashMap<>();
 
     private final SQLiteQuery<T> mQuery;
 
@@ -37,7 +42,7 @@ class SQLiteResult<T> extends AbstractList<T> {
     public T get(int location) {
         final Cursor cursor = mCursorRef.get();
         if (cursor != null && !cursor.isClosed() && cursor.moveToPosition(location)) {
-            final long rowId = CursorUtils.getLong(cursor, BaseColumns._ID);
+            final long rowId = DatabaseUtils.getLong(cursor, BaseColumns._ID);
             final SQLiteCache<T> cache = SQLiteCache.of(mQuery.getType());
             T entry = cache.get(rowId);
             if (entry == null) {
@@ -58,7 +63,7 @@ class SQLiteResult<T> extends AbstractList<T> {
     public T remove(int location) {
         final Cursor oldCursor = mCursorRef.get();
         if (oldCursor.moveToPosition(location)) {
-            final long rowId = CursorUtils.getLong(oldCursor, BaseColumns._ID);
+            final long rowId = DatabaseUtils.getLong(oldCursor, BaseColumns._ID);
             mQuery.getClient().executeUpdateDelete("DELETE FROM " + mQuery.getTableName() + WHERE_ID, rowId);
             IOUtils.closeQuietly(oldCursor);
             final Cursor cursor = mQuery.cursor();
@@ -77,8 +82,10 @@ class SQLiteResult<T> extends AbstractList<T> {
     @NonNull
     T instantiate(@NonNull SQLiteQuery<T> query, @NonNull Cursor cursor) {
         try {
+            final Method method = DynamicMethod.find(CREATE_METHODS, query.getType(), "create",
+                    SQLiteClient.class, Cursor.class);
             //noinspection ConstantConditions
-            return DynamicMethod.invokeStatic(query.getType(), "instantiate", query.getClient(), cursor);
+            return DynamicMethod.invokeStatic(method, query.getClient(), cursor);
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);
         }

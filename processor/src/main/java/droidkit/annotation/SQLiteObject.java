@@ -14,4 +14,6 @@ public @interface SQLiteObject {
 
     String value();
 
+    String fieldPrefix() default "m";
+
 }

@@ -4,14 +4,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import droidkit.util.Iterables;
 
 /**
  * @author Daniel Serdyukov
@@ -223,9 +222,18 @@ public class SQLiteQuery<T> {
     //endregion
 
     //region result
-    @NonNull
+    @Nullable
+    public T withId(long id) {
+        return equalTo(BaseColumns._ID, id).one();
+    }
+
+    @Nullable
     public T one() {
-        return Iterables.getFirst(limit(1).list());
+        final List<T> list = limit(1).list();
+        if (list.isEmpty()) {
+            return null;
+        }
+        return list.get(0);
     }
 
     @NonNull

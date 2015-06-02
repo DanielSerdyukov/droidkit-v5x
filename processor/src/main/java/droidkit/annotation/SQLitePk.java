@@ -14,4 +14,6 @@ public @interface SQLitePk {
 
     int value() default 5; // SQLiteDatabase.CONFLICT_REPLACE
 
+    String setter() default "";
+
 }

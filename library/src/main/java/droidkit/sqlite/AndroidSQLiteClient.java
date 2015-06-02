@@ -105,6 +105,17 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
         return getWritableDatabase().update(table, values, where, bindArgs);
     }
 
+    @Override
+    public long insertRowId(@NonNull String table) {
+        final SQLiteStatement stmt = getWritableDatabase()
+                .compileStatement("INSERT INTO " + table + "(_id) VALUES(null);");
+        try {
+            return stmt.executeInsert();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
+    }
+
     //region SQLiteOpenHelper implementation
     @Override
     public void onConfigure(@NonNull SQLiteDatabase db) {

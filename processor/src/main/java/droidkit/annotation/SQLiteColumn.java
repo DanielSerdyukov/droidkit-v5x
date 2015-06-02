@@ -14,4 +14,6 @@ public @interface SQLiteColumn {
 
     String value() default "";
 
+    String setter() default "";
+
 }

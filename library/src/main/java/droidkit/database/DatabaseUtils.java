@@ -1,17 +1,19 @@
 package droidkit.database;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
-import droidkit.util.Dynamic;
 import droidkit.util.Objects;
 
 /**
  * @author Daniel Serdyukov
  */
-public final class CursorUtils {
+public final class DatabaseUtils {
 
-    private CursorUtils() {
+    private DatabaseUtils() {
     }
 
     @NonNull
@@ -60,25 +62,43 @@ public final class CursorUtils {
         }
     }
 
-    @NonNull
-    public static Object getTypedValue(@NonNull Cursor cursor, @NonNull String columnName, @NonNull Class<?> type) {
-        final Class<?> unboxedType = Dynamic.unbox(type);
-        if (unboxedType == Integer.class) {
-            return getInt(cursor, columnName);
-        } else if (unboxedType == Long.class) {
-            return getLong(cursor, columnName);
-        } else if (unboxedType == Double.class) {
-            return getDouble(cursor, columnName);
-        } else if (unboxedType == Float.class) {
-            return getFloat(cursor, columnName);
-        } else if (unboxedType == Short.class) {
-            return getShort(cursor, columnName);
-        } else if (unboxedType == byte[].class) {
-            return getBlob(cursor, columnName);
-        } else if (unboxedType == Boolean.class) {
-            return getBoolean(cursor, columnName);
+    @Nullable
+    public static <T extends Enum<T>> T getEnum(@NonNull Cursor cursor, @NonNull String columnName,
+                                                @NonNull Class<T> enumType) {
+        final String value = getString(cursor, columnName);
+        if (!TextUtils.isEmpty(value)) {
+            return Enum.valueOf(enumType, value);
+        }
+        return null;
+    }
+
+    public static void putValue(@NonNull ContentValues values, @NonNull String key, @Nullable Object value) {
+        if (value == null) {
+            values.putNull(key);
+        } else if (value instanceof String) {
+            values.put(key, (String) value);
+        } else if (value instanceof Byte) {
+            values.put(key, (Byte) value);
+        } else if (value instanceof Short) {
+            values.put(key, (Short) value);
+        } else if (value instanceof Integer) {
+            values.put(key, (Integer) value);
+        } else if (value instanceof Long) {
+            values.put(key, (Long) value);
+        } else if (value instanceof Float) {
+            values.put(key, (Float) value);
+        } else if (value instanceof Double) {
+            values.put(key, (Double) value);
+        } else if (value instanceof Boolean) {
+            if (((Boolean) value)) {
+                values.put(key, 1);
+            } else {
+                values.put(key, 0);
+            }
+        } else if (value instanceof byte[]) {
+            values.put(key, (byte[]) value);
         } else {
-            return getString(cursor, columnName);
+            throw new IllegalArgumentException("bad value type: " + value.getClass().getName());
         }
     }
 

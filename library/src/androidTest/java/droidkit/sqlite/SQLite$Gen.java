@@ -3,7 +3,7 @@ package droidkit.sqlite;
 /**
  * @author Daniel Serdyukov
  */
-public class SQLite$Gen {
+class SQLite$Gen {
 
     static {
         SQLite.CREATE.add("CREATE TABLE IF NOT EXISTS users(" +

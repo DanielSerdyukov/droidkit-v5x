@@ -337,6 +337,14 @@ public class SQLiteQueryTest {
         Assert.assertEquals(2, mSQLite.where(SQLiteUser.class).isFalse("enabled").count("_id").intValue());
     }
 
+    @Test
+    public void testSetter() throws Exception {
+        final SQLiteUser user = mSQLite.where(SQLiteUser.class).equalTo("name", "Mia").one();
+        user.setName("Maya");
+        Assert.assertEquals("Maya", user.getName());
+        Assert.assertEquals("Maya", mSQLite.simpleQueryForString("SELECT name FROM users WHERE _id = ?", user.mId));
+    }
+
     @After
     public void tearDown() throws Exception {
         mSQLite.execSQL("DELETE FROM users;");

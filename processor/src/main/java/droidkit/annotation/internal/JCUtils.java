@@ -12,12 +12,15 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
+import javax.tools.Diagnostic;
 import java.util.ArrayList;
 
 /**
  * @author Daniel Serdyukov
  */
 class JCUtils {
+
+    static JavacProcessingEnvironment ENV;
 
     static Trees TREES;
 
@@ -26,10 +29,10 @@ class JCUtils {
     static Names NAMES;
 
     static void init(ProcessingEnvironment env) {
-        final JavacProcessingEnvironment jenv = (JavacProcessingEnvironment) env;
-        TREES = Trees.instance(jenv);
-        MAKER = TreeMaker.instance(jenv.getContext());
-        NAMES = Names.instance(jenv.getContext());
+        ENV = (JavacProcessingEnvironment) env;
+        TREES = Trees.instance(ENV);
+        MAKER = TreeMaker.instance(ENV.getContext());
+        NAMES = Names.instance(ENV.getContext());
     }
 
     static boolean isEmpty(String string) {
@@ -91,6 +94,27 @@ class JCUtils {
 
     static JCTree getTree(Element element) {
         return (JCTree) TREES.getTree(element);
+    }
+
+    static <T extends JCTree> List<T> nilList() {
+        return List.nil();
+    }
+
+    static JCTree.JCBlock block(JCTree.JCStatement... statements) {
+        return MAKER.Block(0, List.from(statements));
+    }
+
+    static JCTree.JCExpressionStatement invoke(JCTree.JCExpression method, JCTree.JCExpression... args) {
+        return MAKER.Exec(MAKER.Apply(List.<JCTree.JCExpression>nil(), method, List.from(args)));
+    }
+
+    static void error(CharSequence msg, Element e) {
+        ENV.getMessager().printMessage(Diagnostic.Kind.ERROR, msg, e);
+    }
+
+    static String normalize(String prefix, String field) {
+        final String name = field.substring(prefix.length());
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
 }

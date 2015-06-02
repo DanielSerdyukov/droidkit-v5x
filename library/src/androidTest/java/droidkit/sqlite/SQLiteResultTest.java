@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import droidkit.database.CursorUtils;
+import droidkit.database.DatabaseUtils;
 import droidkit.io.IOUtils;
 
 /**
@@ -57,7 +57,7 @@ public class SQLiteResultTest {
         try {
             if (cursor.moveToFirst()) {
                 do {
-                    Assert.assertFalse("Ethan".equals(CursorUtils.getString(cursor, "name")));
+                    Assert.assertFalse("Ethan".equals(DatabaseUtils.getString(cursor, "name")));
                 } while (cursor.moveToNext());
             }
         } finally {

@@ -43,6 +43,11 @@ class JCVarSpec {
         return this;
     }
 
+    JCVarSpec initWithNew() {
+        mInit = new JCNewSpec(mVarType).build();
+        return this;
+    }
+
     JCTree.JCVariableDecl build() {
         if (mGenericTypes != null) {
             return JCUtils.MAKER.VarDef(mModifiers, mName, JCUtils.MAKER.TypeApply(mVarType, mGenericTypes), mInit);

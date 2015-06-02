@@ -35,4 +35,6 @@ public interface SQLiteClient {
     int update(@NonNull String table, @NonNull ContentValues values, @Nullable String where,
                @Nullable String[] bindArgs);
 
+    long insertRowId(@NonNull String table);
+
 }

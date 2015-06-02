@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.sqlite.database.sqlite.SQLiteDatabase;
-import org.sqlite.database.sqlite.SQLiteDoneException;
 import org.sqlite.database.sqlite.SQLiteOpenHelper;
 import org.sqlite.database.sqlite.SQLiteProgram;
 import org.sqlite.database.sqlite.SQLiteStatement;
@@ -126,6 +125,17 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
     public int update(@NonNull String table, @NonNull ContentValues values, @Nullable String where,
                       @Nullable String[] bindArgs) {
         return getWritableDatabase().update(table, values, where, bindArgs);
+    }
+
+    @Override
+    public long insertRowId(@NonNull String table) {
+        final SQLiteStatement stmt = getWritableDatabase()
+                .compileStatement("INSERT INTO " + table + "(_id) VALUES(null);");
+        try {
+            return stmt.executeInsert();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
     }
 
     //region SQLiteOpenHelper implementation

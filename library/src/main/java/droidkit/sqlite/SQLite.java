@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -14,6 +15,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.util.Dynamic;
+import droidkit.util.DynamicException;
+import droidkit.util.DynamicMethod;
 import droidkit.util.Objects;
 
 /**
@@ -31,7 +34,9 @@ public final class SQLite {
 
     private static final ConcurrentMap<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
 
-    private static final long AUTO_ID = -1;
+    private static final ConcurrentMap<Class<?>, Method> CREATE_METHODS = new ConcurrentHashMap<>();
+
+    private static final ConcurrentMap<Class<?>, Method> SAVE_METHODS = new ConcurrentHashMap<>();
 
     private static volatile SQLite sInstance;
 
@@ -113,20 +118,23 @@ public final class SQLite {
 
     @NonNull
     public <T> T create(@NonNull Class<T> type) {
-        return createWithId(type, AUTO_ID);
-    }
-
-    @NonNull
-    public <T> T createWithId(@NonNull Class<T> type, long id) {
-        throw new UnsupportedOperationException();
+        try {
+            final Method method = DynamicMethod.find(CREATE_METHODS, type, "create", SQLiteClient.class);
+            //noinspection ConstantConditions
+            return DynamicMethod.invokeStatic(method, mClient);
+        } catch (DynamicException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     public <T> void save(@NonNull T object) {
-        saveWithId(object, AUTO_ID);
-    }
-
-    public <T> void saveWithId(@NonNull T object, long id) {
-        throw new UnsupportedOperationException();
+        try {
+            final Class<?> type = object.getClass();
+            final Method method = DynamicMethod.find(SAVE_METHODS, type, "saveToSQLite", SQLiteClient.class, type);
+            DynamicMethod.invokeStatic(method, mClient, object);
+        } catch (DynamicException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     @NonNull
