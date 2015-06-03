@@ -85,11 +85,11 @@ public class AnnotationProcessor extends AbstractProcessor {
             processor = mProcessors.get(enclosingElement);
             if (processor == null) {
                 if (JCUtils.isSubtype(enclosingElement, "android.app.Activity")) {
-                    processor = new ActivityProcessor((TypeElement) enclosingElement);
+                    processor = new ActivityProxy((TypeElement) enclosingElement);
                     mProcessors.put(enclosingElement, processor);
                 } else if (JCUtils.isSubtype(enclosingElement, "android.app.Fragment")
                         || JCUtils.isSubtype(enclosingElement, "android.support.v4.app.Fragment")) {
-                    processor = new FragmentProcessor((TypeElement) enclosingElement);
+                    processor = new FragmentProxy((TypeElement) enclosingElement);
                     mProcessors.put(enclosingElement, processor);
                 } else {
                     throw new IllegalArgumentException(annotation + " supported only for Activity and Fragments ");

@@ -19,11 +19,11 @@ import java.io.Writer;
  */
 class ViewInjector implements JavaClassMaker {
 
-    public static final String TARGET = "target";
+    static final ClassName DK_VIEWS = ClassName.get("droidkit.view", "Views");
 
-    public static final String ROOT = "root";
+    private static final String TARGET = "target";
 
-    public static final ClassName DK_VIEWS = ClassName.get("droidkit.view", "Views");
+    private static final String ROOT = "root";
 
     private final CodeBlock.Builder mCodeBlock = CodeBlock.builder();
 

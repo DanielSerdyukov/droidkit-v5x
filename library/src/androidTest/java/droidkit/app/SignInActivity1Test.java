@@ -1,9 +1,13 @@
 package droidkit.app;
 
+import android.support.test.espresso.Espresso;
+import android.support.test.espresso.action.ViewActions;
+import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,14 +19,28 @@ import org.junit.runner.RunWith;
 public class SignInActivity1Test {
 
     @Rule
-    public ActivityTestRule<SignInActivity1> mActivityRule = new ActivityTestRule<>(SignInActivity1.class);
+    public ActivityTestRule<SignInActivity1> mRule = new ActivityTestRule<>(SignInActivity1.class);
+
+    private SignInActivity1 mActivity;
+
+    @Before
+    public void setUp() throws Exception {
+        mActivity = mRule.getActivity();
+    }
 
     @Test
     public void testViewInjected() throws Exception {
-        final SignInActivity1 activity = mActivityRule.getActivity();
-        Assert.assertNotNull(activity.mLogin);
-        Assert.assertNotNull(activity.mPassword);
-        Assert.assertNotNull(activity.getSignIn());
+        Assert.assertNotNull(mActivity.mLogin);
+        Assert.assertNotNull(mActivity.mPassword);
+        Assert.assertNotNull(mActivity.getSignIn());
+    }
+
+    @Test
+    public void testOnClick() throws Exception {
+        Espresso.onView(ViewMatchers
+                .withId(droidkit.test.R.id.sign_in))
+                .perform(ViewActions.click());
+        Assert.assertTrue(mActivity.mSignInClicked);
     }
 
 }

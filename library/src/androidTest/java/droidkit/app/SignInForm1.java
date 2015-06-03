@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import droidkit.annotation.InjectView;
+import droidkit.annotation.OnClick;
 
 /**
  * @author Daniel Serdyukov
@@ -21,6 +22,8 @@ public class SignInForm1 extends Fragment {
 
     @InjectView(droidkit.test.R.id.password)
     EditText mPassword;
+
+    boolean mSignInClicked;
 
     @InjectView(droidkit.test.R.id.sign_in)
     private Button mSignIn;
@@ -38,6 +41,11 @@ public class SignInForm1 extends Fragment {
 
     public Button getSignIn() {
         return mSignIn;
+    }
+
+    @OnClick(droidkit.test.R.id.sign_in)
+    void onSignInClick() {
+        mSignInClicked = true;
     }
 
 }
