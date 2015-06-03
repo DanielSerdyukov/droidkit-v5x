@@ -3,6 +3,7 @@ package droidkit.annotation.internal;
 import com.squareup.javapoet.*;
 import com.sun.tools.javac.tree.JCTree;
 import droidkit.annotation.InjectView;
+import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
 
 import javax.lang.model.element.*;
@@ -25,6 +26,8 @@ class FragmentProxy implements IProcessor, JavaClassMaker {
 
     private final OnClickInjector mOnClickInjector;
 
+    private final OnActionClickInjector mOnActionClickInjector;
+
     private boolean mDone;
 
     public FragmentProxy(TypeElement originElement) {
@@ -33,6 +36,7 @@ class FragmentProxy implements IProcessor, JavaClassMaker {
         final ClassName view = ClassName.get("android.view", "View");
         mViewInjector = new ViewInjector(originElement, view);
         mOnClickInjector = new OnClickInjector(mOriginClass, view);
+        mOnActionClickInjector = new OnActionClickInjector(mOriginClass);
     }
 
     @Override
@@ -43,7 +47,9 @@ class FragmentProxy implements IProcessor, JavaClassMaker {
                 if (ElementKind.FIELD == element.getKind()) {
                     mViewInjector.tryInject((VariableElement) element, element.getAnnotation(InjectView.class));
                 } else if (ElementKind.METHOD == element.getKind()) {
-                    mOnClickInjector.tryInject((ExecutableElement) element, element.getAnnotation(OnClick.class));
+                    final ExecutableElement method = (ExecutableElement) element;
+                    mOnClickInjector.tryInject(method, element.getAnnotation(OnClick.class));
+                    mOnActionClickInjector.tryInject(method, element.getAnnotation(OnActionClick.class));
                 }
             }
         }
@@ -67,11 +73,14 @@ class FragmentProxy implements IProcessor, JavaClassMaker {
         final TypeSpec spec = TypeSpec.classBuilder(mOriginElement.getSimpleName() + "$Proxy")
                 .superclass(TypeName.get(mOriginElement.getSuperclass()))
                 .addFields(mOnClickInjector.fields())
+                .addFields(mOnActionClickInjector.fields())
                 .addMethod(makeOnViewCreated())
                 .addMethod(makeOnResume())
                 .addMethod(makeOnPause())
                 .addMethod(makeOnDestroy())
+                .addMethod(makeOnOptionsItemSelected())
                 .addMethods(mOnClickInjector.setupMethods())
+                .addMethods(mOnActionClickInjector.setupMethods())
                 .build();
         final JavaFile javaFile = JavaFile.builder(mOriginElement.getEnclosingElement().toString(), spec)
                 .addFileComment(AUTO_GENERATED)
@@ -96,6 +105,9 @@ class FragmentProxy implements IProcessor, JavaClassMaker {
         }
         for (final MethodSpec setupMethod : mOnClickInjector.setupMethods()) {
             method.addStatement("$N(($T) this, view)", setupMethod, mOriginClass);
+        }
+        for (final MethodSpec setupMethod : mOnActionClickInjector.setupMethods()) {
+            method.addStatement("$N(($T) this)", setupMethod, mOriginClass);
         }
         return method.build();
     }
@@ -124,6 +136,17 @@ class FragmentProxy implements IProcessor, JavaClassMaker {
                 .addModifiers(Modifier.PUBLIC)
                 .addCode(mOnClickInjector.destroyBlock())
                 .addStatement("super.onDestroy()")
+                .build();
+    }
+
+    private MethodSpec makeOnOptionsItemSelected() {
+        return MethodSpec.methodBuilder("onOptionsItemSelected")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(TypeName.BOOLEAN)
+                .addParameter(ClassName.get("android.view", "MenuItem"), "item")
+                .addCode(mOnActionClickInjector.handleClick("item"))
+                .addStatement("return super.onOptionsItemSelected(item)")
                 .build();
     }
 

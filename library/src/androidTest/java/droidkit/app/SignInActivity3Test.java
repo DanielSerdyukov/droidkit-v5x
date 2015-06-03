@@ -42,8 +42,7 @@ public class SignInActivity3Test {
         Espresso.onView(ViewMatchers
                 .withId(droidkit.test.R.id.sign_in))
                 .perform(ViewActions.click());
-        final SignInForm2 signInForm = mActivity.getSignInForm();
-        Assert.assertTrue(signInForm.mSignInClicked);
+        Assert.assertTrue(mActivity.getSignInForm().mSignInClicked);
     }
 
 }

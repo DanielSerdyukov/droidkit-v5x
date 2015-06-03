@@ -17,7 +17,7 @@ class OnClickInjector {
 
     private static final ClassName VIEW = ClassName.get("android.view", "View");
 
-    private static final ClassName LISTENER = ClassName.get("android.view", "View.OnClickListener");
+    private static final ClassName LISTENER = ClassName.get("android.view", "View", "OnClickListener");
 
     private final List<MethodSpec> mEmitters = new ArrayList<>();
 

@@ -2,10 +2,12 @@ package droidkit.app;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.Menu;
 import android.widget.Button;
 import android.widget.EditText;
 
 import droidkit.annotation.InjectView;
+import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
 
 /**
@@ -21,6 +23,8 @@ public class SignInActivity1 extends Activity {
 
     boolean mSignInClicked;
 
+    boolean mSettingsClicked;
+
     @InjectView(droidkit.test.R.id.sign_in)
     private Button mSignIn;
 
@@ -30,6 +34,12 @@ public class SignInActivity1 extends Activity {
         setContentView(droidkit.test.R.layout.sign_in);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(droidkit.test.R.menu.test, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
     public Button getSignIn() {
         return mSignIn;
     }
@@ -37,6 +47,11 @@ public class SignInActivity1 extends Activity {
     @OnClick(droidkit.test.R.id.sign_in)
     void onSignInClick() {
         mSignInClicked = true;
+    }
+
+    @OnActionClick(droidkit.test.R.id.action_settings)
+    void onSettingsClick() {
+        mSettingsClicked = true;
     }
 
 }
