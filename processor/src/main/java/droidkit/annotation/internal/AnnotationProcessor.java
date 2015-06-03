@@ -91,6 +91,8 @@ public class AnnotationProcessor extends AbstractProcessor {
                         || JCUtils.isSubtype(enclosingElement, "android.support.v4.app.Fragment")) {
                     processor = new FragmentProcessor((TypeElement) enclosingElement);
                     mProcessors.put(enclosingElement, processor);
+                } else {
+                    throw new IllegalArgumentException(annotation + " supported only for Activity and Fragments ");
                 }
             }
         }

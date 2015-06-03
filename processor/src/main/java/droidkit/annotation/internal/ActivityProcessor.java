@@ -25,9 +25,9 @@ class ActivityProcessor implements IProcessor, JavaClassMaker {
     private boolean mDone;
 
     public ActivityProcessor(TypeElement originElement) {
-        mViewInjector = new ViewInjector(originElement);
         mOriginElement = originElement;
         mOriginClass = ClassName.get(originElement);
+        mViewInjector = new ViewInjector(originElement, mOriginClass);
     }
 
     @Override
@@ -73,10 +73,6 @@ class ActivityProcessor implements IProcessor, JavaClassMaker {
         JCUtils.<JCTree.JCClassDecl>getTree(mOriginElement).extending = JCUtils.ident(spec.name);
     }
 
-    /*private FieldSpec makeDelegateField() {
-        return FieldSpec.builder(ClassName.get(mOriginElement), "mDelegate", ).build();
-    }*/
-
     private MethodSpec makeSetContentView1() {
         final MethodSpec.Builder method = MethodSpec.methodBuilder("setContentView")
                 .addAnnotation(Override.class)
@@ -84,7 +80,8 @@ class ActivityProcessor implements IProcessor, JavaClassMaker {
                 .addParameter(TypeName.INT, "layoutResId")
                 .addStatement("super.setContentView(layoutResId)");
         if (!mViewInjector.isEmpty()) {
-            method.addStatement("$T$$ViewInjector.inject(($T) this)", mOriginClass, mOriginClass);
+            method.addStatement("$T$$ViewInjector.inject(($T) this, ($T) this)",
+                    mOriginClass, mOriginClass, mOriginClass);
         }
         return method.build();
     }
@@ -96,7 +93,8 @@ class ActivityProcessor implements IProcessor, JavaClassMaker {
                 .addParameter(ClassName.get("android.view", "View"), "view")
                 .addStatement("super.setContentView(view)");
         if (!mViewInjector.isEmpty()) {
-            method.addStatement("$T$$ViewInjector.inject(($T) this)", mOriginClass, mOriginClass);
+            method.addStatement("$T$$ViewInjector.inject(($T) this, ($T) this)",
+                    mOriginClass, mOriginClass, mOriginClass);
         }
         return method.build();
     }

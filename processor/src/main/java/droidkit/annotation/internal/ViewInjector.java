@@ -19,7 +19,9 @@ import java.io.Writer;
  */
 class ViewInjector implements JavaClassMaker {
 
-    public static final String DELEGATE = "delegate";
+    public static final String TARGET = "target";
+
+    public static final String ROOT = "root";
 
     public static final ClassName DK_VIEWS = ClassName.get("droidkit.view", "Views");
 
@@ -27,10 +29,13 @@ class ViewInjector implements JavaClassMaker {
 
     private final TypeElement mOriginElement;
 
+    private final TypeName mRootViewType;
+
     private TypeSpec mTypeSpec;
 
-    public ViewInjector(TypeElement originElement) {
+    public ViewInjector(TypeElement originElement, TypeName rootViewType) {
         mOriginElement = originElement;
+        mRootViewType = rootViewType;
     }
 
     private static boolean checkView(Element element) {
@@ -44,8 +49,9 @@ class ViewInjector implements JavaClassMaker {
     void tryInject(VariableElement element, InjectView injectView) {
         if (injectView != null && checkView(element)) {
             JCUtils.<JCTree.JCVariableDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
-            mCodeBlock.addStatement("$L.$L = $T.findById($L, $L)", DELEGATE, element.getSimpleName(),
-                    DK_VIEWS, DELEGATE, injectView.value());
+            mCodeBlock.addStatement("$L.$L = $T.findById($L, $L)",
+                    TARGET, element.getSimpleName(),
+                    DK_VIEWS, ROOT, injectView.value());
         }
     }
 
@@ -61,7 +67,8 @@ class ViewInjector implements JavaClassMaker {
                     .addModifiers(Modifier.PUBLIC)
                     .addMethod(MethodSpec.methodBuilder("inject")
                             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                            .addParameter(TypeName.get(mOriginElement.asType()), DELEGATE)
+                            .addParameter(ClassName.get(mOriginElement), TARGET)
+                            .addParameter(mRootViewType, ROOT)
                             .addCode(codeBlock)
                             .build())
                     .build();

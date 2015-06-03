@@ -31,6 +31,11 @@ public class SignInForm1 extends Fragment {
         return inflater.inflate(droidkit.test.R.layout.sign_in, container, false);
     }
 
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+    }
+
     public Button getSignIn() {
         return mSignIn;
     }
