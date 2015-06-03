@@ -17,7 +17,7 @@ import droidkit.DroidkitTestRunner;
  */
 @Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
-public class CursorUtilsTest {
+public class DatabaseUtilsTest {
 
     private Cursor mCursor;
 

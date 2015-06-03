@@ -12,6 +12,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 
@@ -107,8 +108,9 @@ class JCUtils {
         return MAKER.Select(expression, NAMES._class);
     }
 
-    static JCTree getTree(Element element) {
-        return (JCTree) TREES.getTree(element);
+    @SuppressWarnings("unchecked")
+    static <T extends JCTree> T getTree(Element element) {
+        return (T) TREES.getTree(element);
     }
 
     static <T extends JCTree> List<T> nilList() {
@@ -123,10 +125,6 @@ class JCUtils {
         return MAKER.Exec(MAKER.Apply(List.<JCTree.JCExpression>nil(), method, List.from(args)));
     }
 
-    static void error(CharSequence msg) {
-        ENV.getMessager().printMessage(Diagnostic.Kind.ERROR, msg);
-    }
-
     static void error(CharSequence msg, Element e) {
         ENV.getMessager().printMessage(Diagnostic.Kind.ERROR, msg, e);
     }
@@ -134,6 +132,14 @@ class JCUtils {
     static String normalize(String prefix, String field) {
         final String name = field.substring(prefix.length());
         return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
+
+    static boolean isSubtype(Element type, String baseType) {
+        return isSubtype(type.asType(), baseType);
+    }
+
+    static boolean isSubtype(TypeMirror type, String baseType) {
+        return ENV.getTypeUtils().isSubtype(type, ENV.getElementUtils().getTypeElement(baseType).asType());
     }
 
 }

@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author Daniel Serdyukov
  */
-class SQLiteGenMaker implements JavaClassMaker {
+class SQLiteGen implements JavaClassMaker {
 
     private final CodeBlock.Builder mCodeBlock = CodeBlock.builder();
 

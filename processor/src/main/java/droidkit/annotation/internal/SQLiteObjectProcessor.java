@@ -21,7 +21,7 @@ import java.util.*;
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationProcessor {
+class SQLiteObjectProcessor extends TreeTranslator implements IProcessor {
 
     private static final Map<TypeKind, String> JAVA_TO_SQLITE_TYPE = new HashMap<>();
 
@@ -59,7 +59,7 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
 
     private final ListBuffer<JCTree.JCStatement> mCreateStats = new ListBuffer<>();
 
-    private final SQLiteGenMaker mSQLiteGenMaker;
+    private final SQLiteGen mSQLiteGen;
 
     private final TypeElement mOriginElement;
 
@@ -69,8 +69,8 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
 
     private String mPkField;
 
-    SQLiteObjectProcessor(SQLiteGenMaker maker, TypeElement element) {
-        mSQLiteGenMaker = maker;
+    SQLiteObjectProcessor(SQLiteGen maker, TypeElement element) {
+        mSQLiteGen = maker;
         mOriginElement = element;
         final SQLiteObject annotation = element.getAnnotation(SQLiteObject.class);
         mTableName = annotation.value();
@@ -103,8 +103,8 @@ public class SQLiteObjectProcessor extends TreeTranslator implements AnnotationP
     @Override
     public boolean finishProcessing() {
         final String fqcn = mOriginElement.getQualifiedName().toString();
-        mSQLiteGenMaker.createTable(fqcn, mColumnsDef);
-        mSQLiteGenMaker.bindTableClass(fqcn);
+        mSQLiteGen.createTable(fqcn, mColumnsDef);
+        mSQLiteGen.bindTableClass(fqcn);
         return false;
     }
 
