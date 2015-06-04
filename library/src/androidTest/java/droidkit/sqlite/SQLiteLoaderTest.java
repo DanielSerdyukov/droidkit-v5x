@@ -44,9 +44,9 @@ public class SQLiteLoaderTest extends SQLiteTestCase {
     @Test
     public void testOnChange() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
-        mLoader.registerListener(0, new Loader.OnLoadCompleteListener<SQLiteResult<SQLiteUser>>() {
+        mLoader.registerListener(0, new Loader.OnLoadCompleteListener<List<SQLiteUser>>() {
             @Override
-            public void onLoadComplete(Loader<SQLiteResult<SQLiteUser>> loader, SQLiteResult<SQLiteUser> data) {
+            public void onLoadComplete(Loader<List<SQLiteUser>> loader, List<SQLiteUser> data) {
                 latch.countDown();
             }
         });

@@ -14,7 +14,7 @@ import droidkit.util.Observer;
 /**
  * @author Daniel Serdyukov
  */
-class SQLiteLoaderCallbacks<T> implements LoaderManager.LoaderCallbacks<SQLiteResult<T>> {
+class SQLiteLoaderCallbacks<T> implements LoaderManager.LoaderCallbacks<List<T>> {
 
     private final Reference<SQLiteLoader<T>> mLoader;
 
@@ -26,12 +26,12 @@ class SQLiteLoaderCallbacks<T> implements LoaderManager.LoaderCallbacks<SQLiteRe
     }
 
     @Override
-    public final Loader<SQLiteResult<T>> onCreateLoader(int id, Bundle args) {
+    public final Loader<List<T>> onCreateLoader(int id, Bundle args) {
         return mLoader.get();
     }
 
     @Override
-    public void onLoadFinished(Loader<SQLiteResult<T>> loader, SQLiteResult<T> data) {
+    public void onLoadFinished(Loader<List<T>> loader, List<T> data) {
         final Observer<List<T>> observer = mObserver.get();
         if (observer != null) {
             observer.onChange(data);
@@ -39,7 +39,7 @@ class SQLiteLoaderCallbacks<T> implements LoaderManager.LoaderCallbacks<SQLiteRe
     }
 
     @Override
-    public void onLoaderReset(Loader<SQLiteResult<T>> loader) {
+    public void onLoaderReset(Loader<List<T>> loader) {
         mLoader.clear();
     }
 

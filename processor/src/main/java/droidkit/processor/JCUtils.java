@@ -1,4 +1,4 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.TypeTag;

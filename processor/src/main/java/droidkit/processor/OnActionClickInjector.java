@@ -1,6 +1,8 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
 import com.squareup.javapoet.*;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.tree.JCTree;
 import droidkit.annotation.OnActionClick;
 
 import javax.lang.model.element.ExecutableElement;
@@ -28,8 +30,8 @@ class OnActionClickInjector {
 
     void tryInject(ExecutableElement element, OnActionClick onActionClick) {
         if (onActionClick != null) {
-            final int[] viewIds = onActionClick.value();
-            for (final int viewId : viewIds) {
+            JCUtils.<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
+            for (final int viewId : onActionClick.value()) {
                 final CodeBlock.Builder codeBlock = CodeBlock.builder()
                         .add("mOnActionClick.put($L, new $T() {\n", viewId, LISTENER)
                         .indent()

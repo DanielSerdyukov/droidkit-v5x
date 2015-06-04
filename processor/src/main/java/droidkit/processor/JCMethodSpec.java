@@ -1,4 +1,4 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.TypeTag;

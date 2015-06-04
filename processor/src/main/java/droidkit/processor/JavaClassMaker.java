@@ -1,4 +1,4 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
 import java.io.IOException;
 

@@ -1,6 +1,8 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
 import com.squareup.javapoet.*;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.tree.JCTree;
 import droidkit.annotation.OnClick;
 
 import javax.lang.model.element.ExecutableElement;
@@ -32,8 +34,8 @@ class OnClickInjector {
 
     void tryInject(ExecutableElement element, OnClick onClick) {
         if (onClick != null) {
-            final int[] viewIds = onClick.value();
-            for (final int viewId : viewIds) {
+            JCUtils.<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
+            for (final int viewId : onClick.value()) {
                 final CodeBlock.Builder codeBlock = CodeBlock.builder()
                         .add("mOnClick.put(view, new $T() {\n", LISTENER)
                         .indent()

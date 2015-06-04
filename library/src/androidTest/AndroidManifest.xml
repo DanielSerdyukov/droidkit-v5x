@@ -6,8 +6,10 @@
         <activity android:name=".app.SignInActivity1" />
 
         <activity android:name=".app.SignInActivity2" />
-        
+
         <activity android:name=".app.SignInActivity3" />
+
+        <activity android:name=".app.LoadersActivity" />
 
         <provider
             android:name=".sqlite.SQLiteProvider"

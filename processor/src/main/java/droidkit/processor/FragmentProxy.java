@@ -1,10 +1,8 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
 import com.squareup.javapoet.*;
 import com.sun.tools.javac.tree.JCTree;
-import droidkit.annotation.InjectView;
-import droidkit.annotation.OnActionClick;
-import droidkit.annotation.OnClick;
+import droidkit.annotation.*;
 
 import javax.lang.model.element.*;
 import javax.tools.JavaFileObject;
@@ -16,7 +14,7 @@ import java.util.List;
 /**
  * @author Daniel Serdyukov
  */
-class ActivityProxy implements IProcessor, JavaClassMaker {
+class FragmentProxy implements IProcessor, JavaClassMaker {
 
     private final TypeElement mOriginElement;
 
@@ -28,14 +26,18 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
 
     private final OnActionClickInjector mOnActionClickInjector;
 
+    private final LoaderCallbacks mLoaderCallbacks;
+
     private boolean mDone;
 
-    public ActivityProxy(TypeElement originElement) {
+    public FragmentProxy(TypeElement originElement) {
         mOriginElement = originElement;
         mOriginClass = ClassName.get(originElement);
-        mViewInjector = new ViewInjector(originElement, mOriginClass);
-        mOnClickInjector = new OnClickInjector(mOriginClass, mOriginClass);
+        final ClassName view = ClassName.get("android.view", "View");
+        mViewInjector = new ViewInjector(originElement, view);
+        mOnClickInjector = new OnClickInjector(mOriginClass, view);
         mOnActionClickInjector = new OnActionClickInjector(mOriginClass);
+        mLoaderCallbacks = new LoaderCallbacks(originElement);
     }
 
     @Override
@@ -49,6 +51,9 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
                     final ExecutableElement method = (ExecutableElement) element;
                     mOnClickInjector.tryInject(method, element.getAnnotation(OnClick.class));
                     mOnActionClickInjector.tryInject(method, element.getAnnotation(OnActionClick.class));
+                    mLoaderCallbacks.tryInject(method, element.getAnnotation(OnCreateLoader.class));
+                    mLoaderCallbacks.tryInject(method, element.getAnnotation(OnLoadFinished.class));
+                    mLoaderCallbacks.tryInject(method, element.getAnnotation(OnResetLoader.class));
                 }
             }
         }
@@ -59,6 +64,7 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
     public boolean finishProcessing() {
         try {
             mViewInjector.makeJavaFile();
+            mLoaderCallbacks.makeJavaFile();
             makeJavaFile();
             return true;
         } catch (IOException e) {
@@ -73,8 +79,7 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
                 .superclass(TypeName.get(mOriginElement.getSuperclass()))
                 .addFields(mOnClickInjector.fields())
                 .addFields(mOnActionClickInjector.fields())
-                .addMethod(makeSetContentView1())
-                .addMethod(makeSetContentView2())
+                .addMethod(makeOnViewCreated())
                 .addMethod(makeOnResume())
                 .addMethod(makeOnPause())
                 .addMethod(makeOnDestroy())
@@ -93,37 +98,18 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
         JCUtils.<JCTree.JCClassDecl>getTree(mOriginElement).extending = JCUtils.ident(spec.name);
     }
 
-    private MethodSpec makeSetContentView1() {
-        final MethodSpec.Builder method = MethodSpec.methodBuilder("setContentView")
-                .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
-                .addParameter(TypeName.INT, "layoutResId")
-                .addStatement("super.setContentView(layoutResId)");
-        if (!mViewInjector.isEmpty()) {
-            method.addStatement("$T$$ViewInjector.inject(($T) this, ($T) this)",
-                    mOriginClass, mOriginClass, mOriginClass);
-        }
-        for (final MethodSpec setupMethod : mOnClickInjector.setupMethods()) {
-            method.addStatement("$N(($T) this, ($T) this)", setupMethod, mOriginClass, mOriginClass);
-        }
-        for (final MethodSpec setupMethod : mOnActionClickInjector.setupMethods()) {
-            method.addStatement("$N(($T) this)", setupMethod, mOriginClass);
-        }
-        return method.build();
-    }
-
-    private MethodSpec makeSetContentView2() {
-        final MethodSpec.Builder method = MethodSpec.methodBuilder("setContentView")
+    private MethodSpec makeOnViewCreated() {
+        final MethodSpec.Builder method = MethodSpec.methodBuilder("onViewCreated")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(ClassName.get("android.view", "View"), "view")
-                .addStatement("super.setContentView(view)");
+                .addParameter(ClassName.get("android.os", "Bundle"), "savedInstanceState")
+                .addStatement("super.onViewCreated(view, savedInstanceState)");
         if (!mViewInjector.isEmpty()) {
-            method.addStatement("$T$$ViewInjector.inject(($T) this, ($T) this)",
-                    mOriginClass, mOriginClass, mOriginClass);
+            method.addStatement("$T$$ViewInjector.inject(($T) this, view)", mOriginClass, mOriginClass);
         }
         for (final MethodSpec setupMethod : mOnClickInjector.setupMethods()) {
-            method.addStatement("$N(($T) this, ($T) this)", setupMethod, mOriginClass, mOriginClass);
+            method.addStatement("$N(($T) this, view)", setupMethod, mOriginClass);
         }
         for (final MethodSpec setupMethod : mOnActionClickInjector.setupMethods()) {
             method.addStatement("$N(($T) this)", setupMethod, mOriginClass);
@@ -137,7 +123,6 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("super.onResume()")
                 .addCode(mOnClickInjector.resumeBlock())
-                .addCode(mOnActionClickInjector.resumeBlock())
                 .build();
     }
 
@@ -146,7 +131,6 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .addCode(mOnClickInjector.pauseBlock())
-                .addCode(mOnActionClickInjector.pauseBlock())
                 .addStatement("super.onPause()")
                 .build();
     }
@@ -156,7 +140,6 @@ class ActivityProxy implements IProcessor, JavaClassMaker {
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .addCode(mOnClickInjector.destroyBlock())
-                .addCode(mOnActionClickInjector.destroyBlock())
                 .addStatement("super.onDestroy()")
                 .build();
     }

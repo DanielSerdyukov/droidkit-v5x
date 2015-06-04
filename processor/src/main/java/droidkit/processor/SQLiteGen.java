@@ -1,4 +1,4 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;

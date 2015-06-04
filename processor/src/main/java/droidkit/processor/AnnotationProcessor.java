@@ -1,7 +1,6 @@
-package droidkit.annotation.internal;
+package droidkit.processor;
 
-import droidkit.annotation.InjectView;
-import droidkit.annotation.SQLiteObject;
+import droidkit.annotation.*;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -21,7 +20,10 @@ import java.util.Set;
  */
 @SupportedAnnotationTypes({
         "droidkit.annotation.SQLiteObject",
-        "droidkit.annotation.InjectView"
+        "droidkit.annotation.InjectView",
+        "droidkit.annotation.OnClick",
+        "droidkit.annotation.OnActionClick",
+        "droidkit.annotation.OnCreateLoader"
 })
 public class AnnotationProcessor extends AbstractProcessor {
 
@@ -80,7 +82,10 @@ public class AnnotationProcessor extends AbstractProcessor {
                 processor = new SQLiteObjectProcessor(mSQLiteGen, (TypeElement) element);
                 mProcessors.put(element, processor);
             }
-        } else if (InjectView.class.getName().equals(fqcn)) {
+        } else if (InjectView.class.getName().equals(fqcn)
+                || OnClick.class.getName().equals(fqcn)
+                || OnActionClick.class.getName().equals(fqcn)
+                || OnCreateLoader.class.getName().equals(fqcn)) {
             final Element enclosingElement = element.getEnclosingElement();
             processor = mProcessors.get(enclosingElement);
             if (processor == null) {

@@ -303,15 +303,13 @@ public final class SQLiteQuery<T> {
     }
 
     @NonNull
-    public Loader<SQLiteResult<T>> load(@NonNull LoaderManager lm, int loaderId,
-                                        @NonNull Observer<List<T>> observer) {
+    public Loader<List<T>> load(@NonNull LoaderManager lm, int loaderId, @NonNull Observer<List<T>> observer) {
         return lm.initLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(
                 new SQLiteLoader<>(getClient().getContext(), this), observer));
     }
 
     @NonNull
-    public Loader<SQLiteResult<T>> reload(@NonNull LoaderManager lm, int loaderId,
-                                          @NonNull Observer<List<T>> observer) {
+    public Loader<List<T>> reload(@NonNull LoaderManager lm, int loaderId, @NonNull Observer<List<T>> observer) {
         return lm.restartLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(
                 new SQLiteLoader<>(getClient().getContext(), this), observer));
     }
