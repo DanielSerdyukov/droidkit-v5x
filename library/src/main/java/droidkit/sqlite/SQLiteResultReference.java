@@ -21,6 +21,7 @@ import droidkit.io.IOUtils;
  */
 class SQLiteResultReference<T> extends PhantomReference<SQLiteResult<T>> implements Closeable {
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static final Set<Reference<?>> SET = new CopyOnWriteArraySet<>();
 
     private final AtomicReference<Cursor> mCursorRef;

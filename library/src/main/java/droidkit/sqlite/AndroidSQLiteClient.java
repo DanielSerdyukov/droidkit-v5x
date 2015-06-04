@@ -1,5 +1,6 @@
 package droidkit.sqlite;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -18,10 +19,13 @@ import droidkit.io.IOUtils;
  */
 class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
 
+    private final Context mContext;
+
     private final SQLiteDbInfo mDbInfo;
 
     public AndroidSQLiteClient(@NonNull Context context, @NonNull SQLiteDbInfo dbInfo) {
         super(context, dbInfo.getName(), null, dbInfo.getVersion());
+        mContext = context;
         mDbInfo = dbInfo;
     }
 
@@ -66,7 +70,15 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
 
     @Override
     public void execSQL(@NonNull String sql, @NonNull Object... bindArgs) {
-        getWritableDatabase().execSQL(sql, bindArgs);
+        final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
+        try {
+            for (int i = 0; i < bindArgs.length; ++i) {
+                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
+            }
+            stmt.execute();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
     }
 
     @Override
@@ -114,6 +126,11 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
         } finally {
             IOUtils.closeQuietly(stmt);
         }
+    }
+
+    @Override
+    public ContentResolver getContentResolver() {
+        return mContext.getContentResolver();
     }
 
     //region SQLiteOpenHelper implementation

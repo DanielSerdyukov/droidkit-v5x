@@ -9,13 +9,10 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -26,8 +23,7 @@ import droidkit.io.IOUtils;
 /**
  * @author Daniel Serdyukov
  */
-@RunWith(AndroidJUnit4.class)
-public class SQLiteProviderTest {
+public class SQLiteProviderTest extends SQLiteTestCase {
 
     private static final Uri ALL_USERS = Uri.parse("content://droidkit.sqlite/users");
 
@@ -36,16 +32,10 @@ public class SQLiteProviderTest {
     private ContentResolver mResolver;
 
     @Before
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         mResolver = InstrumentationRegistry.getContext().getContentResolver();
-        final SQLite sqlite = SQLite.of(InstrumentationRegistry.getContext());
-        sqlite.beginTransaction();
-        for (int i = 0; i < SQLiteQueryTest.USERS.length; ++i) {
-            final SQLiteUser user = SQLiteQueryTest.USERS[i];
-            sqlite.execSQL("INSERT INTO users(_id, name, age, weight, avatar, enabled) VALUES(?, ?, ?, ?, ?, ?)",
-                    (i + 1), user.mName, user.mAge, user.mWeight, user.mAvatar, (user.mAge > 18));
-        }
-        sqlite.endTransaction(true);
     }
 
     @Test
@@ -128,11 +118,6 @@ public class SQLiteProviderTest {
         });
         mResolver.delete(FIRST_USER, null, null);
         Assert.assertTrue(latch.await(2, TimeUnit.SECONDS));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        SQLite.of(InstrumentationRegistry.getContext()).execSQL("DELETE FROM users;");
     }
 
 }

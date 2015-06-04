@@ -1,5 +1,7 @@
 package droidkit.sqlite;
 
+import java.util.Arrays;
+
 import droidkit.annotation.SQLiteColumn;
 import droidkit.annotation.SQLiteObject;
 import droidkit.annotation.SQLitePk;
@@ -87,6 +89,19 @@ public class SQLiteUser {
 
     public void setRole(Role role) {
         mRole = role;
+    }
+
+    @Override
+    public String toString() {
+        return "SQLiteUser{" +
+                "mId=" + mId +
+                ", mName='" + mName + '\'' +
+                ", mAge=" + mAge +
+                ", mWeight=" + mWeight +
+                ", mAvatar=" + Arrays.toString(mAvatar) +
+                ", mEnabled=" + mEnabled +
+                ", mRole=" + mRole +
+                '}';
     }
 
     public enum Role {

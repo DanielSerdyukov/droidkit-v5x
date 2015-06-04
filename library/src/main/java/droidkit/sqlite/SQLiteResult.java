@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
+import java.io.Closeable;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ConcurrentModificationException;
@@ -19,7 +20,7 @@ import droidkit.util.DynamicMethod;
 /**
  * @author Daniel Serdyukov
  */
-class SQLiteResult<T> extends AbstractList<T> {
+class SQLiteResult<T> extends AbstractList<T> implements Closeable {
 
     public static final String WHERE_ID = " WHERE _id = ?";
 
@@ -64,7 +65,9 @@ class SQLiteResult<T> extends AbstractList<T> {
         final Cursor oldCursor = mCursorRef.get();
         if (oldCursor.moveToPosition(location)) {
             final long rowId = DatabaseUtils.getLong(oldCursor, BaseColumns._ID);
-            mQuery.getClient().executeUpdateDelete("DELETE FROM " + mQuery.getTableName() + WHERE_ID, rowId);
+            new SQLiteQuery<>(mQuery.getClient(), mQuery.getType())
+                    .equalTo(BaseColumns._ID, rowId)
+                    .remove();
             IOUtils.closeQuietly(oldCursor);
             final Cursor cursor = mQuery.cursor();
             mCursorRef.compareAndSet(oldCursor, cursor);
@@ -72,6 +75,24 @@ class SQLiteResult<T> extends AbstractList<T> {
             return SQLiteCache.of(mQuery.getType()).remove(rowId);
         }
         throw new ConcurrentModificationException();
+    }
+
+    @Override
+    public void close() {
+        final Cursor cursor = mCursorRef.get();
+        if (cursor != null) {
+            IOUtils.closeQuietly(cursor);
+            mSize = 0;
+        }
+    }
+
+    @Override
+    public String toString() {
+        final Cursor cursor = mCursorRef.get();
+        if (cursor != null) {
+            return android.database.DatabaseUtils.dumpCursorToString(mCursorRef.get());
+        }
+        return super.toString();
     }
 
     @NonNull

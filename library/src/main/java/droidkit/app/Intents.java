@@ -13,7 +13,7 @@ import android.text.TextUtils;
 
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -56,7 +56,7 @@ public final class Intents {
 
         @NonNull
         public static Intent sendEmail(@NonNull String[] to, @NonNull String subject, @NonNull String body,
-                                       @Nullable List<Uri> attachments) {
+                                       @NonNull Uri... attachments) {
             final Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
             intent.setType("message/rfc822");
             intent.putExtra(Intent.EXTRA_EMAIL, to);
@@ -64,8 +64,9 @@ public final class Intents {
             final ArrayList<CharSequence> extraText = new ArrayList<>(1);
             extraText.add(body);
             intent.putCharSequenceArrayListExtra(Intent.EXTRA_TEXT, extraText);
-            if (attachments != null && !attachments.isEmpty()) {
-                intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, new ArrayList<Parcelable>(attachments));
+            if (attachments.length > 0) {
+                intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM,
+                        new ArrayList<Parcelable>(Arrays.asList(attachments)));
             }
             return intent;
         }
@@ -253,33 +254,34 @@ public final class Intents {
 
         @NonNull
         public static Intent text(@NonNull String text) {
-            return share("text/*", text, null);
+            return share("text/*", text);
         }
 
         @NonNull
-        public static Intent image(@NonNull List<Uri> attachments) {
+        public static Intent image(@NonNull Uri... attachments) {
             return share("image/*", null, attachments);
         }
 
         @NonNull
-        public static Intent video(@NonNull List<Uri> attachments) {
+        public static Intent video(@NonNull Uri... attachments) {
             return share("video/*", null, attachments);
         }
 
         @NonNull
-        public static Intent share(@Nullable String text, @NonNull List<Uri> attachments) {
+        public static Intent share(@Nullable String text, @NonNull Uri... attachments) {
             return share("*/*", text, attachments);
         }
 
         @NonNull
-        private static Intent share(@NonNull String mime, @Nullable String text, @Nullable List<Uri> attachments) {
+        private static Intent share(@NonNull String mime, @Nullable String text, @NonNull Uri... attachments) {
             final Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
             intent.setType(mime);
             if (!TextUtils.isEmpty(text)) {
                 intent.putExtra(Intent.EXTRA_TEXT, text);
             }
-            if (attachments != null && !attachments.isEmpty()) {
-                intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, new ArrayList<Parcelable>(attachments));
+            if (attachments.length > 0) {
+                intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM,
+                        new ArrayList<Parcelable>(Arrays.asList(attachments)));
             }
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             return intent;

@@ -15,11 +15,11 @@ import java.util.List;
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteQuery<T> {
+public final class SQLiteQuery<T> {
 
     static final String WHERE_ID_EQ = BaseColumns._ID + " = ?";
 
-    //region operators and values
+    //region operators and conditions
     private static final String EQ = " = ?";
 
     private static final String NOT_EQ = " <> ?";
@@ -61,6 +61,7 @@ public class SQLiteQuery<T> {
     private static final String WHERE = " WHERE ";
     //endregion
 
+    //region fields
     private final WeakReference<SQLiteClient> mClient;
 
     private final Class<T> mType;
@@ -79,12 +80,25 @@ public class SQLiteQuery<T> {
 
     private String mLimit;
 
-    public SQLiteQuery(@NonNull SQLiteClient client, @NonNull Class<T> type) {
+    private boolean mNotifyOnChange;
+
+    private boolean mSyncOnChange;
+    //endregion
+
+    SQLiteQuery(@NonNull SQLiteClient client, @NonNull Class<T> type) {
         mClient = new WeakReference<>(client);
         mType = type;
+        setNotifyOnChange(true, false);
     }
 
-    //region where conditions
+    //region builder
+    @NonNull
+    public final SQLiteQuery<T> setNotifyOnChange(boolean notifyOnChange, boolean syncOnChange) {
+        mNotifyOnChange = notifyOnChange;
+        mSyncOnChange = syncOnChange;
+        return this;
+    }
+
     @NonNull
     public SQLiteQuery<T> distinct() {
         mDistinct = true;
@@ -221,7 +235,7 @@ public class SQLiteQuery<T> {
     }
     //endregion
 
-    //region result
+    //region result accessors
     @Nullable
     public T withId(long id) {
         return equalTo(BaseColumns._ID, id).one();
@@ -238,7 +252,7 @@ public class SQLiteQuery<T> {
 
     @NonNull
     public List<T> list() {
-        return SQLiteResultReference.wrap(new SQLiteResult<>(this, cursor()));
+        return SQLiteResultReference.wrap(result());
     }
 
     @NonNull
@@ -256,9 +270,12 @@ public class SQLiteQuery<T> {
         if (mWhere != null) {
             sql.append(" WHERE ").append(mWhere);
         }
-        return mClient.get().executeUpdateDelete(sql.toString(), bindArgs());
+        final int affectedRows = mClient.get().executeUpdateDelete(sql.toString(), bindArgs());
+        if (mNotifyOnChange && affectedRows > 0) {
+            notifyChange(mSyncOnChange);
+        }
+        return affectedRows;
     }
-    //endregion
 
     @NonNull
     public Number min(@NonNull String column) {
@@ -279,6 +296,11 @@ public class SQLiteQuery<T> {
     public Number count(@NonNull String column) {
         return applyFunc("COUNT", column);
     }
+
+    public void notifyChange(boolean syncToNetwork) {
+        mClient.get().getContentResolver().notifyChange(SQLite.uriOf(mType), null, syncToNetwork);
+    }
+    //endregion
 
     @Override
     public String toString() {
@@ -310,8 +332,13 @@ public class SQLiteQuery<T> {
     }
 
     @NonNull
-    public Class<T> getType() {
+    Class<T> getType() {
         return mType;
+    }
+
+    @NonNull
+    SQLiteResult<T> result() {
+        return new SQLiteResult<>(this, cursor());
     }
 
     private SQLiteQuery<T> where(@NonNull String column, @NonNull String op, @NonNull Object... values) {
