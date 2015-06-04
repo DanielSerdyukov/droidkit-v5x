@@ -1,7 +1,10 @@
 package droidkit.sqlite;
 
+import android.app.LoaderManager;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,6 +14,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import droidkit.util.Observer;
 
 /**
  * @author Daniel Serdyukov
@@ -297,10 +302,26 @@ public final class SQLiteQuery<T> {
         return applyFunc("COUNT", column);
     }
 
-    public void notifyChange(boolean syncToNetwork) {
-        mClient.get().getContentResolver().notifyChange(SQLite.uriOf(mType), null, syncToNetwork);
+    @NonNull
+    public Loader<SQLiteResult<T>> load(@NonNull LoaderManager lm, int loaderId,
+                                        @NonNull Observer<List<T>> observer) {
+        return lm.initLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(
+                new SQLiteLoader<>(getClient().getContext(), this), observer));
+    }
+
+    @NonNull
+    public Loader<SQLiteResult<T>> reload(@NonNull LoaderManager lm, int loaderId,
+                                          @NonNull Observer<List<T>> observer) {
+        return lm.restartLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(
+                new SQLiteLoader<>(getClient().getContext(), this), observer));
     }
     //endregion
+
+    public void notifyChange(boolean syncToNetwork) {
+        getClient().getContext()
+                .getContentResolver()
+                .notifyChange(SQLite.uriOf(mType), null, syncToNetwork);
+    }
 
     @Override
     public String toString() {

@@ -1,7 +1,7 @@
 package droidkit.sqlite;
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +10,8 @@ import android.support.annotation.Nullable;
  * @author Daniel Serdyukov
  */
 public interface SQLiteClient {
+
+    Context getContext();
 
     void beginTransaction();
 
@@ -37,7 +39,5 @@ public interface SQLiteClient {
                @Nullable String[] bindArgs);
 
     long insertRowId(@NonNull String table);
-
-    ContentResolver getContentResolver();
 
 }

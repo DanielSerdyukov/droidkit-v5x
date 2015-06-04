@@ -1,6 +1,5 @@
 package droidkit.sqlite;
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -49,6 +48,11 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         } else {
             prog.bindString(index, value.toString());
         }
+    }
+
+    @Override
+    public Context getContext() {
+        return mContext;
     }
 
     @Override
@@ -148,11 +152,6 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         } finally {
             IOUtils.closeQuietly(stmt);
         }
-    }
-
-    @Override
-    public ContentResolver getContentResolver() {
-        return mContext.getContentResolver();
     }
 
     //region SQLiteOpenHelper implementation
