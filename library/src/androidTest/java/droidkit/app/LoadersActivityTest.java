@@ -1,5 +1,6 @@
 package droidkit.app;
 
+import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -32,6 +33,7 @@ public class LoadersActivityTest {
         Loaders.init(mActivity.getLoaderManager(), 1, null, mActivity);
         Assert.assertTrue(mActivity.mLoader1Loaded.await(5, TimeUnit.SECONDS));
         Loaders.destroy(mActivity.getLoaderManager(), 1);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         Assert.assertTrue(mActivity.mLoader1Destroyed);
     }
 
@@ -40,6 +42,7 @@ public class LoadersActivityTest {
         Loaders.init(mActivity.getLoaderManager(), 2, null, mActivity);
         Assert.assertTrue(mActivity.mLoader2Loaded.await(5, TimeUnit.SECONDS));
         Loaders.destroy(mActivity.getLoaderManager(), 2);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         Assert.assertTrue(mActivity.mLoader2Destroyed);
     }
 
@@ -48,6 +51,7 @@ public class LoadersActivityTest {
         Loaders.init(mActivity.getLoaderManager(), 3, null, mActivity);
         Assert.assertTrue(mActivity.mLoader3Loaded.await(5, TimeUnit.SECONDS));
         Loaders.destroy(mActivity.getLoaderManager(), 3);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         Assert.assertTrue(mActivity.mLoader3Destroyed);
     }
 

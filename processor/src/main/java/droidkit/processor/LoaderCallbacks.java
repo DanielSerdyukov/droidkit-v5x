@@ -11,6 +11,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
 import javax.tools.JavaFileObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -54,6 +55,21 @@ class LoaderCallbacks implements JavaClassMaker {
                         JCUtils.isSubtype(parameters.get(0), "android.os.Bundle")) {
                     mOnCreate.put(loaderId, CodeBlock.builder()
                             .addStatement("return mDelegate.$L(args)", element.getSimpleName())
+                            .build());
+                    continue;
+                }
+                if (parameters.size() == 1 &&
+                        TypeKind.INT == parameters.get(0).asType().getKind()) {
+                    mOnCreate.put(loaderId, CodeBlock.builder()
+                            .addStatement("return mDelegate.$L(id)", element.getSimpleName())
+                            .build());
+                    continue;
+                }
+                if (parameters.size() == 2 &&
+                        TypeKind.INT == parameters.get(0).asType().getKind() &&
+                        JCUtils.isSubtype(parameters.get(1), "android.os.Bundle")) {
+                    mOnCreate.put(loaderId, CodeBlock.builder()
+                            .addStatement("return mDelegate.$L(id, args)", element.getSimpleName())
                             .build());
                     continue;
                 }

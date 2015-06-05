@@ -31,7 +31,7 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v13:22.2.0'
-    compile fileTree(dir: '../processor/build/libs', include: ['*.jar'])
+    provided files("../processor/build/libs/processor-${rootProject.versionName}.jar")
     provided 'org.sqlite.android:sqlite:3.8.10.2'
     testCompile 'junit:junit:4.12'
     testCompile('org.robolectric:robolectric:3.0-rc3') {
@@ -40,4 +40,13 @@ dependencies {
     }
     testCompile 'org.apache.maven:maven-ant-tasks:2.1.3'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.1'
+}
+
+task assembleProcessor(type: GradleBuild) {
+    dir = file('../processor')
+    tasks = ['clean', 'assemble']
+}
+
+if (project.hasProperty("bintrayUser")) {
+    apply from: 'bintray.gradle'
 }

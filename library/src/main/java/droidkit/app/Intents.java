@@ -15,6 +15,9 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.concurrent.Future;
+
+import droidkit.concurrent.AsyncQueue;
 
 /**
  * @author Daniel Serdyukov
@@ -33,6 +36,13 @@ public final class Intents {
         if (hasResolution(context, intent)) {
             context.startActivity(intent);
         } else {
+            final Future<?> invoke = AsyncQueue.invoke(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            });
+            invoke.cancel(false);
             context.startActivity(Intent.createChooser(intent, title));
         }
     }

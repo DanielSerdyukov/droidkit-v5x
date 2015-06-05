@@ -152,12 +152,13 @@ class SQLiteObjectProcessor extends TreeTranslator implements IProcessor {
             JCUtils.error("@SQLitePk must be long", field);
         }
         final String fieldName = field.getSimpleName().toString();
+        mFields.put("_id", fieldName);
         mColumnsDef.add("_id INTEGER PRIMARY KEY" + CONFLICT_VALUES[pk.value()]);
         mCreateStats.add(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
                 JCUtils.select("object", fieldName),
                 JCCursor.getValue("cursor", "getLong", "_id").expr
         )));
-        processGetterSetter(fieldName, "_id", pk.setter());
+        processSetter(fieldName, "_id", pk.setter());
         return fieldName;
     }
 
@@ -174,7 +175,7 @@ class SQLiteObjectProcessor extends TreeTranslator implements IProcessor {
                     JCUtils.select("object", fieldName),
                     JCCursor.getValue("cursor", CURSOR_TO_JAVA_TYPE.get(typeKind), columnName).expr
             )));
-            processGetterSetter(fieldName, columnName, column.setter());
+            processSetter(fieldName, columnName, column.setter());
             return;
         }
         if (Objects.equals(String.class.getName(), type.toString())) {
@@ -184,7 +185,7 @@ class SQLiteObjectProcessor extends TreeTranslator implements IProcessor {
                     JCUtils.select("object", fieldName),
                     JCCursor.getValue("cursor", "getString", columnName).expr
             )));
-            processGetterSetter(fieldName, columnName, column.setter());
+            processSetter(fieldName, columnName, column.setter());
             return;
         }
         if (Objects.equals("byte[]", type.toString())) {
@@ -194,7 +195,7 @@ class SQLiteObjectProcessor extends TreeTranslator implements IProcessor {
                     JCUtils.select("object", fieldName),
                     JCCursor.getValue("cursor", "getBlob", columnName).expr
             )));
-            processGetterSetter(fieldName, columnName, column.setter());
+            processSetter(fieldName, columnName, column.setter());
             return;
         }
         if (TypeKind.DECLARED == typeKind) {
@@ -207,14 +208,14 @@ class SQLiteObjectProcessor extends TreeTranslator implements IProcessor {
                         JCUtils.select("object", fieldName),
                         JCCursor.getEnumValue(JCUtils.enumClass(typeElement), "cursor", columnName).expr
                 )));
-                processGetterSetter(fieldName, columnName, column.setter());
+                processSetter(fieldName, columnName, column.setter());
                 return;
             }
         }
         JCUtils.error("Unsupported column type " + type, field);
     }
 
-    private void processGetterSetter(String fieldName, String columnName, String setter) {
+    private void processSetter(String fieldName, String columnName, String setter) {
         final String normalizedName = JCUtils.normalize(mFieldPrefix, fieldName);
         if (JCUtils.isEmpty(setter)) {
             setter = "set" + normalizedName;
@@ -339,12 +340,14 @@ class SQLiteObjectProcessor extends TreeTranslator implements IProcessor {
                 ))
                 .build());
         for (final Map.Entry<String, String> field : mFields.entrySet()) {
-            method.statements(JCUtils.invoke(
-                    JCUtils.select("droidkit.database", "DatabaseUtils", "putValue"),
-                    JCUtils.ident("values"),
-                    JCUtils.MAKER.Literal(TypeTag.CLASS, field.getKey()),
-                    JCUtils.select("object", field.getValue())
-            ));
+            if (!"_id".equals(field.getKey())) {
+                method.statements(JCUtils.invoke(
+                        JCUtils.select("droidkit.database", "DatabaseUtils", "putValue"),
+                        JCUtils.ident("values"),
+                        JCUtils.MAKER.Literal(TypeTag.CLASS, field.getKey()),
+                        JCUtils.select("object", field.getValue())
+                ));
+            }
         }
         method.statements(JCUtils.MAKER.Exec(JCUtils.MAKER.Assign(
                 JCUtils.select("object", mPkField),

@@ -24,13 +24,13 @@ import droidkit.util.Objects;
  */
 public final class SQLite {
 
-    static final AtomicReference<String> AUTHORITY = new AtomicReference<>();
-
     static final List<String> CREATE = new CopyOnWriteArrayList<>();
 
     static final List<String> UPGRADE = new CopyOnWriteArrayList<>();
 
     static final ConcurrentMap<Class<?>, String> TABLES = new ConcurrentHashMap<>();
+
+    private static final AtomicReference<String> AUTHORITY = new AtomicReference<>();
 
     private static final ConcurrentMap<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
 

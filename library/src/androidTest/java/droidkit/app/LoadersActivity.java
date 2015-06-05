@@ -69,4 +69,19 @@ public class LoadersActivity extends Activity {
         }
     }
 
+    @OnCreateLoader(4)
+    Loader<List<SQLiteUser>> onCreateLoader1(int loaderId) {
+        return new SQLiteLoader<>(getApplicationContext(), SQLiteUser.class);
+    }
+
+    @OnCreateLoader(5)
+    Loader<List<SQLiteUser>> onCreateLoader1(Bundle args) {
+        return new SQLiteLoader<>(getApplicationContext(), SQLiteUser.class);
+    }
+
+    @OnCreateLoader(6)
+    Loader<List<SQLiteUser>> onCreateLoader1(int loaderId, Bundle args) {
+        return new SQLiteLoader<>(getApplicationContext(), SQLiteUser.class);
+    }
+
 }

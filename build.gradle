@@ -4,6 +4,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
     }
 }
 
@@ -16,14 +17,11 @@ allprojects {
 version = file('VERSION').text.trim()
 
 ext {
-    versionCode = 1
+    versionCode = calculateVersionCode()
     versionName = version
 }
 
-if (project.hasProperty('build.number')) {
-    versionCode = project.properties['build.number'] as int
-}
-
-if (project.hasProperty('snapshot')) {
-    versionName += " (${versionCode})"
+int calculateVersionCode() {
+    int[] build = version.split('\\.').collect { Integer.parseInt(it) }
+    return build[0] * 100000 + build[1] * 1000 + build[2]
 }
