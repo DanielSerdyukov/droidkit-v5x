@@ -1,4 +1,4 @@
-# DroidKit [![Build Status](https://travis-ci.org/DanielSerdyukov/droidkit.svg?branch=master)](https://travis-ci.org/DanielSerdyukov/droidkit.svg)
+# DroidKit [![Build Status](https://travis-ci.org/DanielSerdyukov/droidkit.svg?branch=master)](https://travis-ci.org/DanielSerdyukov/droidkit)
 
 a carefully crafted Android framework that includes:
 
