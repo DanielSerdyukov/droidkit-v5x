@@ -117,10 +117,10 @@ public final class SQLite {
     }
 
     @NonNull
+    @SuppressWarnings("ConstantConditions")
     public <T> T create(@NonNull Class<T> type) {
         try {
             final Method method = DynamicMethod.find(CREATE_METHODS, type, "create", SQLiteClient.class);
-            //noinspection ConstantConditions
             return DynamicMethod.invokeStatic(method, mClient);
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);

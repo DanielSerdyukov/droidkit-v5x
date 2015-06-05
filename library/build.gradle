@@ -31,7 +31,8 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v13:22.2.0'
-    provided files("../processor/build/libs/processor-${rootProject.versionName}.jar")
+    debugCompile files("../processor/build/libs/processor-${rootProject.versionName}.jar")
+    releaseProvided files("../processor/build/libs/processor-${rootProject.versionName}.jar")
     provided 'org.sqlite.android:sqlite:3.8.10.2'
     testCompile 'junit:junit:4.12'
     testCompile('org.robolectric:robolectric:3.0-rc3') {

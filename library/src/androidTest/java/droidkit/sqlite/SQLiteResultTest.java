@@ -26,6 +26,29 @@ public class SQLiteResultTest extends SQLiteTestCase {
     }
 
     @Test
+    public void testAdd() throws Exception {
+        final List<SQLiteUser> users = getSQLite().where(SQLiteUser.class).list();
+        Assert.assertEquals(USERS.length, users.size());
+        final SQLiteUser user = new SQLiteUser();
+        user.setName("Joe");
+        user.setAge(40);
+        users.add(user);
+        Assert.assertEquals(11, users.size());
+        final Cursor cursor = getSQLite().rawQuery("SELECT * FROM users;");
+        try {
+            Assert.assertTrue(cursor.moveToFirst());
+            Assert.assertEquals(11, cursor.getCount());
+            boolean actual;
+            do {
+                actual = "Joe".equals(DatabaseUtils.getString(cursor, "name"));
+            } while (!actual && cursor.moveToNext());
+            Assert.assertTrue(actual);
+        } finally {
+            IOUtils.closeQuietly(cursor);
+        }
+    }
+
+    @Test
     public void testRemove() throws Exception {
         final List<SQLiteUser> users = getSQLite().where(SQLiteUser.class).list();
         final SQLiteUser removed = users.remove(4);

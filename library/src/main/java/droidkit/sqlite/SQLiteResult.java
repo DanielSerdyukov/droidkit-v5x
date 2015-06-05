@@ -22,8 +22,6 @@ import droidkit.util.DynamicMethod;
  */
 class SQLiteResult<T> extends AbstractList<T> implements Closeable {
 
-    public static final String WHERE_ID = " WHERE _id = ?";
-
     private static final ConcurrentMap<Class<?>, Method> CREATE_METHODS = new ConcurrentHashMap<>();
 
     private final SQLiteQuery<T> mQuery;
@@ -61,6 +59,19 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
     }
 
     @Override
+    public void add(int location, T object) {
+        final Cursor oldCursor = mCursorRef.get();
+        try {
+            SQLite.of(mQuery.getClient().getContext()).save(object);
+            final Cursor cursor = mQuery.cursor();
+            mCursorRef.compareAndSet(oldCursor, cursor);
+            mSize = cursor.getCount();
+        } finally {
+            IOUtils.closeQuietly(oldCursor);
+        }
+    }
+
+    @Override
     public T remove(int location) {
         final Cursor oldCursor = mCursorRef.get();
         if (oldCursor.moveToPosition(location)) {
@@ -86,26 +97,17 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
         }
     }
 
-    @Override
-    public String toString() {
-        final Cursor cursor = mCursorRef.get();
-        if (cursor != null) {
-            return android.database.DatabaseUtils.dumpCursorToString(mCursorRef.get());
-        }
-        return super.toString();
-    }
-
     @NonNull
     AtomicReference<Cursor> getCursorReference() {
         return mCursorRef;
     }
 
     @NonNull
+    @SuppressWarnings("ConstantConditions")
     T instantiate(@NonNull SQLiteQuery<T> query, @NonNull Cursor cursor) {
         try {
             final Method method = DynamicMethod.find(CREATE_METHODS, query.getType(), "create",
                     SQLiteClient.class, Cursor.class);
-            //noinspection ConstantConditions
             return DynamicMethod.invokeStatic(method, query.getClient(), cursor);
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);
