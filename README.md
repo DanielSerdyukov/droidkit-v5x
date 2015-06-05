@@ -1,5 +1,5 @@
-DroidKit
-----------
+# DroidKit [![Build Status](https://travis-ci.org/DanielSerdyukov/droidkit.svg?branch=master)](https://travis-ci.org/DanielSerdyukov/droidkit.svg)
+
 a carefully crafted Android framework that includes:
 
 * *Injector*
@@ -14,7 +14,7 @@ Gradle
 --------
 
     dependencies {
-        compile 'droidkit:droidkit:4.4.+'
+        compile 'droidkit:droidkit:5.0.1'
     }
 
 License
