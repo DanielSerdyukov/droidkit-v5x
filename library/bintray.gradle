@@ -66,7 +66,7 @@ bintray {
     configurations = ['archives']
     publications = ['mavenAndroid']
     pkg {
-        repo = 'maven'
+        repo = 'droidkit'
         name = 'droidkit'
         desc = bintrayDesc
         websiteUrl = siteUrl
