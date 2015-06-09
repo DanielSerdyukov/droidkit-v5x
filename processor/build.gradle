@@ -1,4 +1,4 @@
-import javax.tools.ToolProvider
+import org.gradle.internal.jvm.Jvm
 
 buildscript {
     repositories {
@@ -21,7 +21,7 @@ targetCompatibility = JavaVersion.VERSION_1_7
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
+    compile files(Jvm.current().getToolsJar())
 }
 
 jar {
