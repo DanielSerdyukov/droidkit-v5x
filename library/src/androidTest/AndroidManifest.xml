@@ -3,6 +3,7 @@
 
     <application android:allowBackup="true">
 
+
         <activity android:name=".app.SignInActivity1" />
 
         <activity android:name=".app.SignInActivity2" />
@@ -11,6 +12,7 @@
 
         <activity android:name=".app.LoadersActivity" />
 
+        <!--
         <provider
             android:name=".sqlite.SQLiteProvider"
             android:authorities="droidkit.sqlite"
@@ -23,6 +25,7 @@
         <meta-data
             android:name="droidkit.sqlite.CASE_SENSITIVE_LIKE"
             android:value="true" />
+            -->
 
     </application>
 

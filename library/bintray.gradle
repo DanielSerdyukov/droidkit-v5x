@@ -2,54 +2,45 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
-def siteUrl = 'https://github.com/DanielSerdyukov/droidkit'
-def issuesUrl = 'https://github.com/DanielSerdyukov/droidkit/issues'
-def gitUrl = 'https://github.com/DanielSerdyukov/droidkit.git'
-def bintrayDesc = 'DroidKit a carefully crafted Android framework'
-
-group = 'droidkit'
-version = rootProject.versionName
+version = rootProject.version
 
 task androidJar(type: Jar, dependsOn: ['assembleRelease']) {
     group 'Build'
     from zipTree('build/intermediates/bundles/release/classes.jar')
-    from zipTree("../processor/build/libs/processor-${version}.jar")
+    from zipTree("../apt/build/libs/apt-${version}.jar")
 }
 
-task androidSourcesJar(type: Jar) {
+task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
 artifacts {
     archives file("build/libs/library-${version}.jar")
-    archives androidSourcesJar
+    archives sourcesJar
 }
 
 publishing {
     publications {
         mavenAndroid(MavenPublication) {
+            groupId 'droidkit'
             artifactId 'droidkit'
-            pom {
-                packaging 'jar'
-            }
+            version rootProject.version
             artifact androidJar
-            artifact androidSourcesJar {
-                classifier 'sources'
-            }
+            artifact sourcesJar { classifier 'sources' }
             pom.withXml {
                 Node root = asNode()
                 root.appendNode('name', 'droidkit')
-                root.appendNode('description', bintrayDesc)
-                root.appendNode('url', siteUrl)
+                root.appendNode('description', 'DroidKit a carefully crafted Android framework.')
+                root.appendNode('url', 'https://github.com/DanielSerdyukov/droidkit')
 
                 def issues = root.appendNode('issueManagement')
                 issues.appendNode('system', 'github')
-                issues.appendNode('url', issuesUrl)
+                issues.appendNode('url', 'https://github.com/DanielSerdyukov/droidkit/issues')
 
                 def scm = root.appendNode('scm')
-                scm.appendNode('url', "scm:${siteUrl}")
-                scm.appendNode('connection', "scm:${gitUrl}")
-                scm.appendNode('developerConnection', "scm:${gitUrl}")
+                scm.appendNode('url', 'scm:https://github.com/DanielSerdyukov/droidkit')
+                scm.appendNode('connection', 'scm:git@github.com:DanielSerdyukov/droidkit')
+                scm.appendNode('developerConnection', 'scm:git@github.com:DanielSerdyukov/droidkit')
 
                 def license = root.appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'The Apache Software License, Version 2.0')
@@ -66,13 +57,8 @@ bintray {
     configurations = ['archives']
     publications = ['mavenAndroid']
     pkg {
-        repo = 'droidkit'
+        repo = 'maven'
         name = 'droidkit'
-        desc = bintrayDesc
-        websiteUrl = siteUrl
-        issueTrackerUrl = issuesUrl
-        vcsUrl = gitUrl
         licenses = ['Apache-2.0']
-        labels = ['android', 'framework']
     }
 }

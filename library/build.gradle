@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    buildToolsVersion "23.0.0 rc2"
 
     defaultConfig {
         minSdkVersion 15
@@ -30,9 +30,8 @@ android {
 }
 
 dependencies {
+    compile project(':apt')
     compile 'com.android.support:support-v13:22.2.0'
-    debugCompile files("../processor/build/libs/processor-${rootProject.versionName}.jar")
-    releaseProvided files("../processor/build/libs/processor-${rootProject.versionName}.jar")
     provided 'org.sqlite.android:sqlite:3.8.10.2'
     testCompile 'junit:junit:4.12'
     testCompile('org.robolectric:robolectric:3.0-rc3') {
@@ -40,12 +39,8 @@ dependencies {
         exclude group: 'org.apache.httpcomponents', module: 'httpclient'
     }
     testCompile 'org.apache.maven:maven-ant-tasks:2.1.3'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.1'
-}
-
-task assembleProcessor(type: GradleBuild) {
-    dir = file('../processor')
-    tasks = ['clean', 'assemble']
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2'
+    androidTestCompile 'com.android.support.test:runner:0.3'
 }
 
 if (project.hasProperty("bintrayUser")) {

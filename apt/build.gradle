@@ -1,0 +1,20 @@
+import org.gradle.internal.jvm.Jvm
+
+group 'droidkit.apt'
+version = rootProject.version
+
+apply plugin: 'java'
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+dependencies {
+    compile files(Jvm.current().getToolsJar())
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+jar {
+    from configurations.compile.findAll {
+        it.name.contains('javapoet')
+    }.collect { zipTree(it) }
+}

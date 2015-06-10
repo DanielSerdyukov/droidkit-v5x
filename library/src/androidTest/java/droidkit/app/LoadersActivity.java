@@ -30,6 +30,21 @@ public class LoadersActivity extends Activity {
 
     boolean mLoader3Destroyed;
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
     @OnCreateLoader(1)
     Loader<List<SQLiteUser>> onCreateLoader1() {
         return new SQLiteLoader<>(getApplicationContext(), SQLiteUser.class);
