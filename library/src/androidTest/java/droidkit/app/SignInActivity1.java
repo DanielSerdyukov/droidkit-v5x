@@ -3,6 +3,7 @@ package droidkit.app;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -32,6 +33,17 @@ public class SignInActivity1 extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(droidkit.test.R.layout.sign_in);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                return false;
+            }
+        };
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

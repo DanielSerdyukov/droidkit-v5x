@@ -51,10 +51,13 @@ class ActivityApt extends LifecycleApt {
         Collections.addAll(methods,
                 setContentView1(),
                 setContentView2(),
+                onPostCreate(),
+                onOptionsItemSelected(),
                 onResume(Modifier.PROTECTED),
                 onPause(Modifier.PROTECTED),
                 onDestroy(Modifier.PROTECTED));
         methods.addAll(mOnClick);
+        methods.addAll(setupOnActionClickMethods());
         return methods;
     }
 
@@ -65,7 +68,7 @@ class ActivityApt extends LifecycleApt {
                 .addParameter(TypeName.INT, "layoutResId")
                 .addStatement("super.setContentView(layoutResId)")
                 .addCode(mInjectViews.build())
-                .addCode(setupOnClickListeners())
+                .addCode(callSetupOnClickMethods())
                 .build();
     }
 
@@ -76,11 +79,21 @@ class ActivityApt extends LifecycleApt {
                 .addParameter(ClassName.get("android.view", "View"), "view")
                 .addStatement("super.setContentView(view)")
                 .addCode(mInjectViews.build())
-                .addCode(setupOnClickListeners())
+                .addCode(callSetupOnClickMethods())
                 .build();
     }
 
-    private CodeBlock setupOnClickListeners() {
+    private MethodSpec onPostCreate() {
+        return MethodSpec.methodBuilder("onPostCreate")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PROTECTED)
+                .addParameter(ClassName.get("android.os", "Bundle"), "savedInstanceState")
+                .addStatement("super.onPostCreate(savedInstanceState)")
+                .addCode(callSetupOnActionClickMethods())
+                .build();
+    }
+
+    private CodeBlock callSetupOnClickMethods() {
         final CodeBlock.Builder codeBlock = CodeBlock.builder();
         for (final MethodSpec method : mOnClick) {
             codeBlock.addStatement("$N()", method);
