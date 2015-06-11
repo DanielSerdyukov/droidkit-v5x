@@ -37,15 +37,15 @@ class JCGenericType extends JCTypeName {
     }
 
     @Override
-    public JCTree.JCExpression getIdent() {
-        return JavacEnv.get().maker().TypeApply(mTypeName.getIdent(), getGenericTypes());
+    public JCTree.JCExpression ident() {
+        return JavacEnv.get().maker().TypeApply(mTypeName.ident(), getGenericTypes());
     }
 
     public JCTree.JCExpression newInstance(JCTree.JCExpression... args) {
         return JavacEnv.get().maker().NewClass(
                 null, // enclosing
                 getGenericTypes(), // generic types
-                getIdent(), // type
+                ident(), // type
                 List.from(args), // args
                 null
         );
@@ -54,7 +54,7 @@ class JCGenericType extends JCTypeName {
     private List<JCTree.JCExpression> getGenericTypes() {
         final ListBuffer<JCTree.JCExpression> genericTypes = new ListBuffer<>();
         for (final JCTypeName genericType : mGenericTypes) {
-            genericTypes.add(genericType.getIdent());
+            genericTypes.add(genericType.ident());
         }
         return genericTypes.toList();
     }

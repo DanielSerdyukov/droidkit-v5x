@@ -12,20 +12,18 @@
 
         <activity android:name=".app.LoadersActivity" />
 
-        <!--
         <provider
-            android:name=".sqlite.SQLiteProvider"
+            android:name="droidkit.sqlite.SQLiteProvider"
             android:authorities="droidkit.sqlite"
             android:exported="false" />
 
-        <meta-data
+        <!--<meta-data
             android:name="${applicationId}.DATABASE_NAME"
             android:value=":memory:" />
 
         <meta-data
             android:name="droidkit.sqlite.CASE_SENSITIVE_LIKE"
-            android:value="true" />
-            -->
+            android:value="true" />-->
 
     </application>
 

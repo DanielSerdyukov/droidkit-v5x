@@ -6,6 +6,7 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.ListBuffer;
 import com.sun.tools.javac.util.Name;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -29,7 +30,7 @@ class JCMethodSpec extends JCEmitter {
 
     private JCMethodSpec(Builder builder) {
         mModifiers = builder.mModifiers;
-        mReturnType = builder.mReturnType.getIdent();
+        mReturnType = builder.mReturnType.ident();
         mName = builder.mName;
         mParams = Collections.unmodifiableSet(builder.mParams);
         mStatements = builder.mStatements.toList();
@@ -45,7 +46,7 @@ class JCMethodSpec extends JCEmitter {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends JCTree> T getTree() {
+    public <T extends JCTree> T tree() {
         final TreeMaker maker = JavacEnv.get().maker();
         return (T) maker.MethodDef(
                 mModifiers, // modifiers
@@ -88,7 +89,7 @@ class JCMethodSpec extends JCEmitter {
         }
 
         Builder addParameter(JCVarSpec param) {
-            mParams.add(param.<JCTree.JCVariableDecl>getTree());
+            mParams.add(param.<JCTree.JCVariableDecl>tree());
             return this;
         }
 
@@ -98,6 +99,11 @@ class JCMethodSpec extends JCEmitter {
 
         Builder addStatement(JCTree.JCStatement statement) {
             mStatements.add(statement);
+            return this;
+        }
+
+        Builder addStatements(Collection<? extends JCTree.JCStatement> statements) {
+            mStatements.addAll(statements);
             return this;
         }
 

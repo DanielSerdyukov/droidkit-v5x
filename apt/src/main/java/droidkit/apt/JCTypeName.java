@@ -69,7 +69,7 @@ class JCTypeName {
         }, null);
     }
 
-    public JCTree.JCExpression getIdent() {
+    public JCTree.JCExpression ident() {
         return JavacEnv.get().maker().TypeIdent(mTypeTag);
     }
 

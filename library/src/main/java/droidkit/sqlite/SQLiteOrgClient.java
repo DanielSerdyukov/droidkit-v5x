@@ -9,9 +9,9 @@ import android.support.annotation.Nullable;
 
 import org.sqlite.database.sqlite.SQLiteDatabase;
 import org.sqlite.database.sqlite.SQLiteOpenHelper;
-import org.sqlite.database.sqlite.SQLiteProgram;
 import org.sqlite.database.sqlite.SQLiteStatement;
 
+import droidkit.database.DatabaseUtils;
 import droidkit.io.IOUtils;
 
 /**
@@ -27,27 +27,6 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         super(context, dbInfo.getName(), null, dbInfo.getVersion());
         mContext = context;
         mDbInfo = dbInfo;
-    }
-
-    private static void bindObjectToProgram(SQLiteProgram prog, int index, Object value) {
-        if (value == null) {
-            prog.bindNull(index);
-        } else if (value instanceof Double || value instanceof Float) {
-            prog.bindDouble(index, ((Number) value).doubleValue());
-        } else if (value instanceof Number) {
-            prog.bindLong(index, ((Number) value).longValue());
-        } else if (value instanceof Boolean) {
-            Boolean bool = (Boolean) value;
-            if (bool) {
-                prog.bindLong(index, 1);
-            } else {
-                prog.bindLong(index, 0);
-            }
-        } else if (value instanceof byte[]) {
-            prog.bindBlob(index, (byte[]) value);
-        } else {
-            prog.bindString(index, value.toString());
-        }
     }
 
     @Override
@@ -86,7 +65,7 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
         try {
             for (int i = 0; i < bindArgs.length; ++i) {
-                bindObjectToProgram(stmt, i + 1, bindArgs[i]);
+                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
             }
             return stmt.simpleQueryForString();
         } finally {
@@ -99,7 +78,7 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
         try {
             for (int i = 0; i < bindArgs.length; ++i) {
-                bindObjectToProgram(stmt, i + 1, bindArgs[i]);
+                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
             }
             stmt.execute();
         } finally {
@@ -112,7 +91,7 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
         final SQLiteStatement stmt = getWritableDatabase().compileStatement(sql);
         try {
             for (int i = 0; i < bindArgs.length; ++i) {
-                bindObjectToProgram(stmt, i + 1, bindArgs[i]);
+                DatabaseUtils.bindObjectToProgram(stmt, i + 1, bindArgs[i]);
             }
             return stmt.executeUpdateDelete();
         } finally {
@@ -149,6 +128,19 @@ class SQLiteOrgClient extends SQLiteOpenHelper implements SQLiteClient {
                 .compileStatement("INSERT INTO " + table + "(_id) VALUES(null);");
         try {
             return stmt.executeInsert();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
+    }
+
+    @Override
+    public int updateRecord(@NonNull String table, @NonNull String column, @Nullable Object value, long rowId) {
+        final SQLiteStatement stmt = getWritableDatabase()
+                .compileStatement("UPDATE " + table + " SET " + column + " = ? WHERE " + BaseColumns._ID + " = ?;");
+        try {
+            DatabaseUtils.bindObjectToProgram(stmt, 1, value);
+            DatabaseUtils.bindObjectToProgram(stmt, 2, rowId);
+            return stmt.executeUpdateDelete();
         } finally {
             IOUtils.closeQuietly(stmt);
         }

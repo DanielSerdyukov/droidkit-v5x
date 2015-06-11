@@ -25,8 +25,8 @@ class JCArrayType extends JCTypeName {
     }
 
     @Override
-    public JCTree.JCExpression getIdent() {
-        return JavacEnv.get().maker().TypeArray(mTypeName.getIdent());
+    public JCTree.JCExpression ident() {
+        return JavacEnv.get().maker().TypeArray(mTypeName.ident());
     }
 
     public JCTree.JCExpression newArray(int... sizes) {
@@ -34,7 +34,7 @@ class JCArrayType extends JCTypeName {
         for (final int size : sizes) {
             dimensions.add(JCLiteral.intValue(size));
         }
-        return JavacEnv.get().maker().NewArray(mTypeName.getIdent(), dimensions.toList(), null);
+        return JavacEnv.get().maker().NewArray(mTypeName.ident(), dimensions.toList(), null);
     }
 
 }

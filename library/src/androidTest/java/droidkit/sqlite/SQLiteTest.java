@@ -46,7 +46,7 @@ public class SQLiteTest {
         Assert.assertEquals("John", mSQLite.simpleQueryForString("SELECT name FROM users;"));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUnicode() throws Exception {
         mSQLite.execSQL("INSERT INTO users(name) VALUES('Вася Пупкин');");
         mSQLite.simpleQueryForString("SELECT name FROM users WHERE name LIKE 'ва%';");

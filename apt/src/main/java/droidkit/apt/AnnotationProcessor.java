@@ -16,11 +16,13 @@ import javax.lang.model.element.TypeElement;
 import droidkit.annotation.InjectView;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
+import droidkit.annotation.SQLiteObject;
 
 @SupportedAnnotationTypes({
         "droidkit.annotation.InjectView",
         "droidkit.annotation.OnActionClick",
-        "droidkit.annotation.OnClick"
+        "droidkit.annotation.OnClick",
+        "droidkit.annotation.SQLiteObject"
 })
 public class AnnotationProcessor extends AbstractProcessor {
 
@@ -52,6 +54,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             for (final Apt apt : mApt.values()) {
                 apt.finishProcessing();
             }
+            SQLiteObjectApt.brewClass();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -64,6 +67,13 @@ public class AnnotationProcessor extends AbstractProcessor {
                 || OnClick.class.getName().equals(fqcn)
                 || OnActionClick.class.getName().equals(fqcn)) {
             return findLifecycleApt(annotation, element.getEnclosingElement());
+        } else if (SQLiteObject.class.getName().equals(fqcn)) {
+            Apt apt = mApt.get(element);
+            if (apt == null) {
+                apt = new SQLiteObjectApt((TypeElement) element);
+                mApt.put(element, apt);
+            }
+            return apt;
         } else {
             JavacEnv.get().logE(element, "Unsupported annotation: %s", annotation);
         }

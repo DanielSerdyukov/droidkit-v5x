@@ -100,4 +100,35 @@ public final class DatabaseUtils {
         }
     }
 
+    public static void bindObjectToProgram(org.sqlite.database.sqlite.SQLiteProgram prog, int index, Object value) {
+        if (value == null) {
+            prog.bindNull(index);
+        } else if (value instanceof Double || value instanceof Float) {
+            prog.bindDouble(index, ((Number) value).doubleValue());
+        } else if (value instanceof Number) {
+            prog.bindLong(index, ((Number) value).longValue());
+        } else if (value instanceof Boolean) {
+            Boolean bool = (Boolean) value;
+            if (bool) {
+                prog.bindLong(index, 1);
+            } else {
+                prog.bindLong(index, 0);
+            }
+        } else if (value instanceof byte[]) {
+            prog.bindBlob(index, (byte[]) value);
+        } else if (value instanceof Enum) {
+            prog.bindString(index, ((Enum) value).name());
+        } else {
+            prog.bindString(index, value.toString());
+        }
+    }
+
+    public static void bindObjectToProgram(android.database.sqlite.SQLiteProgram prog, int index, Object value) {
+        if (value instanceof Enum) {
+            prog.bindString(index, ((Enum) value).name());
+        } else {
+            android.database.DatabaseUtils.bindObjectToProgram(prog, index, value);
+        }
+    }
+
 }

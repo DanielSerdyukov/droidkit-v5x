@@ -40,4 +40,6 @@ public interface SQLiteClient {
 
     long insertRowId(@NonNull String table);
 
+    int updateRecord(@NonNull String table, @NonNull String column, @Nullable Object value, long rowId);
+
 }

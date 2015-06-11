@@ -21,7 +21,7 @@ final class JCVarSpec extends JCEmitter {
     private final JCTree.JCExpression mInit;
 
     JCVarSpec(Builder builder) {
-        mType = builder.mType.getIdent();
+        mType = builder.mType.ident();
         mName = JavacEnv.get().names().fromString(builder.mName);
         mModifiers = builder.mModifiers;
         mInit = builder.mInit;
@@ -37,7 +37,7 @@ final class JCVarSpec extends JCEmitter {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends JCTree> T getTree() {
+    public <T extends JCTree> T tree() {
         final TreeMaker maker = JavacEnv.get().maker();
         return (T) maker.VarDef(
                 mModifiers, // modifiers
@@ -47,7 +47,7 @@ final class JCVarSpec extends JCEmitter {
         );
     }
 
-    public JCTree.JCExpression getIdent() {
+    public JCTree.JCExpression ident() {
         return JavacEnv.get().maker().Ident(mName);
     }
 
@@ -99,12 +99,12 @@ final class JCVarSpec extends JCEmitter {
         }
 
         public Builder init(JCSelector selector) {
-            mInit = selector.getIdent();
+            mInit = selector.ident();
             return this;
         }
 
         public Builder init(String... selectors) {
-            mInit = JCSelector.get(selectors).getIdent();
+            mInit = JCSelector.get(selectors).ident();
             return this;
         }
 

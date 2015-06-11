@@ -17,10 +17,13 @@ abstract class JCEmitter {
     public void emitTo(JCTree.JCClassDecl classDecl) {
         final ListBuffer<JCTree> defs = new ListBuffer<>();
         defs.addAll(classDecl.defs);
-        defs.add(getTree());
+        defs.add(tree());
         classDecl.defs = defs.toList();
     }
 
-    public abstract <T extends JCTree> T getTree();
+    public void emitTo(JCTree.JCMethodDecl methodDecl) {
+    }
+
+    public abstract <T extends JCTree> T tree();
 
 }

@@ -106,7 +106,7 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
     @SuppressWarnings("ConstantConditions")
     T instantiate(@NonNull SQLiteQuery<T> query, @NonNull Cursor cursor) {
         try {
-            final Method method = DynamicMethod.find(CREATE_METHODS, query.getType(), "create",
+            final Method method = DynamicMethod.find(CREATE_METHODS, query.getType(), "_create",
                     SQLiteClient.class, Cursor.class);
             return DynamicMethod.invokeStatic(method, query.getClient(), cursor);
         } catch (DynamicException e) {

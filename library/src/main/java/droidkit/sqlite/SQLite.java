@@ -60,7 +60,6 @@ public final class SQLite {
 
     @NonNull
     public static SQLite of(@NonNull Context context) {
-
         SQLite instance = sInstance;
         if (instance == null) {
             synchronized (SQLite.class) {
@@ -120,7 +119,7 @@ public final class SQLite {
     @SuppressWarnings("ConstantConditions")
     public <T> T create(@NonNull Class<T> type) {
         try {
-            final Method method = DynamicMethod.find(CREATE_METHODS, type, "create", SQLiteClient.class);
+            final Method method = DynamicMethod.find(CREATE_METHODS, type, "_create", SQLiteClient.class);
             return DynamicMethod.invokeStatic(method, mClient);
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);
@@ -130,7 +129,7 @@ public final class SQLite {
     public <T> void save(@NonNull T object) {
         try {
             final Class<?> type = object.getClass();
-            final Method method = DynamicMethod.find(SAVE_METHODS, type, "saveToSQLite", SQLiteClient.class, type);
+            final Method method = DynamicMethod.find(SAVE_METHODS, type, "_save", SQLiteClient.class, type);
             DynamicMethod.invokeStatic(method, mClient, object);
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);

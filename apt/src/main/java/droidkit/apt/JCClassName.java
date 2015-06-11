@@ -65,15 +65,15 @@ class JCClassName extends JCTypeName {
     }
 
     @Override
-    public JCTree.JCExpression getIdent() {
-        return JCSelector.get(mNames).getIdent();
+    public JCTree.JCExpression ident() {
+        return JCSelector.get(mNames).ident();
     }
 
     public JCTree.JCExpression newInstance(JCTree.JCExpression... args) {
         return JavacEnv.get().maker().NewClass(
                 null, // enclosing
                 List.<JCTree.JCExpression>nil(), // generic types
-                getIdent(), // type
+                ident(), // type
                 List.from(args), // args
                 null
         );

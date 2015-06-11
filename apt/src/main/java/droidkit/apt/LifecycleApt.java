@@ -90,7 +90,7 @@ class LifecycleApt implements Apt {
         try (final Writer writer = new BufferedWriter(sourceFile.openWriter())) {
             javaFile.writeTo(writer);
         }
-        JavacEnv.get().<JCTree.JCClassDecl>getTree(mElement).extending = JCSelector.get(spec.name).getIdent();
+        JavacEnv.get().<JCTree.JCClassDecl>getTree(mElement).extending = JCSelector.get(spec.name).ident();
     }
 
     protected void injectView(TypeElement clazz, Element view, int viewId) {

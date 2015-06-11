@@ -5,57 +5,74 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @author Daniel Serdyukov
  */
 final class JCSelector {
 
-    private final java.util.List<String> mNames;
+    private final JCTree.JCExpression mSelector;
 
-    private JCSelector(java.util.List<String> names) {
-        mNames = names;
+    private JCSelector(JCTree.JCExpression selector) {
+        mSelector = selector;
+    }
+
+    public static JCSelector get(JCTree.JCExpressionStatement selector, Collection<String> selectors) {
+        return get(selector.getExpression(), selectors);
+    }
+
+    public static JCSelector get(JCTree.JCExpressionStatement selector, String... selectors) {
+        return get(selector.getExpression(), Arrays.asList(selectors));
+    }
+
+    public static JCSelector get(JCTree.JCExpression selector, Collection<String> selectors) {
+        final TreeMaker maker = JavacEnv.get().maker();
+        final Names names = JavacEnv.get().names();
+        for (final String sel : selectors) {
+            selector = maker.Select(selector, names.fromString(sel));
+        }
+        return new JCSelector(selector);
+    }
+
+    public static JCSelector get(JCTree.JCExpression selector, String... selectors) {
+        return get(selector, Arrays.asList(selectors));
     }
 
     public static JCSelector get(String... selectors) {
-        return new JCSelector(Arrays.asList(selectors));
+        return get(Arrays.asList(selectors));
     }
 
-    public static JCSelector get(Iterable<String> selectors) {
-        final ArrayList<String> list = new ArrayList<>();
-        for (final String selector : selectors) {
-            list.add(selector);
-        }
-        return new JCSelector(list);
-    }
-
-    public JCTree.JCExpression getIdent() {
-        Utils.checkArgument(!mNames.isEmpty(), "Selectors is empty");
+    public static JCSelector get(Collection<String> selectors) {
+        final Iterator<String> iterator = selectors.iterator();
         final TreeMaker maker = JavacEnv.get().maker();
         final Names names = JavacEnv.get().names();
-        JCTree.JCExpression selector = maker.Ident(names.fromString(mNames.get(0)));
-        for (int i = 1; i < mNames.size(); ++i) {
-            selector = maker.Select(selector, names.fromString(mNames.get(i)));
+        JCTree.JCExpression selector = maker.Ident(names.fromString(iterator.next()));
+        while (iterator.hasNext()) {
+            selector = maker.Select(selector, names.fromString(iterator.next()));
         }
-        return selector;
+        return new JCSelector(selector);
     }
 
-    public JCTree.JCExpression assign(JCTree.JCExpression expression) {
-        return JavacEnv.get().maker().Assign(getIdent(), expression);
+    public JCTree.JCExpression ident() {
+        return mSelector;
     }
 
-    public JCTree.JCExpressionStatement execAssign(JCTree.JCExpression expression) {
-        return JavacEnv.get().maker().Exec(assign(expression));
+    public JCTree.JCExpressionStatement assign(String value) {
+        final TreeMaker maker = JavacEnv.get().maker();
+        return maker.Exec(maker.Assign(ident(), JCSelector.get(value).ident()));
     }
 
-    public JCTree.JCMethodInvocation apply(JCTree.JCExpression... args) {
-        return JavacEnv.get().maker().Apply(List.<JCTree.JCExpression>nil(), getIdent(), List.from(args));
+    public JCTree.JCExpressionStatement assign(JCTree.JCExpression expression) {
+        final TreeMaker maker = JavacEnv.get().maker();
+        return maker.Exec(maker.Assign(ident(), expression));
     }
 
-    public JCTree.JCExpressionStatement execApply(JCTree.JCExpression... args) {
-        return JavacEnv.get().maker().Exec(apply(args));
+    public JCTree.JCExpressionStatement invoke(JCTree.JCExpression... args) {
+        final TreeMaker maker = JavacEnv.get().maker();
+        return maker.Exec(maker.Apply(List.<JCTree.JCExpression>nil(), ident(), List.from(args)));
     }
 
 }

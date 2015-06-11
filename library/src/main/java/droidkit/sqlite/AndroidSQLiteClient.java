@@ -3,7 +3,6 @@ package droidkit.sqlite;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
@@ -11,6 +10,7 @@ import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import droidkit.database.DatabaseUtils;
 import droidkit.io.IOUtils;
 
 /**
@@ -127,6 +127,19 @@ class AndroidSQLiteClient extends SQLiteOpenHelper implements SQLiteClient {
                 .compileStatement("INSERT INTO " + table + "(_id) VALUES(null);");
         try {
             return stmt.executeInsert();
+        } finally {
+            IOUtils.closeQuietly(stmt);
+        }
+    }
+
+    @Override
+    public int updateRecord(@NonNull String table, @NonNull String column, @Nullable Object value, long rowId) {
+        final SQLiteStatement stmt = getWritableDatabase()
+                .compileStatement("UPDATE " + table + " SET " + column + " = ? WHERE " + BaseColumns._ID + " = ?;");
+        try {
+            DatabaseUtils.bindObjectToProgram(stmt, 1, value);
+            DatabaseUtils.bindObjectToProgram(stmt, 2, rowId);
+            return stmt.executeUpdateDelete();
         } finally {
             IOUtils.closeQuietly(stmt);
         }
