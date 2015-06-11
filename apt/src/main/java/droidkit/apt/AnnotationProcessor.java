@@ -14,6 +14,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import droidkit.annotation.InjectView;
+import droidkit.annotation.InstanceState;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
 import droidkit.annotation.OnCreateLoader;
@@ -21,6 +22,7 @@ import droidkit.annotation.SQLiteObject;
 
 @SupportedAnnotationTypes({
         "droidkit.annotation.InjectView",
+        "droidkit.annotation.InstanceState",
         "droidkit.annotation.OnActionClick",
         "droidkit.annotation.OnClick",
         "droidkit.annotation.SQLiteObject",
@@ -72,6 +74,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         } else {
             final String fqcn = annotation.getQualifiedName().toString();
             if (InjectView.class.getName().equals(fqcn)
+                    || InstanceState.class.getName().equals(fqcn)
                     || OnClick.class.getName().equals(fqcn)
                     || OnActionClick.class.getName().equals(fqcn)) {
                 if (Utils.isSubtype(enclosingElement, "android.app.Activity")) {

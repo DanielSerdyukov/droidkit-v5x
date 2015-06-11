@@ -49,15 +49,27 @@ class FragmentApt extends LifecycleApt {
     protected Collection<MethodSpec> methods() {
         final List<MethodSpec> methods = new ArrayList<>();
         Collections.addAll(methods,
+                onCreate(),
                 onViewCreated(),
                 onActivityCreated(),
                 onOptionsItemSelected(),
                 onResume(Modifier.PUBLIC),
                 onPause(Modifier.PUBLIC),
+                onSaveInstanceState(Modifier.PUBLIC),
                 onDestroy(Modifier.PUBLIC));
         methods.addAll(mOnClick);
         methods.addAll(setupOnActionClickMethods());
         return methods;
+    }
+
+    private MethodSpec onCreate() {
+        return MethodSpec.methodBuilder("onCreate")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(ClassName.get("android.os", "Bundle"), "savedInstanceState")
+                .addStatement("super.onCreate(savedInstanceState)")
+                .addCode(restoreInstanceState())
+                .build();
     }
 
     private MethodSpec onViewCreated() {

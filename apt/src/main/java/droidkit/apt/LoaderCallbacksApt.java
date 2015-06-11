@@ -9,6 +9,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.tree.JCTree;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -198,6 +200,7 @@ class LoaderCallbacksApt implements Apt {
     private void tryInjectOnCreateLoader(ExecutableElement method, OnCreateLoader annotation) {
         if (annotation != null) {
             mSupportImpl = annotation.support();
+            JavacEnv.get().<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
             for (final int loaderId : annotation.value()) {
                 final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.isEmpty()) {
@@ -229,6 +232,7 @@ class LoaderCallbacksApt implements Apt {
 
     private void tryInjectOnLoadFinished(ExecutableElement method, OnLoadFinished annotation) {
         if (annotation != null) {
+            JavacEnv.get().<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
             for (final int loaderId : annotation.value()) {
                 final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.isEmpty()) {
@@ -257,6 +261,7 @@ class LoaderCallbacksApt implements Apt {
 
     private void tryInjectOnLoaderReset(ExecutableElement method, OnResetLoader annotation) {
         if (annotation != null) {
+            JavacEnv.get().<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
             for (final int loaderId : annotation.value()) {
                 final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.isEmpty()) {

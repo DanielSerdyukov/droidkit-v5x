@@ -18,7 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.processing.RoundEnvironment;
@@ -29,9 +31,11 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 
 import droidkit.annotation.InjectView;
+import droidkit.annotation.InstanceState;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
 
@@ -51,9 +55,30 @@ class LifecycleApt implements Apt {
 
     static final ClassName DK_VIEWS = ClassName.get("droidkit.view", "Views");
 
+    private static final Map<Enum<?>, String> JAVA_TO_STATE = new HashMap<>();
+
+    private static final Map<Enum<?>, String> STATE_TO_JAVA = new HashMap<>();
+
+    static {
+        JAVA_TO_STATE.put(TypeKind.INT, "outState.putInt($S, (($T) this).$L)");
+        JAVA_TO_STATE.put(TypeKind.LONG, "outState.putLong($S, (($T) this).$L)");
+        JAVA_TO_STATE.put(TypeKind.DOUBLE, "outState.putDouble($S, (($T) this).$L)");
+        JAVA_TO_STATE.put(TypeKind.BOOLEAN, "outState.putBoolean($S, (($T) this).$L)");
+        JAVA_TO_STATE.put(TypeKind.FLOAT, "outState.putFloat($S, (($T) this).$L)");
+        STATE_TO_JAVA.put(TypeKind.INT, "(($T) this).$L = savedInstanceState.getInt($S, 0)");
+        STATE_TO_JAVA.put(TypeKind.LONG, "(($T) this).$L = savedInstanceState.getLong($S, 0L)");
+        STATE_TO_JAVA.put(TypeKind.DOUBLE, "(($T) this).$L = savedInstanceState.getDouble($S, 0d)");
+        STATE_TO_JAVA.put(TypeKind.BOOLEAN, "(($T) this).$L = savedInstanceState.getBoolean($S, false)");
+        STATE_TO_JAVA.put(TypeKind.FLOAT, "(($T) this).$L = savedInstanceState.getFloat($S, 0f)");
+    }
+
     private final AtomicBoolean mProcessSingle = new AtomicBoolean();
 
     private final List<MethodSpec> mOnActionClick = new ArrayList<>();
+
+    private final CodeBlock.Builder mSaveInstanceState = CodeBlock.builder();
+
+    private final CodeBlock.Builder mRestoreInstanceState = CodeBlock.builder();
 
     private final TypeElement mElement;
 
@@ -68,6 +93,7 @@ class LifecycleApt implements Apt {
             for (final Element element : elements) {
                 if (ElementKind.FIELD == element.getKind()) {
                     tryInjectView(element, element.getAnnotation(InjectView.class));
+                    tryInjectInstanceState((VariableElement) element, element.getAnnotation(InstanceState.class));
                 } else if (ElementKind.METHOD == element.getKind()) {
                     tryInjectOnClick((ExecutableElement) element, element.getAnnotation(OnClick.class));
                     tryInjectOnActionClick((ExecutableElement) element, element.getAnnotation(OnActionClick.class));
@@ -137,11 +163,22 @@ class LifecycleApt implements Apt {
                 .build();
     }
 
+    protected MethodSpec onSaveInstanceState(Modifier... modifiers) {
+        return MethodSpec.methodBuilder("onSaveInstanceState")
+                .addAnnotation(Override.class)
+                .addModifiers(modifiers)
+                .addParameter(ClassName.get("android.os", "Bundle"), "outState")
+                .addStatement("super.onSaveInstanceState(outState)")
+                .addCode(mSaveInstanceState.build())
+                .build();
+    }
+
     protected MethodSpec onDestroy(Modifier... modifiers) {
         return MethodSpec.methodBuilder("onDestroy")
                 .addAnnotation(Override.class)
                 .addModifiers(modifiers)
                 .addStatement("mOnClick.clear()")
+                .addStatement("mOnActionClick.clear()")
                 .addStatement("super.onDestroy()")
                 .build();
     }
@@ -194,6 +231,14 @@ class LifecycleApt implements Apt {
         return codeBlock.build();
     }
 
+    protected CodeBlock restoreInstanceState() {
+        return CodeBlock.builder()
+                .beginControlFlow("if (savedInstanceState != null)")
+                .add(mRestoreInstanceState.build())
+                .endControlFlow()
+                .build();
+    }
+
     private void tryInjectView(Element element, InjectView injectView) {
         if (injectView != null) {
             JavacEnv.get().<JCTree.JCVariableDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
@@ -201,19 +246,19 @@ class LifecycleApt implements Apt {
         }
     }
 
-    private void tryInjectOnClick(ExecutableElement element, OnClick onClick) {
-        if (onClick != null) {
+    private void tryInjectOnClick(ExecutableElement element, OnClick annotation) {
+        if (annotation != null) {
             JavacEnv.get().<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
-            for (final int viewId : onClick.value()) {
+            for (final int viewId : annotation.value()) {
                 injectOnClick(mElement, element, viewId);
             }
         }
     }
 
-    private void tryInjectOnActionClick(ExecutableElement element, OnActionClick onActionClick) {
-        if (onActionClick != null) {
+    private void tryInjectOnActionClick(ExecutableElement element, OnActionClick annotation) {
+        if (annotation != null) {
             JavacEnv.get().<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
-            for (final int viewId : onActionClick.value()) {
+            for (final int viewId : annotation.value()) {
                 final CodeBlock.Builder codeBlock = CodeBlock.builder()
                         .addStatement("final $T target = ($T) this", mElement, mElement)
                         .add("mOnActionClick.put($L, new $T() {\n", viewId, ON_MENU_ITEM_CLICK_LISTENER).indent()
@@ -246,6 +291,32 @@ class LifecycleApt implements Apt {
                         .addModifiers(Modifier.PRIVATE)
                         .addCode(codeBlock.build())
                         .build());
+            }
+        }
+    }
+
+    private void tryInjectInstanceState(VariableElement field, InstanceState annotation) {
+        if (annotation != null) {
+            JavacEnv.get().<JCTree.JCVariableDecl>getTree(field).mods.flags &= ~Flags.PRIVATE;
+            final String key = annotation.value().isEmpty() ? field.getSimpleName().toString() : annotation.value();
+            final TypeMirror mirror = field.asType();
+            if (JAVA_TO_STATE.containsKey(mirror.getKind())) {
+                mSaveInstanceState.addStatement(JAVA_TO_STATE.get(mirror.getKind()),
+                        key, mElement, field.getSimpleName());
+                mRestoreInstanceState.addStatement(STATE_TO_JAVA.get(mirror.getKind()),
+                        mElement, field.getSimpleName(), key);
+            } else if (TypeKind.DECLARED == mirror.getKind()) {
+                if (Utils.isSubtype(mirror, "android.os.Bundle")) {
+                    mSaveInstanceState.addStatement("outState.putBundle($S, (($T) this).$L)",
+                            key, mElement, field.getSimpleName());
+                    mRestoreInstanceState.addStatement("(($T) this).$L = savedInstanceState.getBundle($S)",
+                            mElement, field.getSimpleName(), key);
+                } else if (Utils.isSubtype(mirror, "android.os.Parcelable")) {
+                    mSaveInstanceState.addStatement("outState.putParcelable($S, (($T) this).$L)",
+                            key, mElement, field.getSimpleName());
+                    mRestoreInstanceState.addStatement("(($T) this).$L = savedInstanceState.getParcelable($S)",
+                            mElement, field.getSimpleName(), key);
+                }
             }
         }
     }

@@ -49,16 +49,28 @@ class ActivityApt extends LifecycleApt {
     protected Collection<MethodSpec> methods() {
         final List<MethodSpec> methods = new ArrayList<>();
         Collections.addAll(methods,
+                onCreate(),
                 setContentView1(),
                 setContentView2(),
                 onPostCreate(),
                 onOptionsItemSelected(),
                 onResume(Modifier.PROTECTED),
                 onPause(Modifier.PROTECTED),
+                onSaveInstanceState(Modifier.PROTECTED),
                 onDestroy(Modifier.PROTECTED));
         methods.addAll(mOnClick);
         methods.addAll(setupOnActionClickMethods());
         return methods;
+    }
+
+    private MethodSpec onCreate() {
+        return MethodSpec.methodBuilder("onCreate")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PROTECTED)
+                .addParameter(ClassName.get("android.os", "Bundle"), "savedInstanceState")
+                .addStatement("super.onCreate(savedInstanceState)")
+                .addCode(restoreInstanceState())
+                .build();
     }
 
     private MethodSpec setContentView1() {
