@@ -23,8 +23,7 @@ public final class Loaders {
             return lm.initLoader(loaderId, args, (android.app.LoaderManager.LoaderCallbacks<D>) target);
         }
         try {
-            return lm.initLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(
-                    target.getClass().getName() + "$LC" + loaderId, target));
+            return lm.initLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
                     ", loaderId=" + loaderId);
@@ -40,8 +39,7 @@ public final class Loaders {
             return lm.initLoader(loaderId, args, (android.support.v4.app.LoaderManager.LoaderCallbacks<D>) target);
         }
         try {
-            return lm.initLoader(loaderId, args, Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(
-                    target.getClass().getName() + "$LC" + loaderId, target));
+            return lm.initLoader(loaderId, args, Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
                     ", loaderId=" + loaderId);
@@ -56,8 +54,7 @@ public final class Loaders {
             return lm.restartLoader(loaderId, args, (android.app.LoaderManager.LoaderCallbacks<D>) target);
         }
         try {
-            return lm.restartLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(
-                    target.getClass().getName() + "$LC" + loaderId, target));
+            return lm.restartLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
                     ", loaderId=" + loaderId);
@@ -73,9 +70,7 @@ public final class Loaders {
             return lm.restartLoader(loaderId, args, (android.support.v4.app.LoaderManager.LoaderCallbacks<D>) target);
         }
         try {
-            return lm.restartLoader(loaderId, args,
-                    Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(
-                            target.getClass().getName() + "$LC" + loaderId, target));
+            return lm.restartLoader(loaderId, args, Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
                     ", loaderId=" + loaderId);

@@ -16,13 +16,15 @@ import javax.lang.model.element.TypeElement;
 import droidkit.annotation.InjectView;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
+import droidkit.annotation.OnCreateLoader;
 import droidkit.annotation.SQLiteObject;
 
 @SupportedAnnotationTypes({
         "droidkit.annotation.InjectView",
         "droidkit.annotation.OnActionClick",
         "droidkit.annotation.OnClick",
-        "droidkit.annotation.SQLiteObject"
+        "droidkit.annotation.SQLiteObject",
+        "droidkit.annotation.OnCreateLoader"
 })
 public class AnnotationProcessor extends AbstractProcessor {
 
@@ -47,7 +49,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         for (final TypeElement annotation : annotations) {
             final Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(annotation);
             for (final Element element : elements) {
-                findApt(annotation, element).process(roundEnv);
+                getOrCreateApt(annotation, element).process(roundEnv);
             }
         }
         try {
@@ -61,43 +63,35 @@ public class AnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
-    private Apt findApt(TypeElement annotation, Element element) {
-        final String fqcn = annotation.getQualifiedName().toString();
-        if (InjectView.class.getName().equals(fqcn)
-                || OnClick.class.getName().equals(fqcn)
-                || OnActionClick.class.getName().equals(fqcn)) {
-            return findLifecycleApt(annotation, element.getEnclosingElement());
-        } else if (SQLiteObject.class.getName().equals(fqcn)) {
-            Apt apt = mApt.get(element);
-            if (apt == null) {
-                apt = new SQLiteObjectApt((TypeElement) element);
-                mApt.put(element, apt);
-            }
-            return apt;
+    private Apt getOrCreateApt(TypeElement annotation, Element element) {
+        final Element enclosingElement = element.getEnclosingElement();
+        if (mApt.containsKey(element)) {
+            return mApt.get(element);
+        } else if (mApt.containsKey(enclosingElement)) {
+            return mApt.get(enclosingElement);
         } else {
-            JavacEnv.get().logE(element, "Unsupported annotation: %s", annotation);
+            final String fqcn = annotation.getQualifiedName().toString();
+            if (InjectView.class.getName().equals(fqcn)
+                    || OnClick.class.getName().equals(fqcn)
+                    || OnActionClick.class.getName().equals(fqcn)) {
+                if (Utils.isSubtype(enclosingElement, "android.app.Activity")) {
+                    return putIfAbsent(enclosingElement, new ActivityApt((TypeElement) enclosingElement));
+                } else if (Utils.isSubtype(enclosingElement, "android.app.Fragment")
+                        || Utils.isSubtype(enclosingElement, "android.support.v4.app.Fragment")) {
+                    return putIfAbsent(enclosingElement, new FragmentApt((TypeElement) enclosingElement));
+                }
+            } else if (SQLiteObject.class.getName().equals(fqcn)) {
+                return putIfAbsent(element, new SQLiteObjectApt((TypeElement) element));
+            } else if (OnCreateLoader.class.getName().equals(fqcn)) {
+                return putIfAbsent(enclosingElement, new LoaderCallbacksApt((TypeElement) enclosingElement));
+            }
         }
-        throw new AssertionError();
+        JavacEnv.get().logE(element, "Unsupported annotation: %s", annotation);
+        throw new IllegalArgumentException("Unsupported annotation: " + annotation);
     }
 
-    private Apt findLifecycleApt(TypeElement annotation, Element element) {
-        Apt apt = null;
-        if (Utils.isSubtype(element, "android.app.Activity")) {
-            apt = mApt.get(element);
-            if (apt == null) {
-                apt = new ActivityApt((TypeElement) element);
-                mApt.put(element, apt);
-            }
-        } else if (Utils.isSubtype(element, "android.app.Fragment")
-                || Utils.isSubtype(element, "android.support.v4.app.Fragment")) {
-            apt = mApt.get(element);
-            if (apt == null) {
-                apt = new FragmentApt((TypeElement) element);
-                mApt.put(element, apt);
-            }
-        } else {
-            JavacEnv.get().logE(element, "%s supported only in Activity and Fragment", annotation);
-        }
+    private Apt putIfAbsent(Element element, Apt apt) {
+        mApt.put(element, apt);
         return apt;
     }
 
