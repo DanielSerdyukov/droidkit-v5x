@@ -1,6 +1,7 @@
 package droidkit.sqlite;
 
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -10,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,7 +69,9 @@ public final class SQLiteQuery<T> {
     //endregion
 
     //region fields
-    private final WeakReference<SQLiteClient> mClient;
+    private final Reference<Context> mContext;
+
+    private final Reference<SQLiteClient> mClient;
 
     private final Class<T> mType;
 
@@ -86,21 +90,19 @@ public final class SQLiteQuery<T> {
     private String mLimit;
 
     private boolean mNotifyOnChange;
-
-    private boolean mSyncOnChange;
     //endregion
 
-    SQLiteQuery(@NonNull SQLiteClient client, @NonNull Class<T> type) {
+    SQLiteQuery(@NonNull Context context, @NonNull SQLiteClient client, @NonNull Class<T> type) {
+        mContext = new WeakReference<>(context);
         mClient = new WeakReference<>(client);
         mType = type;
-        setNotifyOnChange(true, false);
+        notifyOnChange(true);
     }
 
     //region builder
     @NonNull
-    public final SQLiteQuery<T> setNotifyOnChange(boolean notifyOnChange, boolean syncOnChange) {
+    public final SQLiteQuery<T> notifyOnChange(boolean notifyOnChange) {
         mNotifyOnChange = notifyOnChange;
-        mSyncOnChange = syncOnChange;
         return this;
     }
 
@@ -271,13 +273,13 @@ public final class SQLiteQuery<T> {
 
     public int remove() {
         final StringBuilder sql = new StringBuilder("DELETE FROM ")
-                .append(getTableName());
+                .append(SQLite.tableOf(mType));
         if (mWhere != null) {
             sql.append(" WHERE ").append(mWhere);
         }
         final int affectedRows = mClient.get().executeUpdateDelete(sql.toString(), bindArgs());
-        if (mNotifyOnChange && affectedRows > 0) {
-            notifyChange(mSyncOnChange);
+        if (affectedRows > 0 && mNotifyOnChange && mContext.get() != null) {
+            mContext.get().getContentResolver().notifyChange(SQLite.uriOf(mType), null, false);
         }
         return affectedRows;
     }
@@ -305,21 +307,15 @@ public final class SQLiteQuery<T> {
     @NonNull
     public Loader<List<T>> load(@NonNull LoaderManager lm, int loaderId, @NonNull Observer<List<T>> observer) {
         return lm.initLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(
-                new SQLiteLoader<>(getClient().getContext(), this), observer));
+                new SQLiteLoader<>(mContext.get(), this), observer));
     }
 
     @NonNull
     public Loader<List<T>> reload(@NonNull LoaderManager lm, int loaderId, @NonNull Observer<List<T>> observer) {
         return lm.restartLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(
-                new SQLiteLoader<>(getClient().getContext(), this), observer));
+                new SQLiteLoader<>(mContext.get(), this), observer));
     }
     //endregion
-
-    public void notifyChange(boolean syncToNetwork) {
-        getClient().getContext()
-                .getContentResolver()
-                .notifyChange(SQLite.uriOf(mType), null, syncToNetwork);
-    }
 
     @Override
     public String toString() {
@@ -336,18 +332,14 @@ public final class SQLiteQuery<T> {
     }
 
     //region internal
+    @NonNull
+    SQLiteQuery<T> rebuild() {
+        return new SQLiteQuery<>(mContext.get(), mClient.get(), mType)
+                .notifyOnChange(mNotifyOnChange);
+    }
+
     Object[] bindArgs() {
         return mBindArgs.toArray(new Object[mBindArgs.size()]);
-    }
-
-    @NonNull
-    String getTableName() {
-        return SQLite.tableOf(mType);
-    }
-
-    @NonNull
-    SQLiteClient getClient() {
-        return mClient.get();
     }
 
     @NonNull
@@ -357,7 +349,7 @@ public final class SQLiteQuery<T> {
 
     @NonNull
     SQLiteResult<T> result() {
-        return new SQLiteResult<>(this, cursor());
+        return new SQLiteResult<>(mContext.get(), mClient.get(), cursor(), mType, this, mNotifyOnChange);
     }
 
     private SQLiteQuery<T> where(@NonNull String column, @NonNull String op, @NonNull Object... values) {
@@ -373,7 +365,7 @@ public final class SQLiteQuery<T> {
     private Number applyFunc(@NonNull String func, @NonNull String column) {
         final StringBuilder sql = new StringBuilder("SELECT ").append(func)
                 .append(LEFT_PARENTHESIS).append(column).append(RIGHT_PARENTHESIS)
-                .append(" FROM ").append(getTableName());
+                .append(" FROM ").append(SQLite.tableOf(mType));
         if (mWhere != null) {
             sql.append(WHERE).append(mWhere);
         }

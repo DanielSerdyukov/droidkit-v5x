@@ -316,7 +316,8 @@ public class SQLiteQueryTest extends SQLiteTestCase {
         Assert.assertNotNull(user);
         user.setName("Maya");
         Assert.assertEquals("Maya", user.getName());
-        Assert.assertEquals("Maya", getSQLite().simpleQueryForString("SELECT name FROM users WHERE _id = ?", user.mId));
+        Assert.assertEquals("Maya", getSQLite().getClient()
+                .simpleQueryForString("SELECT name FROM users WHERE _id = ?", user.mId));
     }
 
 }

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.lang.reflect.Method;
@@ -48,13 +47,16 @@ public final class SQLite {
         }
     }
 
+    private final Context mContext;
+
     private final SQLiteClient mClient;
 
     private SQLite(@NonNull Context context) {
+        mContext = context.getApplicationContext();
         if (Dynamic.inClasspath("org.sqlite.database.sqlite.SQLiteDatabase")) {
-            mClient = new SQLiteOrgClient(context.getApplicationContext(), SQLiteDbInfo.from(context));
+            mClient = new SQLiteOrgClient(mContext, SQLiteDbInfo.from(context));
         } else {
-            mClient = new AndroidSQLiteClient(context.getApplicationContext(), SQLiteDbInfo.from(context));
+            mClient = new AndroidSQLiteClient(mContext, SQLiteDbInfo.from(context));
         }
     }
 
@@ -112,42 +114,45 @@ public final class SQLite {
 
     @NonNull
     public <T> SQLiteQuery<T> where(@NonNull Class<T> type) {
-        return new SQLiteQuery<>(mClient, type);
+        return new SQLiteQuery<>(mContext, mClient, type);
     }
 
     @NonNull
     @SuppressWarnings("ConstantConditions")
-    public <T> T create(@NonNull Class<T> type) {
+    public <T> T create(@NonNull Class<T> type, boolean notifyChange) {
         try {
-            final Method method = DynamicMethod.find(CREATE_METHODS, type, "_create", SQLiteClient.class);
-            return DynamicMethod.invokeStatic(method, mClient);
+            final T object = DynamicMethod.invokeStatic(DynamicMethod
+                    .find(CREATE_METHODS, type, "_create", SQLiteClient.class), mClient);
+            if (notifyChange) {
+                mContext.getContentResolver().notifyChange(uriOf(type), null, false);
+            }
+            return object;
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
-    public <T> void save(@NonNull T object) {
+    @SuppressWarnings("ConstantConditions")
+    public <T> void save(@NonNull T object, boolean notifyChange) {
         try {
             final Class<?> type = object.getClass();
-            final Method method = DynamicMethod.find(SAVE_METHODS, type, "_save", SQLiteClient.class, type);
-            DynamicMethod.invokeStatic(method, mClient, object);
+            DynamicMethod.invokeStatic(DynamicMethod
+                    .find(SAVE_METHODS, type, "_save", SQLiteClient.class, type), mClient, object);
+            if (notifyChange) {
+                mContext.getContentResolver().notifyChange(uriOf(type), null, false);
+            }
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    public void execSQL(@NonNull String sql, Object... bindArgs) {
+        mClient.execSQL(sql, bindArgs);
     }
 
     @NonNull
     public Cursor rawQuery(@NonNull String sql, String... bindArgs) {
         return mClient.rawQuery(sql, bindArgs);
-    }
-
-    @Nullable
-    public String simpleQueryForString(@NonNull String sql, Object... bindArgs) {
-        return mClient.simpleQueryForString(sql, bindArgs);
-    }
-
-    public void execSQL(@NonNull String sql, Object... bindArgs) {
-        mClient.execSQL(sql, bindArgs);
     }
 
     SQLiteClient getClient() {

@@ -1,10 +1,13 @@
 package droidkit.sqlite;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
 import java.io.Closeable;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ConcurrentModificationException;
@@ -24,15 +27,28 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
 
     private static final ConcurrentMap<Class<?>, Method> CREATE_METHODS = new ConcurrentHashMap<>();
 
+    private final AtomicReference<Cursor> mCursorRef = new AtomicReference<>();
+
+    private final Reference<Context> mContext;
+
+    private final Reference<SQLiteClient> mClient;
+
+    private final Class<T> mType;
+
     private final SQLiteQuery<T> mQuery;
 
-    private final AtomicReference<Cursor> mCursorRef = new AtomicReference<>();
+    private final boolean mNotifyOnChange;
 
     private int mSize;
 
-    SQLiteResult(@NonNull SQLiteQuery<T> query, @NonNull Cursor cursor) {
-        mQuery = query;
+    SQLiteResult(@NonNull Context context, @NonNull SQLiteClient client, @NonNull Cursor cursor,
+                 @NonNull Class<T> type, @NonNull SQLiteQuery<T> query, boolean notifyOnChange) {
+        mContext = new WeakReference<>(context);
+        mClient = new WeakReference<>(client);
         mCursorRef.compareAndSet(null, cursor);
+        mType = type;
+        mQuery = query;
+        mNotifyOnChange = notifyOnChange;
         mSize = cursor.getCount();
     }
 
@@ -42,10 +58,10 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
         final Cursor cursor = mCursorRef.get();
         if (cursor != null && !cursor.isClosed() && cursor.moveToPosition(location)) {
             final long rowId = DatabaseUtils.getLong(cursor, BaseColumns._ID);
-            final SQLiteCache<T> cache = SQLiteCache.of(mQuery.getType());
+            final SQLiteCache<T> cache = SQLiteCache.of(mType);
             T entry = cache.get(rowId);
             if (entry == null) {
-                entry = instantiate(mQuery, cursor);
+                entry = instantiate(cursor);
                 cache.put(rowId, entry);
             }
             return entry;
@@ -62,7 +78,7 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
     public void add(int location, T object) {
         final Cursor oldCursor = mCursorRef.get();
         try {
-            SQLite.of(mQuery.getClient().getContext()).save(object);
+            SQLite.of(mContext.get()).save(object, mNotifyOnChange);
             final Cursor cursor = mQuery.cursor();
             mCursorRef.compareAndSet(oldCursor, cursor);
             mSize = cursor.getCount();
@@ -76,9 +92,7 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
         final Cursor oldCursor = mCursorRef.get();
         if (oldCursor.moveToPosition(location)) {
             final long rowId = DatabaseUtils.getLong(oldCursor, BaseColumns._ID);
-            new SQLiteQuery<>(mQuery.getClient(), mQuery.getType())
-                    .equalTo(BaseColumns._ID, rowId)
-                    .remove();
+            mQuery.rebuild().equalTo(BaseColumns._ID, rowId).remove();
             IOUtils.closeQuietly(oldCursor);
             final Cursor cursor = mQuery.cursor();
             mCursorRef.compareAndSet(oldCursor, cursor);
@@ -104,11 +118,11 @@ class SQLiteResult<T> extends AbstractList<T> implements Closeable {
 
     @NonNull
     @SuppressWarnings("ConstantConditions")
-    T instantiate(@NonNull SQLiteQuery<T> query, @NonNull Cursor cursor) {
+    private T instantiate(@NonNull Cursor cursor) {
         try {
-            final Method method = DynamicMethod.find(CREATE_METHODS, query.getType(), "_create",
+            final Method method = DynamicMethod.find(CREATE_METHODS, mType, "_create",
                     SQLiteClient.class, Cursor.class);
-            return DynamicMethod.invokeStatic(method, query.getClient(), cursor);
+            return DynamicMethod.invokeStatic(method, mClient.get(), cursor);
         } catch (DynamicException e) {
             throw new IllegalArgumentException(e);
         }

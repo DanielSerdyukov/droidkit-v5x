@@ -30,12 +30,12 @@ public class SQLiteTest {
 
     @Test
     public void testSQLiteVersion() throws Exception {
-        Assert.assertEquals("3.8.10.2", mSQLite.simpleQueryForString("SELECT sqlite_version();"));
+        Assert.assertEquals("3.8.10.2", mSQLite.getClient().simpleQueryForString("SELECT sqlite_version();"));
     }
 
     @Test
     public void testSchema() throws Exception {
-        Assert.assertEquals("users", mSQLite.simpleQueryForString("SELECT name FROM sqlite_master" +
+        Assert.assertEquals("users", mSQLite.getClient().simpleQueryForString("SELECT name FROM sqlite_master" +
                 " WHERE type='table'" +
                 " AND name='users';"));
     }
@@ -43,27 +43,28 @@ public class SQLiteTest {
     @Test
     public void testInsertSelect() throws Exception {
         mSQLite.execSQL("INSERT INTO users(name) VALUES('John');");
-        Assert.assertEquals("John", mSQLite.simpleQueryForString("SELECT name FROM users;"));
+        Assert.assertEquals("John", mSQLite.getClient().simpleQueryForString("SELECT name FROM users;"));
     }
 
     @Test
     public void testUnicode() throws Exception {
         mSQLite.execSQL("INSERT INTO users(name) VALUES('Вася Пупкин');");
-        mSQLite.simpleQueryForString("SELECT name FROM users WHERE name LIKE 'ва%';");
+        mSQLite.getClient().simpleQueryForString("SELECT name FROM users WHERE name LIKE 'ва%';");
     }
 
     @Test
     public void testUnicodeLower() throws Exception {
         mSQLite.execSQL("INSERT INTO users(name) VALUES('Вася Пупкин');");
-        Assert.assertEquals("Вася Пупкин", mSQLite.simpleQueryForString(
+        Assert.assertEquals("Вася Пупкин", mSQLite.getClient().simpleQueryForString(
                 "SELECT name FROM users WHERE LOWER(name) LIKE 'ва%';"));
     }
 
     @Test
     public void testCreate() throws Exception {
-        final SQLiteUser user = mSQLite.create(SQLiteUser.class);
+        final SQLiteUser user = mSQLite.create(SQLiteUser.class, true);
         user.setName("John");
-        Assert.assertEquals("John", mSQLite.simpleQueryForString("SELECT name FROM users WHERE _id = ?", user.mId));
+        Assert.assertEquals("John", mSQLite.getClient()
+                .simpleQueryForString("SELECT name FROM users WHERE _id = ?", user.mId));
     }
 
     @Test
@@ -72,7 +73,7 @@ public class SQLiteTest {
         expected.setName("John");
         expected.setAge(25);
         Log.e("", "testSave " + expected);
-        mSQLite.save(expected);
+        mSQLite.save(expected, true);
         final SQLiteUser actual = mSQLite.where(SQLiteUser.class)
                 .withId(expected.mId);
         Assert.assertNotNull(actual);
