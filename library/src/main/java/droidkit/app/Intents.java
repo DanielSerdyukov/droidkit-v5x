@@ -15,9 +15,8 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.concurrent.Future;
 
-import droidkit.concurrent.AsyncQueue;
+import droidkit.log.Logger;
 
 /**
  * @author Daniel Serdyukov
@@ -27,23 +26,20 @@ public final class Intents {
     private Intents() {
     }
 
-    public static boolean hasResolution(@NonNull Context context, @NonNull Intent intent) {
-        return !context.getPackageManager().queryIntentActivities(intent, 0).isEmpty();
-    }
-
     public static void startActivity(@NonNull Context context, @NonNull Intent intent,
                                      @Nullable CharSequence title) {
-        if (hasResolution(context, intent)) {
-            context.startActivity(intent);
-        } else {
-            final Future<?> invoke = AsyncQueue.invoke(new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            });
-            invoke.cancel(false);
+        if (context.getPackageManager().resolveActivity(intent, 0) != null) {
             context.startActivity(Intent.createChooser(intent, title));
+        } else {
+            context.startActivity(intent);
+        }
+    }
+
+    public static void startService(@NonNull Context context, @NonNull Intent intent) {
+        if (context.getPackageManager().resolveService(intent, 0) != null) {
+            context.startService(intent);
+        } else {
+            Logger.error("No matching service was found.");
         }
     }
 

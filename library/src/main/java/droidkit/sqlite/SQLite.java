@@ -119,6 +119,12 @@ public final class SQLite {
 
     @NonNull
     @SuppressWarnings("ConstantConditions")
+    public <T> T create(@NonNull Class<T> type) {
+        return create(type, true);
+    }
+
+    @NonNull
+    @SuppressWarnings("ConstantConditions")
     public <T> T create(@NonNull Class<T> type, boolean notifyChange) {
         try {
             final T object = DynamicMethod.invokeStatic(DynamicMethod
