@@ -52,6 +52,7 @@ class ActivityApt extends LifecycleApt {
                 onCreate(),
                 setContentView1(),
                 setContentView2(),
+                setContentView3(),
                 onPostCreate(),
                 onOptionsItemSelected(),
                 onResume(Modifier.PROTECTED),
@@ -90,6 +91,18 @@ class ActivityApt extends LifecycleApt {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(ClassName.get("android.view", "View"), "view")
                 .addStatement("super.setContentView(view)")
+                .addCode(mInjectViews.build())
+                .addCode(callSetupOnClickMethods())
+                .build();
+    }
+
+    private MethodSpec setContentView3() {
+        return MethodSpec.methodBuilder("setContentView")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(ClassName.get("android.view", "View"), "view")
+                .addParameter(ClassName.get("android.view", "ViewGroup", "LayoutParams"), "params")
+                .addStatement("super.setContentView(view, params)")
                 .addCode(mInjectViews.build())
                 .addCode(callSetupOnClickMethods())
                 .build();
