@@ -1,45 +1,34 @@
 package droidkit.sqlite;
 
-import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 /**
  * @author Daniel Serdyukov
  */
 public interface SQLiteClient {
 
-    Context getContext();
-
     void beginTransaction();
 
     void endTransaction(boolean successful);
 
-    @NonNull
-    Cursor rawQuery(@NonNull String sql, @NonNull String... bindArgs);
+    void execute(@NonNull String sql, @NonNull Object... bindArgs);
 
-    @Nullable
-    String simpleQueryForString(@NonNull String sql, @NonNull Object... bindArgs);
-
-    void execSQL(@NonNull String sql, @NonNull Object... bindArgs);
+    long executeInsert(@NonNull String sql, @NonNull Object... bindArgs);
 
     int executeUpdateDelete(@NonNull String sql, @NonNull Object... bindArgs);
 
     @NonNull
-    Cursor query(@NonNull String table, @Nullable String[] columns, @Nullable String where,
-                 @Nullable String[] bindArgs, @Nullable String orderBy);
+    Cursor query(@NonNull String sql, @NonNull Object... bindArgs);
 
-    long insert(@NonNull String table, @NonNull ContentValues values);
+    interface Callbacks {
 
-    int delete(@NonNull String table, @Nullable String where, @Nullable String[] bindArgs);
+        void onConfigure(@NonNull SQLiteDatabaseWrapper db);
 
-    int update(@NonNull String table, @NonNull ContentValues values, @Nullable String where,
-               @Nullable String[] bindArgs);
+        void onCreate(@NonNull SQLiteDatabaseWrapper db);
 
-    long insertRowId(@NonNull String table);
+        void onUpgrade(@NonNull SQLiteDatabaseWrapper db, int oldVersion, int newVersion);
 
-    int updateRecord(@NonNull String table, @NonNull String column, @Nullable Object value, long rowId);
+    }
 
 }

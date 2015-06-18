@@ -1,7 +1,5 @@
 package droidkit.app;
 
-import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.matcher.ViewMatchers;
@@ -13,14 +11,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import droidkit.sqlite.SQLite;
-import droidkit.sqlite.SQLiteUser;
-import droidkit.util.Observer;
 
 /**
  * @author Daniel Serdyukov
@@ -59,21 +49,6 @@ public class SignInActivity1Test {
                 .withId(droidkit.test.R.id.action_settings))
                 .perform(ViewActions.click());
         Assert.assertTrue(mActivity.mSettingsClicked);
-    }
-
-    @Test
-    public void testSQLiteQueryLoad() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
-        SQLite.of(InstrumentationRegistry.getContext())
-                .where(SQLiteUser.class)
-                .load(mActivity.getLoaderManager(), 0,
-                        new Observer<List<SQLiteUser>>() {
-                            @Override
-                            public void onChange(@NonNull List<SQLiteUser> data) {
-                                latch.countDown();
-                            }
-                        });
-        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
     }
 
 }

@@ -10,12 +10,10 @@
 
         <activity android:name=".app.SignInActivity3" />
 
-        <activity android:name=".app.LoadersActivity" />
-
-        <provider
+        <!--<provider
             android:name="droidkit.sqlite.SQLiteProvider"
             android:authorities="droidkit.sqlite"
-            android:exported="false" />
+            android:exported="false" />-->
 
         <!--<meta-data
             android:name="${applicationId}.DATABASE_NAME"

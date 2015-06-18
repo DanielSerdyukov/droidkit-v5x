@@ -1,14 +1,12 @@
 package droidkit.sqlite;
 
 import android.content.ContentProvider;
-import android.content.ContentProviderOperation;
-import android.content.ContentProviderResult;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.OperationApplicationException;
 import android.content.pm.ProviderInfo;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
@@ -16,6 +14,8 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import droidkit.util.Iterables;
@@ -24,6 +24,10 @@ import droidkit.util.Iterables;
  * @author Daniel Serdyukov
  */
 public class SQLiteProvider extends ContentProvider {
+
+    private static final String DATABASE_NAME = "data.db";
+
+    private static final int DATABASE_VERSION = 1;
 
     private static final int URI_MATCH_ALL = 1;
 
@@ -57,33 +61,37 @@ public class SQLiteProvider extends ContentProvider {
     }
 
     @Override
-    public void attachInfo(Context context, ProviderInfo info) {
+    public void attachInfo(@NonNull Context context, @NonNull ProviderInfo info) {
         super.attachInfo(context, info);
-        SQLite.attach(info.authority);
+        mClient = new AndroidSQLiteClient(context, getDatabaseName(), getDatabaseVersion(),
+                new SQLiteClientCallbacksImpl());
+        SQLite.initWithClient(context, mClient, info);
     }
 
     @Override
     public boolean onCreate() {
-        mClient = SQLite.of(getContext()).getClient();
-        return true;
+        return mClient != null;
     }
 
-    @NonNull
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] columns, @Nullable String where,
-                        @Nullable String[] bindArgs, @Nullable String orderBy) {
-        if (matchUri(uri) == URI_MATCH_ID) {
-            final Cursor cursor = mClient.query(tableOf(uri), columns, SQLiteQuery.WHERE_ID_EQ,
-                    new String[]{uri.getLastPathSegment()}, orderBy);
-            cursor.setNotificationUri(getContext().getContentResolver(), baseUriOf(uri));
-            return cursor;
+                        @Nullable String[] whereArgs, @Nullable String orderBy) {
+        if (URI_MATCH_ID == matchUri(uri)) {
+            where = SQLiteQuery.WHERE_ID_EQ;
+            whereArgs = new String[]{uri.getLastPathSegment()};
         }
-        final Cursor cursor = mClient.query(tableOf(uri), columns, where, bindArgs, orderBy);
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        final String sql = SQLiteQueryBuilder.buildQueryString(false, tableOf(uri), columns, where,
+                null, null, orderBy, null);
+        final Cursor cursor;
+        if (whereArgs == null) {
+            cursor = mClient.query(sql);
+        } else {
+            cursor = mClient.query(sql, whereArgs);
+        }
+        cursor.setNotificationUri(getContext().getContentResolver(), baseUriOf(uri));
         return cursor;
     }
 
-    @NonNull
     @Override
     public String getType(@NonNull Uri uri) {
         if (matchUri(uri) == URI_MATCH_ID) {
@@ -92,78 +100,132 @@ public class SQLiteProvider extends ContentProvider {
         return MIME_DIR + tableOf(uri);
     }
 
-    @NonNull
     @Override
     public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
-        Uri baseUri = uri;
-        if (matchUri(uri) == URI_MATCH_ID) {
+        if (URI_MATCH_ID == matchUri(uri)) {
             values.put(BaseColumns._ID, uri.getLastPathSegment());
-            baseUri = baseUriOf(uri);
         }
-        final long rowId = mClient.insert(tableOf(uri), values);
-        getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
-        return ContentUris.withAppendedId(baseUri, rowId);
+        final StringBuilder sql = new StringBuilder()
+                .append("INSERT INTO ")
+                .append(tableOf(uri))
+                .append("(");
+        final Object[] bindArgs = new Object[values.size()];
+        int i = 0;
+        for (final String column : values.keySet()) {
+            sql.append((i > 0) ? "," : "");
+            sql.append(column);
+            bindArgs[i++] = values.get(column);
+        }
+        sql.append(')');
+        sql.append(" VALUES (");
+        for (i = 0; i < bindArgs.length; ++i) {
+            sql.append((i > 0) ? ", ?" : "?");
+        }
+        sql.append(");");
+        final Uri rowIdUri = ContentUris.withAppendedId(baseUriOf(uri),
+                mClient.executeInsert(sql.toString(), bindArgs));
+        getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork(rowIdUri));
+        return rowIdUri;
     }
 
     @Override
-    public int delete(@NonNull Uri uri, @Nullable String where, @Nullable String[] bindArgs) {
-        Uri baseUri = uri;
+    public int delete(@NonNull Uri uri, @Nullable String where, @Nullable String[] whereArgs) {
+        if (URI_MATCH_ID == matchUri(uri)) {
+            where = SQLiteQuery.WHERE_ID_EQ;
+            whereArgs = new String[]{uri.getLastPathSegment()};
+        }
+        final StringBuilder sql = new StringBuilder()
+                .append("DELETE FROM ")
+                .append(tableOf(uri));
+        if (where != null) {
+            sql.append(" WHERE ").append(where).append(";");
+        }
         int affectedRows;
-        if (matchUri(uri) == URI_MATCH_ID) {
-            affectedRows = mClient.delete(tableOf(uri), SQLiteQuery.WHERE_ID_EQ,
-                    new String[]{uri.getLastPathSegment()});
-            baseUri = baseUriOf(uri);
+        if (whereArgs == null) {
+            affectedRows = mClient.executeUpdateDelete(sql.toString());
         } else {
-            affectedRows = mClient.delete(tableOf(uri), where, bindArgs);
+            affectedRows = mClient.executeUpdateDelete(sql.toString(), whereArgs);
         }
         if (affectedRows > 0) {
-            getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
+            getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork(uri));
         }
         return affectedRows;
     }
 
     @Override
     public int update(@NonNull Uri uri, @NonNull ContentValues values, @Nullable String where,
-                      @Nullable String[] bindArgs) {
-        Uri baseUri = uri;
-        int affectedRows;
-        if (matchUri(uri) == URI_MATCH_ID) {
-            affectedRows = mClient.update(tableOf(uri), values, SQLiteQuery.WHERE_ID_EQ,
-                    new String[]{uri.getLastPathSegment()});
-            baseUri = baseUriOf(uri);
-        } else {
-            affectedRows = mClient.update(tableOf(uri), values, where, bindArgs);
+                      @Nullable String[] whereArgs) {
+        final List<Object> bindArgs = new ArrayList<>(values.size() * 2);
+        if (URI_MATCH_ID == matchUri(uri)) {
+            where = SQLiteQuery.WHERE_ID_EQ;
+            whereArgs = new String[]{uri.getLastPathSegment()};
         }
+        final StringBuilder sql = new StringBuilder()
+                .append("UPDATE ")
+                .append(tableOf(uri))
+                .append(" SET ");
+        final Iterator<String> iterator = values.keySet().iterator();
+        while (iterator.hasNext()) {
+            final String column = iterator.next();
+            sql.append(column).append(" = ?");
+            if (iterator.hasNext()) {
+                sql.append(", ");
+            }
+            bindArgs.add(values.get(column));
+        }
+        if (where != null) {
+            sql.append(" WHERE ").append(where).append(";");
+        }
+        if (whereArgs != null) {
+            Collections.addAll(bindArgs, whereArgs);
+        }
+        final int affectedRows = mClient.executeUpdateDelete(sql.toString(),
+                bindArgs.toArray(new Object[bindArgs.size()]));
         if (affectedRows > 0) {
-            getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
+            getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork(uri));
         }
         return affectedRows;
     }
 
-    @Override
-    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] bulkValues) {
-        Uri baseUri = uri;
-        if (matchUri(uri) == URI_MATCH_ID) {
-            baseUri = baseUriOf(uri);
-        }
-        mClient.beginTransaction();
-        final String tableName = tableOf(uri);
-        for (final ContentValues values : bulkValues) {
-            mClient.insert(tableName, values);
-        }
-        mClient.endTransaction(true);
-        getContext().getContentResolver().notifyChange(baseUri, null, shouldSyncToNetwork(baseUri));
-        return bulkValues.length;
+    @Nullable
+    protected String getDatabaseName() {
+        return DATABASE_NAME;
     }
 
-    @Override
-    public ContentProviderResult[] applyBatch(@NonNull ArrayList<ContentProviderOperation> operations)
-            throws OperationApplicationException {
-        return super.applyBatch(operations);
+    protected int getDatabaseVersion() {
+        return DATABASE_VERSION;
+    }
+
+    protected void onDatabaseConfigure(@NonNull SQLiteDatabaseWrapper db) {
+    }
+
+    protected void onDatabaseCreate(@NonNull SQLiteDatabaseWrapper db) {
+    }
+
+    protected void onDatabaseUpgrade(@NonNull SQLiteDatabaseWrapper db, int oldVersion, int newVersion) {
     }
 
     protected boolean shouldSyncToNetwork(@NonNull Uri uri) {
         return false;
+    }
+
+    private class SQLiteClientCallbacksImpl implements SQLiteClient.Callbacks {
+
+        @Override
+        public void onConfigure(@NonNull SQLiteDatabaseWrapper db) {
+            onDatabaseConfigure(db);
+        }
+
+        @Override
+        public void onCreate(@NonNull SQLiteDatabaseWrapper db) {
+            onDatabaseCreate(db);
+        }
+
+        @Override
+        public void onUpgrade(@NonNull SQLiteDatabaseWrapper db, int oldVersion, int newVersion) {
+            onDatabaseUpgrade(db, oldVersion, newVersion);
+        }
+
     }
 
 }

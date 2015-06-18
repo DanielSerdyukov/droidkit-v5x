@@ -1,21 +1,16 @@
 package droidkit.sqlite;
 
 import android.content.Context;
+import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 
-import java.lang.reflect.Method;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
-import droidkit.util.Dynamic;
 import droidkit.util.DynamicException;
-import droidkit.util.DynamicMethod;
+import droidkit.util.DynamicField;
 import droidkit.util.Objects;
 
 /**
@@ -23,146 +18,137 @@ import droidkit.util.Objects;
  */
 public final class SQLite {
 
-    static final List<String> CREATE = new CopyOnWriteArrayList<>();
-
-    static final List<String> UPGRADE = new CopyOnWriteArrayList<>();
-
-    static final ConcurrentMap<Class<?>, String> TABLES = new ConcurrentHashMap<>();
-
-    private static final AtomicReference<String> AUTHORITY = new AtomicReference<>();
-
-    private static final ConcurrentMap<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
-
-    private static final ConcurrentMap<Class<?>, Method> CREATE_METHODS = new ConcurrentHashMap<>();
-
-    private static final ConcurrentMap<Class<?>, Method> SAVE_METHODS = new ConcurrentHashMap<>();
-
     private static volatile SQLite sInstance;
 
-    static {
-        try {
-            Class.forName("droidkit.sqlite.SQLite$Gen");
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("Schema class not found, try to rebuild project", e);
-        }
-    }
+    private final ConcurrentMap<Class<?>, Uri> mUriMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<Class<?>, String> mTableMap = new ConcurrentHashMap<>();
 
     private final Context mContext;
 
     private final SQLiteClient mClient;
 
-    private SQLite(@NonNull Context context) {
+    private final String mAuthority;
+
+    private SQLite(@NonNull Context context, @NonNull SQLiteClient client, @NonNull String authority) {
         mContext = context.getApplicationContext();
-        if (Dynamic.inClasspath("org.sqlite.database.sqlite.SQLiteDatabase")) {
-            mClient = new SQLiteOrgClient(mContext, SQLiteDbInfo.from(context));
-        } else {
-            mClient = new AndroidSQLiteClient(mContext, SQLiteDbInfo.from(context));
-        }
+        mClient = client;
+        mAuthority = authority;
     }
 
-    @NonNull
-    public static SQLite of(@NonNull Context context) {
+    static void initWithClient(@NonNull Context context, @NonNull SQLiteClient client, @NonNull ProviderInfo info) {
         SQLite instance = sInstance;
         if (instance == null) {
             synchronized (SQLite.class) {
                 instance = sInstance;
                 if (instance == null) {
-                    instance = sInstance = new SQLite(context);
+                    sInstance = new SQLite(context, client, info.authority);
+                }
+            }
+        }
+    }
+
+    @NonNull
+    public static String tableOf(@NonNull Class<?> type) {
+        return obtainReference().resolveTable(type);
+    }
+
+    @NonNull
+    public static Uri uriOf(@NonNull Class<?> type, @NonNull Object... segments) {
+        Uri uri = obtainReference().resolveUri(type);
+        if (segments.length > 0) {
+            final Uri.Builder builder = uri.buildUpon();
+            for (final Object segment : segments) {
+                builder.appendPath(String.valueOf(segment));
+            }
+            uri = builder.build();
+        }
+        return uri;
+    }
+
+    public static void beginTransaction() {
+        obtainClient().beginTransaction();
+    }
+
+    public static void endTransaction(boolean successful) {
+        obtainClient().endTransaction(successful);
+    }
+
+    @NonNull
+    public static <T> SQLiteQuery<T> where(@NonNull Class<T> type) {
+        return new SQLiteQuery<>(obtainContext().getContentResolver(), obtainClient(), type);
+    }
+
+    @NonNull
+    public static <T> T create(@NonNull Class<T> type) {
+        throw new UnsupportedOperationException();
+    }
+
+    public static void execute(@NonNull String sql, @NonNull Object... bindArgs) {
+        obtainClient().execute(sql, bindArgs);
+    }
+
+    @NonNull
+    public static Cursor query(@NonNull String sql, @NonNull Object... bindArgs) {
+        return obtainClient().query(sql, bindArgs);
+    }
+
+    @NonNull
+    private static SQLiteClient obtainClient() {
+        return obtainReference().mClient;
+    }
+
+    @NonNull
+    private static Context obtainContext() {
+        return obtainReference().mContext;
+    }
+
+    @NonNull
+    private static SQLite obtainReference() {
+        SQLite instance = sInstance;
+        if (instance == null) {
+            synchronized (SQLite.class) {
+                instance = sInstance;
+                if (instance == null) {
+                    throw new IllegalStateException();
                 }
             }
         }
         return instance;
     }
 
-    public static void attach(@NonNull String authority) {
-        AUTHORITY.compareAndSet(null, authority);
-    }
-
     @NonNull
-    public static String tableOf(@NonNull Class<?> type) {
-        return Objects.requireNonNull(TABLES.get(type), "No such table for " + type);
-    }
-
-    @NonNull
-    public static Uri uriOf(@NonNull Class<?> type) {
-        Uri uri = URIS.get(type);
-        if (uri == null) {
-            final String authority = AUTHORITY.get();
-            if (TextUtils.isEmpty(authority)) {
-                throw new IllegalStateException("SQLite not attached to authority");
+    private String resolveTable(@NonNull Class<?> type) {
+        try {
+            String table = mTableMap.get(type);
+            if (table == null) {
+                final String newTable = DynamicField.getStatic(type, "_TABLE_");
+                table = mTableMap.putIfAbsent(type, newTable);
+                if (table == null) {
+                    table = newTable;
+                }
             }
+            return Objects.requireNonNull(table, "Something's wrong! This should not have happened.");
+        } catch (DynamicException e) {
+            throw new IllegalArgumentException("Check that type annotated with @SQLiteObject" + type, e);
+        }
+    }
+
+    @NonNull
+    private Uri resolveUri(@NonNull Class<?> type) {
+        Uri uri = mUriMap.get(type);
+        if (uri == null) {
             final Uri newUri = new Uri.Builder()
                     .scheme("content")
-                    .authority(authority)
-                    .path(tableOf(type))
+                    .authority(mAuthority)
+                    .path(resolveTable(type))
                     .build();
-            uri = URIS.putIfAbsent(type, newUri);
+            uri = mUriMap.putIfAbsent(type, newUri);
             if (uri == null) {
                 uri = newUri;
             }
         }
         return uri;
-    }
-
-    public void beginTransaction() {
-        mClient.beginTransaction();
-    }
-
-    public void endTransaction(boolean successful) {
-        mClient.endTransaction(successful);
-    }
-
-    @NonNull
-    public <T> SQLiteQuery<T> where(@NonNull Class<T> type) {
-        return new SQLiteQuery<>(mContext, mClient, type);
-    }
-
-    @NonNull
-    @SuppressWarnings("ConstantConditions")
-    public <T> T create(@NonNull Class<T> type) {
-        return create(type, true);
-    }
-
-    @NonNull
-    @SuppressWarnings("ConstantConditions")
-    public <T> T create(@NonNull Class<T> type, boolean notifyChange) {
-        try {
-            final T object = DynamicMethod.invokeStatic(DynamicMethod
-                    .find(CREATE_METHODS, type, "_create", SQLiteClient.class), mClient);
-            if (notifyChange) {
-                mContext.getContentResolver().notifyChange(uriOf(type), null, false);
-            }
-            return object;
-        } catch (DynamicException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    public <T> void save(@NonNull T object, boolean notifyChange) {
-        try {
-            final Class<?> type = object.getClass();
-            DynamicMethod.invokeStatic(DynamicMethod
-                    .find(SAVE_METHODS, type, "_save", SQLiteClient.class, type), mClient, object);
-            if (notifyChange) {
-                mContext.getContentResolver().notifyChange(uriOf(type), null, false);
-            }
-        } catch (DynamicException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    public void execSQL(@NonNull String sql, Object... bindArgs) {
-        mClient.execSQL(sql, bindArgs);
-    }
-
-    @NonNull
-    public Cursor rawQuery(@NonNull String sql, String... bindArgs) {
-        return mClient.rawQuery(sql, bindArgs);
-    }
-
-    SQLiteClient getClient() {
-        return mClient;
     }
 
 }
