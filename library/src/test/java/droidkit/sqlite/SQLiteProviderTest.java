@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,11 +49,11 @@ public class SQLiteProviderTest {
             }
 
             @Override
-            protected void onDatabaseCreate(@NonNull SQLiteDatabaseWrapper db) {
-                db.execute("CREATE TABLE IF NOT EXISTS users (name TEXT);");
-                db.execute("INSERT INTO users(name) VALUES(?);", "John");
-                db.execute("INSERT INTO users(name) VALUES(?);", "Jane");
-                db.execute("INSERT INTO users(name) VALUES(?);", "Jim");
+            public void onDatabaseCreate(@NonNull SQLiteDatabase db) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS users (name TEXT);");
+                db.execSQL("INSERT INTO users(name) VALUES(?);", "John");
+                db.execSQL("INSERT INTO users(name) VALUES(?);", "Jane");
+                db.execSQL("INSERT INTO users(name) VALUES(?);", "Jim");
             }
 
         };
@@ -117,6 +118,11 @@ public class SQLiteProviderTest {
         values.put("name", "Jack");
         mProvider.insert(ALL_USERS, values);
         Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mProvider.shutdown();
     }
 
 }

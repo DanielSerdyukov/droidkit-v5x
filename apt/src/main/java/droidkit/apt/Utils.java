@@ -29,8 +29,8 @@ final class Utils {
         }
     }
 
-    public static String join(String separator, Iterable<Object> parts) {
-        final Iterator<Object> iterator = parts.iterator();
+    public static String join(String separator, Iterable<?> parts) {
+        final Iterator<?> iterator = parts.iterator();
         final StringBuilder result = new StringBuilder();
         while (iterator.hasNext()) {
             result.append(String.valueOf(iterator.next()));

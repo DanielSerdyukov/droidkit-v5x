@@ -6,17 +6,21 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import droidkit.util.DynamicException;
 import droidkit.util.DynamicField;
+import droidkit.util.DynamicMethod;
 import droidkit.util.Objects;
 
 /**
  * @author Daniel Serdyukov
  */
 public final class SQLite {
+
+    private static final ConcurrentMap<Class<?>, Method> SAVE = new ConcurrentHashMap<>();
 
     private static volatile SQLite sInstance;
 
@@ -80,8 +84,30 @@ public final class SQLite {
     }
 
     @NonNull
-    public static <T> T create(@NonNull Class<T> type) {
-        throw new UnsupportedOperationException();
+    public static <T> T save(@NonNull T object) {
+        return save(object, true);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static <T> T save(@NonNull T object, boolean notifyChange) {
+        try {
+            final Class<?> type = object.getClass();
+            Method save = SAVE.get(type);
+            if (save == null) {
+                final Method method = type.getDeclaredMethod("_save", SQLiteClient.class, type);
+                save = SAVE.putIfAbsent(type, method);
+                if (save == null) {
+                    save = method;
+                }
+            }
+            DynamicMethod.invokeStatic(save, SQLite.obtainClient(), object);
+            if (notifyChange) {
+                obtainContext().getContentResolver().notifyChange(uriOf(type), null);
+            }
+            return object;
+        } catch (NoSuchMethodException | DynamicException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     public static void execute(@NonNull String sql, @NonNull Object... bindArgs) {
@@ -93,18 +119,25 @@ public final class SQLite {
         return obtainClient().query(sql, bindArgs);
     }
 
+    //region internal
     @NonNull
-    private static SQLiteClient obtainClient() {
+    static SQLiteClient obtainClient() {
         return obtainReference().mClient;
     }
 
     @NonNull
-    private static Context obtainContext() {
+    static Context obtainContext() {
         return obtainReference().mContext;
     }
 
+    static void shutdown() {
+        synchronized (SQLite.class) {
+            sInstance = null;
+        }
+    }
+
     @NonNull
-    private static SQLite obtainReference() {
+    static SQLite obtainReference() {
         SQLite instance = sInstance;
         if (instance == null) {
             synchronized (SQLite.class) {
@@ -150,5 +183,6 @@ public final class SQLite {
         }
         return uri;
     }
+    //endregion
 
 }

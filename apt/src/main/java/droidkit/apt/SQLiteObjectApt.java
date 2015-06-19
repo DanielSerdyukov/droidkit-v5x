@@ -12,11 +12,15 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -52,8 +56,6 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
 
     private static final List<CodeBlock> SQLITE_CREATE = new ArrayList<>();
 
-    private static final List<CodeBlock> SQLITE_TABLES = new ArrayList<>();
-
     private static final JCClassName SQLITE_CLIENT = JCClassName.get("droidkit.sqlite", "SQLiteClient");
 
     private static final JCClassName CURSOR = JCClassName.get("android.database", "Cursor");
@@ -78,9 +80,9 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
 
     private final Map<String, JCTree.JCExpression> mSetterToField = new HashMap<>();
 
-    private final Map<String, String> mSQLiteColumns = new HashMap<>();
+    private final Map<String, String> mSQLiteColumns = new LinkedHashMap<>();
 
-    private final Map<String, String> mFieldToColumn = new HashMap<>();
+    private final Map<String, String> mFieldToColumn = new LinkedHashMap<>();
 
     private final List<JCTree.JCExpressionStatement> mCursorToField = new ArrayList<>();
 
@@ -96,13 +98,10 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
     }
 
     public static void brewClass() throws IOException {
-        final TypeSpec.Builder builder = TypeSpec.classBuilder("SQLite$Gen")
+        final TypeSpec.Builder builder = TypeSpec.classBuilder("SQLiteSchema")
                 .addModifiers(Modifier.PUBLIC);
         final CodeBlock.Builder staticBlock = CodeBlock.builder();
         for (final CodeBlock codeBlock : SQLITE_CREATE) {
-            staticBlock.add(codeBlock);
-        }
-        for (final CodeBlock codeBlock : SQLITE_TABLES) {
             staticBlock.add(codeBlock);
         }
         final TypeSpec spec = builder.addStaticBlock(staticBlock.build()).build();
@@ -113,6 +112,19 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
         try (final Writer writer = new BufferedWriter(sourceFile.openWriter())) {
             javaFile.writeTo(writer);
         }
+    }
+
+    private static List<JCTree.JCExpression> insertArgs(JCTree.JCExpression arg1, String object,
+                                                        Collection<String> fields, String... initialFields) {
+        final List<JCTree.JCExpression> list = new ArrayList<>(fields.size() + initialFields.length + 1);
+        list.add(arg1);
+        for (final String field : initialFields) {
+            list.add(JCSelector.get(object, field).ident());
+        }
+        for (final String field : fields) {
+            list.add(JCSelector.get(object, field).ident());
+        }
+        return list;
     }
 
     @Override
@@ -160,7 +172,7 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
 
     @Override
     public void finishProcessing() throws IOException {
-        final StringBuilder query = new StringBuilder();
+        final StringBuilder query = new StringBuilder("(");
         final Iterator<Map.Entry<String, String>> iterator = mSQLiteColumns.entrySet().iterator();
         while (iterator.hasNext()) {
             final Map.Entry<String, String> entry = iterator.next();
@@ -169,12 +181,9 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
                 query.append(", ");
             }
         }
+        query.append(");");
         SQLITE_CREATE.add(CodeBlock.builder()
-                .addStatement("SQLite.CREATE.add(\"CREATE TABLE IF NOT EXISTS $L($L);\")",
-                        mMetaObject.value(), query.toString())
-                .build());
-        SQLITE_TABLES.add(CodeBlock.builder()
-                .addStatement("SQLite.TABLES.put($T.class, $T._TABLE_)", mElement, mElement)
+                .addStatement("SQLiteProvider.SCHEMA.put($S, $S)", mMetaObject.value(), query.toString())
                 .build());
         JavacEnv.get().getTree(mElement).accept(this);
     }
@@ -191,10 +200,9 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
                     .build()
                     .emitTo(jcClassDecl);
             staticCreate1().emitTo(jcClassDecl);
-            staticCreate2().emitTo(jcClassDecl);
             save().emitTo(jcClassDecl);
-            updateRecord().emitTo(jcClassDecl);
             this.result = jcClassDecl;
+            JavacEnv.get().logI(null, "%s", jcClassDecl);
         }
     }
 
@@ -204,13 +212,24 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
         final String methodName = jcMethodDecl.name.toString();
         final String columnName = mSetterToColumn.get(methodName);
         if (columnName != null) {
+            final JCTree.JCExpression clientRef = JCSelector.get("mClientRef").ident();
             JCTrySpec.builder(jcMethodDecl.body)
-                    .finalize(JCSelector.get("_updateRecord").invoke(
-                            JCSelector.get(JCLiteral.stringValue(columnName)).ident(),
-                            JCSelector.get(mSetterToField.get(methodName)).ident()
-                    ))
-                    .build()
-                    .emitTo(jcMethodDecl);
+                    .finalize(JCIfSpec.builder(JCBinary
+                                    .notEqualTo(clientRef, JCLiteral.NULL))
+                                    .thenStatement(JCVarSpec.builder(SQLITE_CLIENT, "client", Modifier.FINAL)
+                                            .init(JCSelector.get(clientRef, "get").invoke().getExpression())
+                                            .build().<JCTree.JCStatement>tree())
+                                    .thenStatement(JCIfSpec.builder(JCBinary
+                                            .notEqualTo(JCSelector.get("client").ident(), JCLiteral.NULL))
+                                            .thenStatement(JCSelector.get("client", "executeUpdateDelete").invoke(
+                                                    JCLiteral.stringValue("UPDATE " + mMetaObject.value()
+                                                            + " SET " + columnName + " = ? WHERE _id = ?;"),
+                                                    JCSelector.get(mSetterToField.get(methodName)).ident(),
+                                                    JCSelector.get(mPkField).ident()
+                                            ))
+                                            .build().<JCTree.JCStatement>tree())
+                                    .build().<JCTree.JCStatement>tree()
+                    ).build().emitTo(jcMethodDecl);
             this.result = jcMethodDecl;
         }
     }
@@ -297,103 +316,55 @@ class SQLiteObjectApt extends TreeTranslator implements Apt {
                 .modifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returnType(className)
                 .addParameter(SQLITE_CLIENT, "client")
-                .addStatement(object.<JCTree.JCStatement>tree())
-                .addStatement(JCSelector.get("object", "mClientRef")
-                        .assign(SQLITE_CLIENT_REF.newInstance(JCSelector.get("client").ident())))
-                .addStatement(JCSelector.get(object.ident(), mPkField)
-                        .assign(JCSelector.get("client", "insertRowId")
-                                .invoke(JCSelector.get("_TABLE_").ident())
-                                .getExpression()))
-                .addStatement(JCSelector.get(JCSelector.get("droidkit.sqlite", "SQLiteCache", "of")
-                        .invoke(JCLiteral.clazz(className)), "put")
-                        .invoke(JCSelector.get(object.ident(), mPkField).ident(), object.ident()))
-                .addReturnStatement(object.ident())
-                .build();
-    }
-
-    private JCMethodSpec staticCreate2() {
-        final JCClassName className = JCClassName.get(mElement);
-        final JCVarSpec object = JCVarSpec.builder(className, "object", Modifier.FINAL)
-                .init(className.newInstance())
-                .build();
-        return JCMethodSpec.builder("_create")
-                .modifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returnType(className)
-                .addParameter(SQLITE_CLIENT, "client")
                 .addParameter(CURSOR, "cursor")
                 .addStatement(object.<JCTree.JCStatement>tree())
                 .addStatement(JCSelector.get("object", "mClientRef")
                         .assign(SQLITE_CLIENT_REF.newInstance(JCSelector.get("client").ident())))
                 .addStatements(mCursorToField)
-                .addStatement(JCSelector.get(JCSelector.get("droidkit.sqlite", "SQLiteCache", "of")
-                        .invoke(JCLiteral.clazz(className)), "put")
-                        .invoke(JCSelector.get(object.ident(), mPkField).ident(), object.ident()))
+                .addStatement(JCSelector.get("droidkit.sqlite", "SQLiteCache", "put").invoke(
+                        JCLiteral.clazz(className),
+                        JCSelector.get(object.ident(), mPkField).ident(),
+                        object.ident()
+                ))
                 .addReturnStatement(object.ident())
                 .build();
     }
 
     private JCMethodSpec save() {
-        final JCClassName contentValues = JCClassName.get("android.content", "ContentValues");
-        final JCSelector putValue = JCSelector.get("droidkit.database", "DatabaseUtils", "putValue");
-        final JCMethodSpec.Builder method = JCMethodSpec.builder("_save")
+        final JCClassName className = JCClassName.get(mElement);
+        final Set<String> fields = mFieldToColumn.keySet();
+        final Collection<String> columns = mFieldToColumn.values();
+        final List<String> binders = new ArrayList<>(columns);
+        Collections.fill(binders, "?");
+        return JCMethodSpec.builder("_save")
                 .modifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returnType(JCTypeName.LONG)
+                .returnType(className)
                 .addParameter(SQLITE_CLIENT, "client")
                 .addParameter(JCClassName.get(mElement), "object")
-                .addStatement(JCVarSpec.builder(contentValues, "values", Modifier.FINAL)
-                        .init(contentValues.newInstance())
-                        .build().<JCTree.JCStatement>tree())
                 .addStatement(JCIfSpec.builder(JCBinary
                         .greaterThan(JCSelector.get("object", mPkField).ident(), JCLiteral.intValue(0)))
-                        .thenStatement(putValue.invoke(
-                                JCSelector.get("values").ident(),
-                                JCLiteral.stringValue("_id"),
-                                JCSelector.get("object", mPkField).ident()
+                        .thenStatement(JCSelector.get("client", "executeInsert").invoke(
+                                insertArgs(JCLiteral.stringValue("INSERT INTO " + mMetaObject.value() +
+                                                "(_id, " + Utils.join(", ", columns) + ")" +
+                                                " VALUES (?, " + Utils.join(", ", binders) + ");"),
+                                        "object", fields, mPkField)
                         ))
-                        .build().<JCTree.JCStatement>tree());
-        for (final Map.Entry<String, String> entry : mFieldToColumn.entrySet()) {
-            method.addStatement(putValue.invoke(
-                    JCSelector.get("values").ident(),
-                    JCLiteral.stringValue(entry.getValue()),
-                    JCSelector.get("object", entry.getKey()).ident()
-            ));
-        }
-        method.addStatement(JCSelector.get("object", mPkField)
-                .assign(JCSelector.get("client", "insert").invoke(
-                        JCSelector.get("_TABLE_").ident(),
-                        JCSelector.get("values").ident()
-                ).getExpression()));
-        method.addStatement(JCSelector.get("object", "mClientRef")
-                .assign(SQLITE_CLIENT_REF.newInstance(JCSelector.get("client").ident())));
-        final JCClassName className = JCClassName.get(mElement);
-        method.addStatement(JCSelector.get(JCSelector.get("droidkit.sqlite", "SQLiteCache", "of")
-                .invoke(JCLiteral.clazz(className)), "put")
-                .invoke(JCSelector.get("object", mPkField).ident(), JCSelector.get("object").ident()));
-        return method.addReturnStatement(JCSelector.get("object", mPkField).ident()).build();
-    }
-
-    private JCMethodSpec updateRecord() {
-        final JCTree.JCExpression clientRef = JCSelector.get("mClientRef").ident();
-        return JCMethodSpec.builder("_updateRecord")
-                .modifiers(Modifier.PRIVATE)
-                .addParameter(JCClassName.get(String.class), "column")
-                .addParameter(JCClassName.get(Object.class), "value")
-                .addStatement(JCIfSpec.builder(JCBinary
-                        .notEqualTo(clientRef, JCLiteral.NULL))
-                        .thenStatement(JCVarSpec.builder(SQLITE_CLIENT, "client", Modifier.FINAL)
-                                .init(JCSelector.get(clientRef, "get")
-                                        .invoke().getExpression())
-                                .build().<JCTree.JCStatement>tree())
-                        .thenStatement(JCIfSpec.builder(JCBinary
-                                .notEqualTo(JCSelector.get("client").ident(), JCLiteral.NULL))
-                                .thenStatement(JCSelector.get("client", "updateRecord").invoke(
-                                        JCLiteral.stringValue(mMetaObject.value()),
-                                        JCSelector.get("column").ident(),
-                                        JCSelector.get("value").ident(),
-                                        JCSelector.get(mPkField).ident()
-                                ))
-                                .build().<JCTree.JCStatement>tree())
+                        .elseStatement(JCSelector.get("object", mPkField)
+                                .assign(JCSelector.get("client", "executeInsert").invoke(
+                                        insertArgs(JCLiteral.stringValue("INSERT INTO " + mMetaObject.value() +
+                                                        "(" + Utils.join(", ", columns) + ")" +
+                                                        " VALUES (" + Utils.join(", ", binders) + ");"),
+                                                "object", fields)
+                                ).getExpression()))
                         .build().<JCTree.JCStatement>tree())
+                .addStatement(JCSelector.get("object", "mClientRef").assign(SQLITE_CLIENT_REF
+                        .newInstance(JCSelector.get("client").ident())))
+                .addStatement(JCSelector.get("droidkit.sqlite", "SQLiteCache", "put").invoke(
+                        JCLiteral.clazz(className),
+                        JCSelector.get("object", mPkField).ident(),
+                        JCSelector.get("object").ident()
+                ))
+                .addReturnStatement(JCSelector.get("object").ident())
                 .build();
     }
 

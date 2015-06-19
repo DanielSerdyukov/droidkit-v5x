@@ -75,4 +75,9 @@ final class JCSelector {
         return maker.Exec(maker.Apply(List.<JCTree.JCExpression>nil(), ident(), List.from(args)));
     }
 
+    public JCTree.JCExpressionStatement invoke(Iterable<JCTree.JCExpression> args) {
+        final TreeMaker maker = JavacEnv.get().maker();
+        return maker.Exec(maker.Apply(List.<JCTree.JCExpression>nil(), ident(), List.from(args)));
+    }
+
 }

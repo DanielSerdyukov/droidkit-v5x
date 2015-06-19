@@ -3,6 +3,7 @@ package droidkit.util;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +15,15 @@ import java.util.NoSuchElementException;
 public final class Iterables {
 
     private Iterables() {
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E, T> List<T> transform(@NonNull Iterable<E> iterable, @NonNull Func<E, T> func) {
+        final List<T> list = new ArrayList<>();
+        for (final E element : iterable) {
+            list.add(func.apply(element));
+        }
+        return list;
     }
 
     @NonNull
@@ -74,6 +84,10 @@ public final class Iterables {
             last = iterator.next();
         }
         return last;
+    }
+
+    public interface Func<E, T> {
+        T apply(@NonNull E original);
     }
 
 }

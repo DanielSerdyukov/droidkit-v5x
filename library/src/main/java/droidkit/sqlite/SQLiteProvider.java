@@ -17,13 +17,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import droidkit.util.Iterables;
 
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteProvider extends ContentProvider {
+public class SQLiteProvider extends ContentProvider implements SQLiteClient.Callbacks {
+
+    static final ConcurrentMap<String, String> SCHEMA = new ConcurrentHashMap<>();
 
     private static final String DATABASE_NAME = "data.db";
 
@@ -63,9 +68,13 @@ public class SQLiteProvider extends ContentProvider {
     @Override
     public void attachInfo(@NonNull Context context, @NonNull ProviderInfo info) {
         super.attachInfo(context, info);
-        mClient = new AndroidSQLiteClient(context, getDatabaseName(), getDatabaseVersion(),
-                new SQLiteClientCallbacksImpl());
-        SQLite.initWithClient(context, mClient, info);
+        try {
+            Class.forName("droidkit.sqlite.SQLiteSchema");
+            mClient = new SQLiteClientImpl(context, getDatabaseName(), getDatabaseVersion(), this);
+            SQLite.initWithClient(context, mClient, info);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
@@ -86,7 +95,7 @@ public class SQLiteProvider extends ContentProvider {
         if (whereArgs == null) {
             cursor = mClient.query(sql);
         } else {
-            cursor = mClient.query(sql, whereArgs);
+            cursor = mClient.query(sql, (Object[]) whereArgs);
         }
         cursor.setNotificationUri(getContext().getContentResolver(), baseUriOf(uri));
         return cursor;
@@ -144,7 +153,7 @@ public class SQLiteProvider extends ContentProvider {
         if (whereArgs == null) {
             affectedRows = mClient.executeUpdateDelete(sql.toString());
         } else {
-            affectedRows = mClient.executeUpdateDelete(sql.toString(), whereArgs);
+            affectedRows = mClient.executeUpdateDelete(sql.toString(), (Object[]) whereArgs);
         }
         if (affectedRows > 0) {
             getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork(uri));
@@ -187,6 +196,28 @@ public class SQLiteProvider extends ContentProvider {
         return affectedRows;
     }
 
+    @Override
+    public void shutdown() {
+        SQLite.shutdown();
+        mClient.shutdown();
+    }
+
+    public void onDatabaseConfigure(@NonNull SQLiteDatabase db) {
+
+    }
+
+    public void onDatabaseCreate(@NonNull SQLiteDatabase db) {
+        for (final Map.Entry<String, String> entry : SCHEMA.entrySet()) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + entry.getKey() + entry.getValue());
+        }
+    }
+
+    public void onDatabaseUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        for (final String tableName : SCHEMA.keySet()) {
+            db.execSQL("DROP TABLE IF EXISTS " + tableName);
+        }
+    }
+
     @Nullable
     protected String getDatabaseName() {
         return DATABASE_NAME;
@@ -196,36 +227,8 @@ public class SQLiteProvider extends ContentProvider {
         return DATABASE_VERSION;
     }
 
-    protected void onDatabaseConfigure(@NonNull SQLiteDatabaseWrapper db) {
-    }
-
-    protected void onDatabaseCreate(@NonNull SQLiteDatabaseWrapper db) {
-    }
-
-    protected void onDatabaseUpgrade(@NonNull SQLiteDatabaseWrapper db, int oldVersion, int newVersion) {
-    }
-
     protected boolean shouldSyncToNetwork(@NonNull Uri uri) {
         return false;
-    }
-
-    private class SQLiteClientCallbacksImpl implements SQLiteClient.Callbacks {
-
-        @Override
-        public void onConfigure(@NonNull SQLiteDatabaseWrapper db) {
-            onDatabaseConfigure(db);
-        }
-
-        @Override
-        public void onCreate(@NonNull SQLiteDatabaseWrapper db) {
-            onDatabaseCreate(db);
-        }
-
-        @Override
-        public void onUpgrade(@NonNull SQLiteDatabaseWrapper db, int oldVersion, int newVersion) {
-            onDatabaseUpgrade(db, oldVersion, newVersion);
-        }
-
     }
 
 }
