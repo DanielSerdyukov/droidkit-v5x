@@ -62,7 +62,7 @@ public class TextDrawable extends ShapeDrawable {
         mTextPaint.setStrokeWidth(mBorderThickness);
 
         mBorderPaint = new Paint();
-        mBorderPaint.setColor(MaterialColors.darker(builder.mColor, DARKER_FACTOR));
+        mBorderPaint.setColor(Colors.darker(builder.mColor, DARKER_FACTOR));
         mBorderPaint.setStyle(Paint.Style.STROKE);
         mBorderPaint.setStrokeWidth(mBorderThickness);
 
@@ -184,8 +184,8 @@ public class TextDrawable extends ShapeDrawable {
         public Builder text(@NonNull String text, boolean colorize) {
             mText = text.substring(0, 1);
             if (colorize) {
-                color(MaterialColors.DEFAULT.getColor(text));
-                fontColor(MaterialColors.DEFAULT.getFontColor(mColor));
+                color(ColorPalette.MATERIAL.getColor(text));
+                fontColor(ColorPalette.MATERIAL.getFontColor(mColor).primary());
             }
             return this;
         }

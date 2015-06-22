@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import droidkit.io.IOUtils;
+import droidkit.rx.Func1;
 import droidkit.util.Iterables;
 
 /**
@@ -78,10 +79,11 @@ public abstract class SQLiteClient {
     @NonNull
     public Cursor query(@NonNull String sql, @NonNull Object... bindArgs) {
         return getReadableDatabase().rawQuery(sql, Iterables.transform(Arrays.asList(bindArgs),
-                new Iterables.Func<Object, String>() {
+                new Func1<String, Object>() {
+                    @NonNull
                     @Override
-                    public String apply(@NonNull Object original) {
-                        return String.valueOf(original);
+                    public String call(@NonNull Object o) {
+                        return String.valueOf(o);
                     }
                 }).toArray(new String[bindArgs.length]));
     }

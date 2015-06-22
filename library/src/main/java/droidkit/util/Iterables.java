@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import droidkit.rx.Func1;
+
 /**
  * @author Daniel Serdyukov
  */
@@ -18,10 +20,10 @@ public final class Iterables {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T> List<T> transform(@NonNull Iterable<E> iterable, @NonNull Func<E, T> func) {
-        final List<T> list = new ArrayList<>();
-        for (final E element : iterable) {
-            list.add(func.apply(element));
+    public static <R, T> List<R> transform(@NonNull Iterable<T> iterable, @NonNull Func1<R, T> func) {
+        final List<R> list = new ArrayList<>();
+        for (final T element : iterable) {
+            list.add(func.call(element));
         }
         return list;
     }
@@ -84,10 +86,6 @@ public final class Iterables {
             last = iterator.next();
         }
         return last;
-    }
-
-    public interface Func<E, T> {
-        T apply(@NonNull E original);
     }
 
 }
