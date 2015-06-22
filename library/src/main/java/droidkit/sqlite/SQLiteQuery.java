@@ -1,8 +1,11 @@
 package droidkit.sqlite;
 
-import android.content.ContentResolver;
+import android.app.LoaderManager;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.net.Uri;
+import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,8 +16,9 @@ import java.util.Collections;
 import java.util.List;
 
 import droidkit.content.StringValue;
-import rx.Observable;
-import rx.Subscriber;
+import droidkit.rx.Action1;
+import droidkit.rx.Observer;
+import droidkit.rx.Observers;
 
 /**
  * @author Daniel Serdyukov
@@ -81,7 +85,7 @@ public class SQLiteQuery<T> {
 
     private String mLimit;
 
-    SQLiteQuery(@NonNull ContentResolver resolver, @NonNull SQLiteClient client, @NonNull Class<T> type) {
+    SQLiteQuery(@NonNull Class<T> type) {
         mType = type;
     }
 
@@ -284,19 +288,28 @@ public class SQLiteQuery<T> {
     }
 
     @NonNull
-    public Observable<List<T>> observable() {
-        return Observable.create(new Observable.OnSubscribe<List<T>>() {
-            @Override
-            public void call(Subscriber<? super List<T>> subscriber) {
-                subscriber.onNext(list());
-                subscriber.onCompleted();
-            }
-        });
+    public Loader<List<T>> loader() {
+        return new SQLiteLoader<>(SQLite.obtainContext(), this);
+    }
+
+    @NonNull
+    public Loader<List<T>> loadOn(@NonNull LoaderManager lm, int loaderId, @NonNull Observer<List<T>> observer) {
+        return lm.initLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(this, observer));
+    }
+
+    @NonNull
+    public Loader<List<T>> loadOn(@NonNull LoaderManager lm, int loaderId, @NonNull Action1<List<T>> onNext) {
+        return lm.initLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(this, Observers.create(onNext)));
     }
 
     @Override
     public String toString() {
         return WHERE + mWhere.toString();
+    }
+
+    @NonNull
+    Uri getUri() {
+        return SQLite.uriOf(mType);
     }
 
     @NonNull

@@ -1,6 +1,7 @@
 package droidkit.apt;
 
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.ListBuffer;
 
 import javax.lang.model.element.Element;
@@ -22,6 +23,11 @@ abstract class JCEmitter {
     }
 
     public void emitTo(JCTree.JCMethodDecl methodDecl) {
+
+    }
+
+    public void overrideMethod(JCTree.JCMethodDecl methodDecl) {
+        methodDecl.body = JavacEnv.get().maker().Block(0, List.<JCTree.JCStatement>of(this.<JCTree.JCTry>tree()));
     }
 
     public abstract <T extends JCTree> T tree();

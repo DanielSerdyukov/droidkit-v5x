@@ -80,7 +80,7 @@ public final class SQLite {
 
     @NonNull
     public static <T> SQLiteQuery<T> where(@NonNull Class<T> type) {
-        return new SQLiteQuery<>(obtainContext().getContentResolver(), obtainClient(), type);
+        return new SQLiteQuery<>(type);
     }
 
     @NonNull

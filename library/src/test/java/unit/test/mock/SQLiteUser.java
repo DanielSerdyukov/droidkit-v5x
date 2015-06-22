@@ -2,6 +2,9 @@ package unit.test.mock;
 
 import android.support.annotation.NonNull;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import droidkit.annotation.SQLiteColumn;
 import droidkit.annotation.SQLiteObject;
 import droidkit.annotation.SQLitePk;
@@ -26,6 +29,12 @@ public class SQLiteUser {
 
     @SQLiteColumn("role")
     private Role mRole = Role.USER;
+
+    @SQLiteColumn("big_int")
+    private BigInteger mBigInt = BigInteger.ONE;
+
+    @SQLiteColumn("big_dec")
+    private BigDecimal mBigDec = BigDecimal.TEN;
 
     public long getId() {
         return mId;
@@ -69,6 +78,26 @@ public class SQLiteUser {
     @NonNull
     public SQLiteUser setRole(@NonNull Role role) {
         mRole = role;
+        return this;
+    }
+
+    public BigInteger getBigInt() {
+        return mBigInt;
+    }
+
+    @NonNull
+    public SQLiteUser setBigInt(BigInteger bigInt) {
+        mBigInt = bigInt;
+        return this;
+    }
+
+    public BigDecimal getBigDec() {
+        return mBigDec;
+    }
+
+    @NonNull
+    public SQLiteUser setBigDec(BigDecimal bigDec) {
+        mBigDec = bigDec;
         return this;
     }
 

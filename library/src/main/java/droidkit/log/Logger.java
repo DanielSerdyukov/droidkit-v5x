@@ -74,7 +74,8 @@ public final class Logger {
         final String className = caller.getClassName();
         final int lastDot = className.lastIndexOf(".");
         final StringBuilder buf = new StringBuilder(256)
-                .append(className.substring(lastDot + 1));
+                .append(className.substring(lastDot + 1))
+                .append(".").append(caller.getMethodName());
         if (caller.isNativeMethod()) {
             buf.append("(Native Method)");
         } else {

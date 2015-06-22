@@ -1,28 +1,19 @@
 package droidkit.sqlite;
 
 import android.content.ContentValues;
-import android.content.pm.ProviderInfo;
 import android.database.Cursor;
-import android.support.annotation.NonNull;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowContentResolver;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.database.DatabaseUtils;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 import unit.test.mock.SQLiteUser;
 
 /**
@@ -30,32 +21,24 @@ import unit.test.mock.SQLiteUser;
  */
 @Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
-public class SQLiteResultTest {
-
-    private SQLiteProvider mProvider;
+public class SQLiteResultTest extends SQLiteTestCase {
 
     @Before
     public void setUp() throws Exception {
-        mProvider = new SQLiteProvider();
-        final ProviderInfo providerInfo = new ProviderInfo();
-        providerInfo.name = SQLiteProvider.class.getName();
-        providerInfo.authority = BuildConfig.APPLICATION_ID;
-        mProvider.attachInfo(RuntimeEnvironment.application, providerInfo);
-        mProvider.onCreate();
-        ShadowContentResolver.registerProvider(BuildConfig.APPLICATION_ID, mProvider);
+        super.setUp();
         final ContentValues values = new ContentValues();
         for (int i = 1; i <= 10; ++i) {
             values.clear();
             values.put("name", "User #" + i);
             values.put("lat", 50.5 + i);
-            mProvider.insert(SQLite.uriOf(SQLiteUser.class), values);
+            getProvider().insert(SQLite.uriOf(SQLiteUser.class), values);
         }
     }
 
     @Test
     public void testList() throws Exception {
         final List<SQLiteUser> list = SQLite.where(SQLiteUser.class).list();
-        final Cursor cursor = mProvider.query(SQLite.uriOf(SQLiteUser.class), null, null, null, null);
+        final Cursor cursor = getProvider().query(SQLite.uriOf(SQLiteUser.class), null, null, null, null);
         Assert.assertTrue(cursor.moveToFirst());
         Assert.assertEquals(list.size(), cursor.getCount());
         do {
@@ -70,7 +53,7 @@ public class SQLiteResultTest {
         final List<SQLiteUser> list = SQLite.where(SQLiteUser.class).list();
         final SQLiteUser newEntry = new SQLiteUser().setName("Added Entry");
         Assert.assertTrue(list.add(newEntry));
-        final Cursor cursor = mProvider.query(SQLite.uriOf(SQLiteUser.class), null, "name = ?",
+        final Cursor cursor = getProvider().query(SQLite.uriOf(SQLiteUser.class), null, "name = ?",
                 new String[]{newEntry.getName()}, null);
         Assert.assertTrue(cursor.moveToFirst());
         Assert.assertEquals(newEntry.getId(), DatabaseUtils.getLong(cursor, "_id"));
@@ -80,30 +63,17 @@ public class SQLiteResultTest {
     @Test
     public void testRemove() throws Exception {
         final List<SQLiteUser> list = SQLite.where(SQLiteUser.class).list();
+        for (int i = 0; i < list.size(); ++i) {
+            Assert.assertEquals("User #" + (i + 1), list.get(i).getName());
+        }
         final SQLiteUser removed = list.remove(5);
         Assert.assertEquals("User #6", removed.getName());
-        final Cursor cursor = mProvider.query(SQLite.uriOf(SQLiteUser.class), null, null, null, null);
+        final Cursor cursor = getProvider().query(SQLite.uriOf(SQLiteUser.class), null, null, null, null);
         Assert.assertTrue(cursor.moveToFirst());
         do {
             Assert.assertNotEquals(removed.getName(), DatabaseUtils.getString(cursor, "name"));
         } while (cursor.moveToNext());
         cursor.close();
-    }
-
-    @Test
-    public void testObservable() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
-        SQLite.where(SQLiteUser.class).observable()
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.newThread())
-                .subscribe(new Action1<List<SQLiteUser>>() {
-                    @Override
-                    public void call(@NonNull List<SQLiteUser> entries) {
-                        Assert.assertEquals(10, entries.size());
-                        latch.countDown();
-                    }
-                });
-        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
     }
 
     @Test
@@ -196,11 +166,6 @@ public class SQLiteResultTest {
                 .lessThan("lat", 55.5)
                 .count("lat")
                 .intValue());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        mProvider.shutdown();
     }
 
 }

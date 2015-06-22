@@ -51,8 +51,7 @@ public final class Dynamic {
 
     public static boolean inClasspath(@NonNull String name) {
         try {
-            Class.forName(name);
-            return true;
+            return Class.forName(name) != null;
         } catch (ClassNotFoundException ignored) {
             return false;
         }

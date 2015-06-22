@@ -10,18 +10,10 @@
 
         <activity android:name=".app.SignInActivity3" />
 
-        <!--<provider
-            android:name="droidkit.sqlite.SQLiteProvider"
+        <provider
+            android:name=".sqlite.TestSQLiteProvider"
             android:authorities="droidkit.sqlite"
-            android:exported="false" />-->
-
-        <!--<meta-data
-            android:name="${applicationId}.DATABASE_NAME"
-            android:value=":memory:" />
-
-        <meta-data
-            android:name="droidkit.sqlite.CASE_SENSITIVE_LIKE"
-            android:value="true" />-->
+            android:exported="false" />
 
     </application>
 

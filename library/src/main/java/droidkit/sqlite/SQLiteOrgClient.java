@@ -2,10 +2,10 @@ package droidkit.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import org.sqlite.database.sqlite.SQLiteOpenHelper;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -15,12 +15,12 @@ import droidkit.util.Objects;
 /**
  * @author Daniel Serdyukov
  */
-class SQLiteClientImpl extends SQLiteClient {
+public class SQLiteOrgClient extends SQLiteClient {
 
     private final SQLiteOpenHelper mHelper;
 
-    SQLiteClientImpl(@NonNull Context context, @Nullable String databaseName, int databaseVersion,
-                     @NonNull Callbacks callbacks) {
+    SQLiteOrgClient(@NonNull Context context, @Nullable String databaseName, int databaseVersion,
+                    @NonNull Callbacks callbacks) {
         mHelper = new SQLiteOpenHelperImpl(context, databaseName, databaseVersion, callbacks);
         getWritableDatabase();
     }
@@ -40,7 +40,7 @@ class SQLiteClientImpl extends SQLiteClient {
         mHelper.close();
     }
 
-    private static final class SQLiteOpenHelperImpl extends SQLiteOpenHelper {
+    private static final class SQLiteOpenHelperImpl extends org.sqlite.database.sqlite.SQLiteOpenHelper {
 
         private final Reference<Callbacks> mCallbacksRef;
 
@@ -51,7 +51,7 @@ class SQLiteClientImpl extends SQLiteClient {
         }
 
         @Override
-        public void onConfigure(@NonNull android.database.sqlite.SQLiteDatabase db) {
+        public void onConfigure(@NonNull org.sqlite.database.sqlite.SQLiteDatabase db) {
             final Callbacks callbacks = mCallbacksRef.get();
             if (callbacks != null) {
                 callbacks.onDatabaseConfigure(new SQLiteDatabaseWrapper(db));
@@ -59,7 +59,7 @@ class SQLiteClientImpl extends SQLiteClient {
         }
 
         @Override
-        public void onCreate(@NonNull android.database.sqlite.SQLiteDatabase db) {
+        public void onCreate(@NonNull org.sqlite.database.sqlite.SQLiteDatabase db) {
             final Callbacks callbacks = mCallbacksRef.get();
             if (callbacks != null) {
                 callbacks.onDatabaseCreate(new SQLiteDatabaseWrapper(db));
@@ -67,7 +67,7 @@ class SQLiteClientImpl extends SQLiteClient {
         }
 
         @Override
-        public void onUpgrade(@NonNull android.database.sqlite.SQLiteDatabase db, int oldVersion, int newVersion) {
+        public void onUpgrade(@NonNull org.sqlite.database.sqlite.SQLiteDatabase db, int oldVersion, int newVersion) {
             final Callbacks callbacks = mCallbacksRef.get();
             if (callbacks != null) {
                 callbacks.onDatabaseUpgrade(new SQLiteDatabaseWrapper(db), oldVersion, newVersion);
@@ -78,9 +78,9 @@ class SQLiteClientImpl extends SQLiteClient {
 
     private static final class SQLiteDatabaseWrapper implements SQLiteDatabase {
 
-        private final Reference<android.database.sqlite.SQLiteDatabase> mDb;
+        private final Reference<org.sqlite.database.sqlite.SQLiteDatabase> mDb;
 
-        public SQLiteDatabaseWrapper(@NonNull android.database.sqlite.SQLiteDatabase db) {
+        public SQLiteDatabaseWrapper(@NonNull org.sqlite.database.sqlite.SQLiteDatabase db) {
             mDb = new WeakReference<>(db);
         }
 
@@ -96,7 +96,7 @@ class SQLiteClientImpl extends SQLiteClient {
 
         @Override
         public void endTransaction(boolean successful) {
-            final android.database.sqlite.SQLiteDatabase db = obtainDatabase();
+            final org.sqlite.database.sqlite.SQLiteDatabase db = obtainDatabase();
             if (successful) {
                 db.setTransactionSuccessful();
             }
@@ -121,7 +121,7 @@ class SQLiteClientImpl extends SQLiteClient {
         }
 
         @NonNull
-        private android.database.sqlite.SQLiteDatabase obtainDatabase() {
+        private org.sqlite.database.sqlite.SQLiteDatabase obtainDatabase() {
             return Objects.requireNonNull(mDb.get(),
                     "Something's wrong! SQLiteDatabase has been removed by the garbage collector");
         }
@@ -130,9 +130,9 @@ class SQLiteClientImpl extends SQLiteClient {
 
     private static final class SQLiteStatementWrapper implements SQLiteStatement {
 
-        private final android.database.sqlite.SQLiteStatement mStmt;
+        private final org.sqlite.database.sqlite.SQLiteStatement mStmt;
 
-        private SQLiteStatementWrapper(@NonNull android.database.sqlite.SQLiteStatement stmt) {
+        private SQLiteStatementWrapper(@NonNull org.sqlite.database.sqlite.SQLiteStatement stmt) {
             mStmt = stmt;
         }
 
@@ -140,7 +140,26 @@ class SQLiteClientImpl extends SQLiteClient {
         public void rebind(@NonNull Object... args) {
             mStmt.clearBindings();
             for (int i = 0; i < args.length; ++i) {
-                DatabaseUtils.bindObjectToProgram(mStmt, i + 1, args[i]);
+                final Object value = args[i];
+                final int index = i + 1;
+                if (value == null) {
+                    mStmt.bindNull(index);
+                } else if (value instanceof Double || value instanceof Float) {
+                    mStmt.bindDouble(index, ((Number) value).doubleValue());
+                } else if (value instanceof Number) {
+                    mStmt.bindLong(index, ((Number) value).longValue());
+                } else if (value instanceof Boolean) {
+                    Boolean bool = (Boolean) value;
+                    if (bool) {
+                        mStmt.bindLong(index, 1);
+                    } else {
+                        mStmt.bindLong(index, 0);
+                    }
+                } else if (value instanceof byte[]) {
+                    mStmt.bindBlob(index, (byte[]) value);
+                } else {
+                    mStmt.bindString(index, value.toString());
+                }
             }
         }
 

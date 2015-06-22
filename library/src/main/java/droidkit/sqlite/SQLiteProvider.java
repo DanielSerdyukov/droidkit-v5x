@@ -70,7 +70,7 @@ public class SQLiteProvider extends ContentProvider implements SQLiteClient.Call
         super.attachInfo(context, info);
         try {
             Class.forName("droidkit.sqlite.SQLiteSchema");
-            mClient = new SQLiteClientImpl(context, getDatabaseName(), getDatabaseVersion(), this);
+            mClient = createClient(context);
             SQLite.initWithClient(context, mClient, info);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(e);
@@ -229,6 +229,15 @@ public class SQLiteProvider extends ContentProvider implements SQLiteClient.Call
 
     protected boolean shouldSyncToNetwork(@NonNull Uri uri) {
         return false;
+    }
+
+    SQLiteClient createClient(@NonNull Context context) {
+        try {
+            Class.forName("org.sqlite.database.sqlite.SQLiteDatabase");
+            return new SQLiteOrgClient(context, getDatabaseName(), getDatabaseVersion(), this);
+        } catch (ClassNotFoundException e) {
+            return new SQLiteClientImpl(context, getDatabaseName(), getDatabaseVersion(), this);
+        }
     }
 
 }

@@ -5,9 +5,12 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+
+import javax.lang.model.element.VariableElement;
 
 /**
  * @author Daniel Serdyukov
@@ -18,6 +21,14 @@ final class JCSelector {
 
     private JCSelector(JCTree.JCExpression selector) {
         mSelector = selector;
+    }
+
+    public static JCSelector getField(JCTree.JCExpression object, VariableElement field, String... selectors) {
+        final TreeMaker maker = JavacEnv.get().maker();
+        final Names names = JavacEnv.get().names();
+        JCTree.JCExpression selector = object == null ? maker.Ident(names._this) : object;
+        selector = maker.Select(selector, names.fromString(field.getSimpleName().toString()));
+        return get(selector, selectors);
     }
 
     public static JCSelector get(JCTree.JCExpressionStatement selector, Collection<String> selectors) {
@@ -75,7 +86,17 @@ final class JCSelector {
         return maker.Exec(maker.Apply(List.<JCTree.JCExpression>nil(), ident(), List.from(args)));
     }
 
-    public JCTree.JCExpressionStatement invoke(Iterable<JCTree.JCExpression> args) {
+    public JCTree.JCExpressionStatement invoke(JCTree.JCExpression first, java.util.List<JCTree.JCExpression> args,
+                                               int offset, int limit) {
+        final Collection<JCTree.JCExpression> combinedArgs = new ArrayList<>();
+        combinedArgs.add(first);
+        for (int i = offset; i < Math.min(limit, args.size()); ++i) {
+            combinedArgs.add(args.get(i));
+        }
+        return invoke(combinedArgs);
+    }
+
+    public JCTree.JCExpressionStatement invoke(Collection<JCTree.JCExpression> args) {
         final TreeMaker maker = JavacEnv.get().maker();
         return maker.Exec(maker.Apply(List.<JCTree.JCExpression>nil(), ident(), List.from(args)));
     }

@@ -1,15 +1,9 @@
 package droidkit.sqlite;
 
-import android.content.pm.ProviderInfo;
-
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowContentResolver;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
@@ -20,20 +14,7 @@ import unit.test.mock.SQLiteUser;
  */
 @Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
-public class SQLiteQueryTest {
-
-    private SQLiteProvider mProvider;
-
-    @Before
-    public void setUp() throws Exception {
-        mProvider = new SQLiteProvider();
-        final ProviderInfo providerInfo = new ProviderInfo();
-        providerInfo.name = SQLiteProvider.class.getName();
-        providerInfo.authority = BuildConfig.APPLICATION_ID;
-        mProvider.attachInfo(RuntimeEnvironment.application, providerInfo);
-        mProvider.onCreate();
-        ShadowContentResolver.registerProvider(BuildConfig.APPLICATION_ID, mProvider);
-    }
+public class SQLiteQueryTest extends SQLiteTestCase {
 
     @Test
     public void testEqualTo() throws Exception {
@@ -142,11 +123,6 @@ public class SQLiteQueryTest {
                 .greaterThan("c", 3)
                 .endGroup()
                 .toString());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        mProvider.shutdown();
     }
 
 }

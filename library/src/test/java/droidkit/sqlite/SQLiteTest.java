@@ -1,16 +1,11 @@
 package droidkit.sqlite;
 
-import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowContentResolver;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
@@ -22,20 +17,7 @@ import unit.test.mock.SQLiteUser;
  */
 @Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
-public class SQLiteTest {
-
-    private SQLiteProvider mProvider;
-
-    @Before
-    public void setUp() throws Exception {
-        mProvider = new SQLiteProvider();
-        final ProviderInfo providerInfo = new ProviderInfo();
-        providerInfo.name = SQLiteProvider.class.getName();
-        providerInfo.authority = BuildConfig.APPLICATION_ID;
-        mProvider.attachInfo(RuntimeEnvironment.application, providerInfo);
-        mProvider.onCreate();
-        ShadowContentResolver.registerProvider(BuildConfig.APPLICATION_ID, mProvider);
-    }
+public class SQLiteTest extends SQLiteTestCase {
 
     @Test
     public void testSave() throws Exception {
@@ -43,7 +25,7 @@ public class SQLiteTest {
                 .setName("User")
                 .setLat(99.9);
         SQLite.save(entry);
-        final Cursor cursor = mProvider.query(SQLite.uriOf(SQLiteUser.class), null, null, null, null);
+        final Cursor cursor = getProvider().query(SQLite.uriOf(SQLiteUser.class), null, null, null, null);
         Assert.assertTrue(cursor.moveToFirst());
         Assert.assertEquals(entry.getName(), DatabaseUtils.getString(cursor, "name"));
         Assert.assertEquals(entry.getLat(), DatabaseUtils.getDouble(cursor, "lat"), 0d);
@@ -54,16 +36,13 @@ public class SQLiteTest {
     public void testSave5K() throws Exception {
         SQLite.beginTransaction();
         for (int i = 1; i <= 5000; ++i) {
-            SQLite.save(new SQLiteUser()
-                    .setName("User #" + i)
-                    .setLat(99.9));
+            SQLite.save(new SQLiteUser().setName("User #" + i).setLat(99.9));
         }
         SQLite.endTransaction(true);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        mProvider.shutdown();
+        final Cursor cursor = getProvider().query(SQLite.uriOf(SQLiteUser.class), null, null, null, null);
+        Assert.assertTrue(cursor.moveToFirst());
+        Assert.assertEquals(5000, cursor.getCount());
+        cursor.close();
     }
 
 }

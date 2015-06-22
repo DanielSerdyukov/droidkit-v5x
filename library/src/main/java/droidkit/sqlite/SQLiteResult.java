@@ -7,11 +7,13 @@ import android.support.annotation.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.database.DatabaseUtils;
-import droidkit.io.IOUtils;
 import droidkit.util.DynamicException;
 import droidkit.util.DynamicMethod;
 
@@ -26,23 +28,27 @@ class SQLiteResult<T> extends AbstractList<T> {
 
     private final Class<T> mType;
 
-    private Cursor mCursor;
+    private final ArrayList<T> mObjects;
+
+    private final AtomicReference<Cursor> mCursorRef = new AtomicReference<>();
 
     SQLiteResult(@NonNull SQLiteQuery<T> query, @NonNull Class<T> type, @NonNull Cursor cursor) {
         mQuery = query;
         mType = type;
-        mCursor = cursor;
+        mCursorRef.compareAndSet(null, cursor);
+        mObjects = new ArrayList<>(Collections.nCopies(cursor.getCount(), (T) null));
+        SQLiteGuard.get(this);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public T get(int location) {
-        if (mCursor.moveToPosition(location)) {
-            final long rowId = DatabaseUtils.getLong(mCursor, BaseColumns._ID);
-            T entry = SQLiteCache.get(mType, rowId);
+        final Cursor cursor = mCursorRef.get();
+        if (cursor.moveToPosition(location)) {
+            T entry = mObjects.get(location);
             if (entry == null) {
-                entry = instantiate(mCursor);
-                SQLiteCache.put(mType, rowId, entry);
+                entry = instantiate(cursor);
+                mObjects.set(location, entry);
             }
             return entry;
         }
@@ -51,43 +57,39 @@ class SQLiteResult<T> extends AbstractList<T> {
 
     @Override
     public void add(int location, T object) {
-        final Cursor oldCursor = mCursor;
-        try {
-            SQLite.save(object);
-            mCursor = mQuery.cursor();
-        } finally {
-            IOUtils.closeQuietly(oldCursor);
-        }
+        SQLite.save(object);
+        mObjects.add(location, object);
+        final Cursor oldCursor = mCursorRef.get();
+        mCursorRef.compareAndSet(oldCursor, mQuery.cursor());
+        oldCursor.close();
     }
 
     @Override
     public T remove(int location) {
-        final Cursor oldCursor = mCursor;
-        try {
-            if (oldCursor.moveToPosition(location)) {
-                final long rowId = DatabaseUtils.getLong(oldCursor, BaseColumns._ID);
-                SQLite.where(mType).equalTo(BaseColumns._ID, rowId).remove();
-                mCursor = mQuery.cursor();
-                return SQLiteCache.remove(mType, rowId);
-            }
-            throw new ArrayIndexOutOfBoundsException(location);
-        } finally {
-            IOUtils.closeQuietly(oldCursor);
+        final Cursor oldCursor = mCursorRef.get();
+        if (oldCursor.moveToPosition(location)) {
+            final long rowId = DatabaseUtils.getLong(oldCursor, BaseColumns._ID);
+            final T entry = mObjects.remove(location);
+            SQLite.where(mType).equalTo(BaseColumns._ID, rowId).remove();
+            mCursorRef.compareAndSet(oldCursor, mQuery.cursor());
+            oldCursor.close();
+            return entry;
         }
+        throw new ArrayIndexOutOfBoundsException(location);
     }
 
     @Override
     public int size() {
-        if (mCursor != null && !mCursor.isClosed()) {
-            return mCursor.getCount();
+        final Cursor cursor = mCursorRef.get();
+        if (cursor != null && !cursor.isClosed()) {
+            return cursor.getCount();
         }
         return 0;
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        IOUtils.closeQuietly(mCursor);
-        super.finalize();
+    @NonNull
+    AtomicReference<Cursor> getCursorReference() {
+        return mCursorRef;
     }
 
     @Nullable

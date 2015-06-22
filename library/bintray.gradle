@@ -57,7 +57,7 @@ bintray {
     configurations = ['archives']
     publications = ['mavenAndroid']
     pkg {
-        repo = 'maven'
+        repo = 'droidkit'
         name = 'droidkit'
         licenses = ['Apache-2.0']
     }

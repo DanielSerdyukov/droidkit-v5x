@@ -11,10 +11,8 @@
     protected <methods>;
 }
 
--keepnames class droidkit.sqlite.SQLite {
-    static final ** CREATE;
-    static final ** UPGRADE;
-    static final ** TABLES;
+-keepnames class droidkit.sqlite.SQLiteProvider {
+    static final ** SCHEMA;
 }
 
 -dontwarn javax.**
