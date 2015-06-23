@@ -19,6 +19,16 @@ public interface SQLiteStatement extends Closeable {
 
     String simpleQueryForString();
 
+    void bindNull(int index);
+
+    void bindDouble(int index, double value);
+
+    void bindLong(int index, long value);
+
+    void bindBlob(int index, @NonNull byte[] value);
+
+    void bindString(int index, @NonNull String value);
+
     void close();
 
 }

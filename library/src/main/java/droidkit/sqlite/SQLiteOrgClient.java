@@ -10,6 +10,7 @@ import org.sqlite.database.sqlite.SQLiteOpenHelper;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
+import droidkit.database.DatabaseUtils;
 import droidkit.util.Objects;
 
 /**
@@ -140,26 +141,7 @@ public class SQLiteOrgClient extends SQLiteClient {
         public void rebind(@NonNull Object... args) {
             mStmt.clearBindings();
             for (int i = 0; i < args.length; ++i) {
-                final Object value = args[i];
-                final int index = i + 1;
-                if (value == null) {
-                    mStmt.bindNull(index);
-                } else if (value instanceof Double || value instanceof Float) {
-                    mStmt.bindDouble(index, ((Number) value).doubleValue());
-                } else if (value instanceof Number) {
-                    mStmt.bindLong(index, ((Number) value).longValue());
-                } else if (value instanceof Boolean) {
-                    Boolean bool = (Boolean) value;
-                    if (bool) {
-                        mStmt.bindLong(index, 1);
-                    } else {
-                        mStmt.bindLong(index, 0);
-                    }
-                } else if (value instanceof byte[]) {
-                    mStmt.bindBlob(index, (byte[]) value);
-                } else {
-                    mStmt.bindString(index, value.toString());
-                }
+                DatabaseUtils.bindObjectToStatement(this, i + 1, args[i]);
             }
         }
 
@@ -181,6 +163,31 @@ public class SQLiteOrgClient extends SQLiteClient {
         @Override
         public String simpleQueryForString() {
             return mStmt.simpleQueryForString();
+        }
+
+        @Override
+        public void bindNull(int index) {
+            mStmt.bindNull(index);
+        }
+
+        @Override
+        public void bindDouble(int index, double value) {
+            mStmt.bindDouble(index, value);
+        }
+
+        @Override
+        public void bindLong(int index, long value) {
+            mStmt.bindLong(index, value);
+        }
+
+        @Override
+        public void bindBlob(int index, @NonNull byte[] value) {
+            mStmt.bindBlob(index, value);
+        }
+
+        @Override
+        public void bindString(int index, @NonNull String value) {
+            mStmt.bindString(index, value);
         }
 
         @Override

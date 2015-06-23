@@ -2,7 +2,6 @@ package droidkit.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +9,7 @@ import android.support.annotation.Nullable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
+import droidkit.database.DatabaseUtils;
 import droidkit.util.Objects;
 
 /**
@@ -140,7 +140,7 @@ class SQLiteClientImpl extends SQLiteClient {
         public void rebind(@NonNull Object... args) {
             mStmt.clearBindings();
             for (int i = 0; i < args.length; ++i) {
-                DatabaseUtils.bindObjectToProgram(mStmt, i + 1, args[i]);
+                DatabaseUtils.bindObjectToStatement(this, i + 1, args[i]);
             }
         }
 
@@ -162,6 +162,31 @@ class SQLiteClientImpl extends SQLiteClient {
         @Override
         public String simpleQueryForString() {
             return mStmt.simpleQueryForString();
+        }
+
+        @Override
+        public void bindNull(int index) {
+            mStmt.bindNull(index);
+        }
+
+        @Override
+        public void bindDouble(int index, double value) {
+            mStmt.bindDouble(index, value);
+        }
+
+        @Override
+        public void bindLong(int index, long value) {
+            mStmt.bindLong(index, value);
+        }
+
+        @Override
+        public void bindBlob(int index, @NonNull byte[] value) {
+            mStmt.bindBlob(index, value);
+        }
+
+        @Override
+        public void bindString(int index, @NonNull String value) {
+            mStmt.bindString(index, value);
         }
 
         @Override

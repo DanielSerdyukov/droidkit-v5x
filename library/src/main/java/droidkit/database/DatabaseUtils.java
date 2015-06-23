@@ -1,17 +1,26 @@
 package droidkit.database;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import org.joda.time.DateTime;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
+import droidkit.sqlite.SQLiteException;
+import droidkit.sqlite.SQLiteStatement;
+import droidkit.util.Dynamic;
 import droidkit.util.Objects;
 
 /**
  * @author Daniel Serdyukov
  */
 public final class DatabaseUtils {
+
+    private static final boolean JODA_TIME_SUPPORT = Dynamic.inClasspath("org.joda.time.DateTime");
 
     private DatabaseUtils() {
     }
@@ -72,31 +81,46 @@ public final class DatabaseUtils {
         return null;
     }
 
-    public static void putValue(@NonNull ContentValues values, @NonNull String key, @Nullable Object value) {
+    @Nullable
+    public static BigInteger getBigInt(@NonNull Cursor cursor, @NonNull String columnName) {
+        return BigInteger.valueOf(getLong(cursor, columnName));
+    }
+
+    @Nullable
+    public static BigDecimal getBigDec(@NonNull Cursor cursor, @NonNull String columnName) {
+        return BigDecimal.valueOf(getDouble(cursor, columnName));
+    }
+
+    @Nullable
+    public static DateTime getDateTime(@NonNull Cursor cursor, @NonNull String columnName) {
+        return new DateTime(getLong(cursor, columnName));
+    }
+
+    public static void bindObjectToStatement(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
         if (value == null) {
-            values.putNull(key);
-        } else if (value instanceof String) {
-            values.put(key, (String) value);
-        } else if (value instanceof Integer) {
-            values.put(key, (Integer) value);
-        } else if (value instanceof Long) {
-            values.put(key, (Long) value);
-        } else if (value instanceof Float) {
-            values.put(key, (Float) value);
-        } else if (value instanceof Double) {
-            values.put(key, (Double) value);
+            stmt.bindNull(index);
+        } else if (value instanceof Double || value instanceof Float
+                || value instanceof BigDecimal) {
+            stmt.bindDouble(index, ((Number) value).doubleValue());
+        } else if (value instanceof Number) {
+            stmt.bindLong(index, ((Number) value).longValue());
         } else if (value instanceof Boolean) {
-            if (((Boolean) value)) {
-                values.put(key, 1);
+            boolean bool = (boolean) value;
+            if (bool) {
+                stmt.bindLong(index, 1);
             } else {
-                values.put(key, 0);
+                stmt.bindLong(index, 0);
             }
-        } else if (value instanceof Enum) {
-            values.put(key, ((Enum<?>) value).name());
         } else if (value instanceof byte[]) {
-            values.put(key, (byte[]) value);
+            stmt.bindBlob(index, (byte[]) value);
+        } else if (value instanceof Enum) {
+            stmt.bindString(index, ((Enum) value).name());
+        } else if (JODA_TIME_SUPPORT && value instanceof DateTime) {
+            stmt.bindLong(index, ((DateTime) value).getMillis());
+        } else if (value instanceof String) {
+            stmt.bindString(index, (String) value);
         } else {
-            throw new IllegalArgumentException("bad value type: " + value.getClass().getName());
+            throw new SQLiteException("Unsupported sqlite type: " + value.getClass());
         }
     }
 

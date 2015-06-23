@@ -185,7 +185,7 @@ public class TextDrawable extends ShapeDrawable {
             mText = text.substring(0, 1);
             if (colorize) {
                 color(ColorPalette.MATERIAL.getColor(text));
-                fontColor(ColorPalette.MATERIAL.getFontColor(mColor).primary());
+                fontColor(ColorPalette.MATERIAL.getColorSpec(mColor).primary());
             }
             return this;
         }

@@ -32,7 +32,7 @@ public class ColorPalette {
     }
 
     @NonNull
-    public FontColor getFontColor(@ColorInt int mainColor) {
+    public ColorSpec getColorSpec(@ColorInt int mainColor) {
         throw new UnsupportedOperationException("No supported color conversion");
     }
 

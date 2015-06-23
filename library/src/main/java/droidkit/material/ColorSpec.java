@@ -6,11 +6,11 @@ import android.support.annotation.ColorInt;
 /**
  * @author Daniel Serdyukov
  */
-public final class FontColor {
+public final class ColorSpec {
 
-    public static final FontColor MATERIAL_DARK = new FontColor(Color.BLACK, 0.12f, 0.26f, 0.54f, 0.87f);
+    public static final ColorSpec MATERIAL_DARK = new ColorSpec(Color.BLACK, 0.12f, 0.26f, 0.54f, 0.87f);
 
-    public static final FontColor MATERIAL_LIGHT = new FontColor(Color.WHITE, 0.12f, 0.30f, 0.70f, 1.00f);
+    public static final ColorSpec MATERIAL_LIGHT = new ColorSpec(Color.WHITE, 0.12f, 0.30f, 0.70f, 1.00f);
 
     private final int mColor;
 
@@ -22,7 +22,7 @@ public final class FontColor {
 
     private final float mPrimaryAlpha;
 
-    public FontColor(@ColorInt int color, float dividerAlpha, float hintAlpha,
+    public ColorSpec(@ColorInt int color, float dividerAlpha, float hintAlpha,
                      float secondaryAlpha, float primaryAlpha) {
         mColor = color;
         mDividerAlpha = dividerAlpha;

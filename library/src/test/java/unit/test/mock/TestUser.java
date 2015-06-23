@@ -2,6 +2,8 @@ package unit.test.mock;
 
 import android.support.annotation.NonNull;
 
+import org.joda.time.DateTime;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -13,7 +15,7 @@ import droidkit.annotation.SQLitePk;
  * @author Daniel Serdyukov
  */
 @SQLiteObject("users")
-public class SQLiteUser {
+public class TestUser {
 
     @SQLitePk
     private long mId;
@@ -21,20 +23,20 @@ public class SQLiteUser {
     @SQLiteColumn("name")
     private String mName;
 
-    @SQLiteColumn("lat")
-    private double mLat;
-
-    @SQLiteColumn("lon")
-    private double mLon;
+    @SQLiteColumn("weight")
+    private double mWeight;
 
     @SQLiteColumn("role")
     private Role mRole = Role.USER;
 
     @SQLiteColumn("big_int")
-    private BigInteger mBigInt = BigInteger.ONE;
+    private BigInteger mBigInt;
 
     @SQLiteColumn("big_dec")
-    private BigDecimal mBigDec = BigDecimal.TEN;
+    private BigDecimal mBigDec;
+
+    @SQLiteColumn("last_modified")
+    private DateTime mLastModified;
 
     public long getId() {
         return mId;
@@ -46,28 +48,18 @@ public class SQLiteUser {
     }
 
     @NonNull
-    public SQLiteUser setName(@NonNull String name) {
+    public TestUser setName(@NonNull String name) {
         mName = name;
         return this;
     }
 
-    public double getLat() {
-        return mLat;
+    public double getWeight() {
+        return mWeight;
     }
 
     @NonNull
-    public SQLiteUser setLat(double lat) {
-        mLat = lat;
-        return this;
-    }
-
-    public double getLon() {
-        return mLon;
-    }
-
-    @NonNull
-    public SQLiteUser setLon(double lon) {
-        mLon = lon;
+    public TestUser setWeight(double weight) {
+        mWeight = weight;
         return this;
     }
 
@@ -76,7 +68,7 @@ public class SQLiteUser {
     }
 
     @NonNull
-    public SQLiteUser setRole(@NonNull Role role) {
+    public TestUser setRole(@NonNull Role role) {
         mRole = role;
         return this;
     }
@@ -86,7 +78,7 @@ public class SQLiteUser {
     }
 
     @NonNull
-    public SQLiteUser setBigInt(BigInteger bigInt) {
+    public TestUser setBigInt(BigInteger bigInt) {
         mBigInt = bigInt;
         return this;
     }
@@ -96,8 +88,19 @@ public class SQLiteUser {
     }
 
     @NonNull
-    public SQLiteUser setBigDec(BigDecimal bigDec) {
+    public TestUser setBigDec(BigDecimal bigDec) {
         mBigDec = bigDec;
+        return this;
+    }
+
+    @NonNull
+    public DateTime getLastModified() {
+        return mLastModified;
+    }
+
+    @NonNull
+    public TestUser setLastModified(@NonNull DateTime lastModified) {
+        mLastModified = lastModified;
         return this;
     }
 

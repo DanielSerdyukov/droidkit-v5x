@@ -134,7 +134,8 @@ final class SQLiteHelper {
         if ("byte[]".equals(typeFqcn)) {
             return "BLOB";
         }
-        if (BigInteger.class.getName().equals(typeFqcn)) {
+        if (BigInteger.class.getName().equals(typeFqcn)
+                || Utils.isSubtype(type, "org.joda.time.DateTime")) {
             return "INTEGER";
         }
         if (BigDecimal.class.getName().equals(typeFqcn)) {
@@ -145,25 +146,13 @@ final class SQLiteHelper {
 
     private JCTree.JCExpression getSQLiteDeclaredFieldValue(JCTree.JCExpression object, VariableElement field) {
         final TypeMirror type = field.asType();
-        final String typeFqcn = type.toString();
         final JCSelector requireNonNull = JCSelector.get("droidkit.util", "Objects", "requireNonNull");
-        final JCTree.JCExpression throwMessage = JCLiteral.stringValue("Declared field is null: " + field);
-        if (String.class.getName().equals(typeFqcn) || "byte[]".equals(typeFqcn)) {
-            return JCSelector.getField(object, field).ident();
-        }
         if (Utils.isEnum(type)) {
-            return JCSelector.get(requireNonNull.invoke(JCSelector.getField(object, field).ident(), throwMessage)
+            return JCSelector.get(requireNonNull.invoke(JCSelector.getField(object, field).ident(),
+                    JCLiteral.stringValue("Enum field is null: " + field))
                     .getExpression(), "name").invoke().getExpression();
         }
-        if (BigInteger.class.getName().equals(typeFqcn)) {
-            return JCSelector.get(requireNonNull.invoke(JCSelector.getField(object, field).ident(), throwMessage)
-                    .getExpression(), "longValue").invoke().getExpression();
-        }
-        if (BigDecimal.class.getName().equals(typeFqcn)) {
-            return JCSelector.get(requireNonNull.invoke(JCSelector.getField(object, field).ident(), throwMessage)
-                    .getExpression(), "doubleValue").invoke().getExpression();
-        }
-        throw new IllegalArgumentException("Can't convert to sqlite value: " + type);
+        return JCSelector.getField(object, field).ident();
     }
 
     private JCTree.JCExpression getCursorDeclaredFieldValue(TypeMirror type, JCTree.JCExpression dbUtils,
@@ -181,14 +170,13 @@ final class SQLiteHelper {
                     JCLiteral.clazz(JCClassName.get(declared))).getExpression();
         }
         if (BigInteger.class.getName().equals(typeFqcn)) {
-            return JCSelector.get("java.math", "BigInteger", "valueOf")
-                    .invoke(JCSelector.get(dbUtils, "getLong")
-                            .invoke(cursor, column).getExpression()).getExpression();
+            return JCSelector.get(dbUtils, "getBigInt").invoke(cursor, column).getExpression();
         }
         if (BigDecimal.class.getName().equals(typeFqcn)) {
-            return JCSelector.get("java.math", "BigDecimal", "valueOf")
-                    .invoke(JCSelector.get(dbUtils, "getDouble")
-                            .invoke(cursor, column).getExpression()).getExpression();
+            return JCSelector.get(dbUtils, "getBigDec").invoke(cursor, column).getExpression();
+        }
+        if (Utils.isSubtype(type, "org.joda.time.DateTime")) {
+            return JCSelector.get(dbUtils, "getDateTime").invoke(cursor, column).getExpression();
         }
         throw new IllegalArgumentException("Can't convert cursor value to field value (" + type + ")");
     }

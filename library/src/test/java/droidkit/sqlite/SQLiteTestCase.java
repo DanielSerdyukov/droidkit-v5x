@@ -5,6 +5,8 @@ import android.content.pm.ProviderInfo;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import net.danlew.android.joda.JodaTimeAndroid;
+
 import org.junit.After;
 import org.junit.Before;
 import org.robolectric.RuntimeEnvironment;
