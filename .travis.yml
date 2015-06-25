@@ -1,0 +1,14 @@
+jdk:
+  - oraclejdk8
+language: android
+android:
+  components:
+    - tools
+    - platform-tools-preview
+    - build-tools-23.0.0-preview
+    - android-22
+    - extra-android-m2repository
+    - extra-android-support
+script:
+  - gradle -version
+  - gradle clean assembleDebug
