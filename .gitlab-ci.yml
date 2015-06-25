@@ -1,0 +1,8 @@
+debug:
+  script:
+    - gradle -version
+    - gradle clean assembleDebug
+  tags:
+    - android
+  except:
+    - tags
