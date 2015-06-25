@@ -233,7 +233,7 @@ public class SQLiteProvider extends ContentProvider implements SQLiteClient.Call
 
     SQLiteClient createClient(@NonNull Context context) {
         try {
-            Class.forName("org.sqlite.database.sqlite.SQLiteDatabase");
+            Class.forName("org.sqlite.database.SQLiteNative");
             return new SQLiteOrgClient(context, getDatabaseName(), getDatabaseVersion(), this);
         } catch (ClassNotFoundException e) {
             return new SQLiteClientImpl(context, getDatabaseName(), getDatabaseVersion(), this);
