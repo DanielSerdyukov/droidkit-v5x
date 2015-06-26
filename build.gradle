@@ -41,6 +41,10 @@ subprojects {
 sonarqube {
     properties {
         properties["sonar.projectName"] = 'DroidKit'
+        def buildRef = System.getenv('CI_BUILD_REF')
+        if (buildRef != null && buildRef.length() > 8) {
+            properties["sonar.projectVersion"] = project.version + '-' + buildRef.substring(0, 8)
+        }
         properties["sonar.host.url"] = System.getenv('SONAR_HOST')
         properties["sonar.login"] = System.getenv('SONAR_LOGIN')
         properties["sonar.password"] = System.getenv('SONAR_PASSWORD')
@@ -57,10 +61,7 @@ project(':library') {
             properties["sonar.tests"] = android.sourceSets.test.java.srcDirs
             properties["sonar.tests"] += android.sourceSets.androidTest.java.srcDirs
             properties["sonar.java.binaries"] = files(["${project.buildDir}/intermediates/classes/debug"])
-            properties["sonar.java.test.binaries"] = files([
-                    "${project.buildDir}/intermediates/classes/test/debug",
-                    "${project.buildDir}/intermediates/classes/androidTest/debug"
-            ])
+            properties["sonar.java.test.binaries"] = files(["${project.buildDir}/intermediates/classes/test/debug"])
             properties["sonar.junit.reportsPath"] = "${project.buildDir}/test-results/debug"
             properties["sonar.jacoco.reportPath"] = "${project.buildDir}/jacoco/testDebugUnitTest.exec"
         }
