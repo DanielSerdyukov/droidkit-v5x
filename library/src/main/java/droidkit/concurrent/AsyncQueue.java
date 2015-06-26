@@ -52,6 +52,9 @@ public class AsyncQueue extends ScheduledThreadPoolExecutor {
 
     private static final class Holder {
         public static final AsyncQueue INSTANCE = new AsyncQueue(CORE_SIZE);
+
+        private Holder() {
+        }
     }
 
 }
