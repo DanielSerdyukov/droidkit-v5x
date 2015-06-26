@@ -1,16 +1,18 @@
 debug:
   script:
+    - echo $CI_SERVER
+    - echo $CI_SERVER_NAME
+    - echo $CI_SERVER_VERSION
+    - echo $CI_BUILD_REF
+    - echo $CI_BUILD_BEFORE_SHA
+    - echo $CI_BUILD_REF_NAME
+    - echo $CI_BUILD_ID
+    - echo $CI_BUILD_REPO
+    - echo $CI_PROJECT_ID
+    - echo $CI_PROJECT_DIR
     - gradle -version
     - gradle clean testDebugUnitTest
-  tags:
-    - android
-  except:
-    - tags
-
-sonar:
-  script:
     - gradle sonarqube
-  type: deploy
   tags:
     - android
   except:
