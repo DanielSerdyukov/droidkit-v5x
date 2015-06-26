@@ -32,6 +32,7 @@ public class NamedThreadFactory implements ThreadFactory {
         }
     }
 
+    @Override
     public Thread newThread(@NonNull Runnable r) {
         final Thread thread = new Thread(mGroup, r, mName + mThreadNumber.getAndIncrement(), 0);
         if (thread.isDaemon()) {
