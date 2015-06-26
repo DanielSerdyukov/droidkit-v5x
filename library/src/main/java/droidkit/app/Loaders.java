@@ -26,7 +26,7 @@ public final class Loaders {
             return lm.initLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId);
+                    ", loaderId=" + loaderId, e);
         }
     }
 
@@ -42,7 +42,7 @@ public final class Loaders {
             return lm.initLoader(loaderId, args, Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId);
+                    ", loaderId=" + loaderId, e);
         }
     }
 
@@ -57,7 +57,7 @@ public final class Loaders {
             return lm.restartLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId);
+                    ", loaderId=" + loaderId, e);
         }
     }
 
@@ -73,7 +73,7 @@ public final class Loaders {
             return lm.restartLoader(loaderId, args, Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
             throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId);
+                    ", loaderId=" + loaderId, e);
         }
     }
 
