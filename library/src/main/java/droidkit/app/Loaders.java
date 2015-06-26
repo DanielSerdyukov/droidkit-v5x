@@ -25,8 +25,7 @@ public final class Loaders {
         try {
             return lm.initLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
-            throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId, e);
+            throw noSuchLoaderCallbacks(target, loaderId, e);
         }
     }
 
@@ -41,8 +40,7 @@ public final class Loaders {
         try {
             return lm.initLoader(loaderId, args, Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
-            throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId, e);
+            throw noSuchLoaderCallbacks(target, loaderId, e);
         }
     }
 
@@ -56,8 +54,7 @@ public final class Loaders {
         try {
             return lm.restartLoader(loaderId, args, Dynamic.<android.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
-            throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId, e);
+            throw noSuchLoaderCallbacks(target, loaderId, e);
         }
     }
 
@@ -72,8 +69,7 @@ public final class Loaders {
         try {
             return lm.restartLoader(loaderId, args, Dynamic.<android.support.v4.app.LoaderManager.LoaderCallbacks<D>>init(target.getClass().getName() + "$LC", target));
         } catch (DynamicException e) {
-            throw new IllegalArgumentException("No such found LoaderCallbacks for " + target +
-                    ", loaderId=" + loaderId, e);
+            throw noSuchLoaderCallbacks(target, loaderId, e);
         }
     }
 
@@ -85,6 +81,13 @@ public final class Loaders {
     @SuppressWarnings("unchecked")
     public static void destroy(@NonNull android.support.v4.app.LoaderManager lm, int loaderId) {
         lm.destroyLoader(loaderId);
+    }
+
+    @NonNull
+    private static IllegalArgumentException noSuchLoaderCallbacks(@NonNull Object target, int loaderId,
+                                                                  @NonNull Exception wrapped) {
+        return new IllegalArgumentException("No such found LoaderCallbacks for " + target +
+                ", loaderId=" + loaderId, wrapped);
     }
 
 }
