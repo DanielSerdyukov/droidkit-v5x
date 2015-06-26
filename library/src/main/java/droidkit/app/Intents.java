@@ -103,6 +103,9 @@ public final class Intents {
 
     public static final class Pick {
 
+        private Pick() {
+        }
+
         @NonNull
         public static Intent contact() {
             return new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
