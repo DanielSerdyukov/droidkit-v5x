@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.database.DatabaseUtils;
+import droidkit.io.IOUtils;
 
 /**
  * @author Daniel Serdyukov
@@ -115,4 +116,9 @@ public class SQLiteProviderTest extends SQLiteTestCase {
         };
     }
 
+    @Test
+    public void testName() throws Exception {
+
+
+    }
 }

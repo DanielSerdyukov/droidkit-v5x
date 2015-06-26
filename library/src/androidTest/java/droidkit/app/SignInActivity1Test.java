@@ -12,6 +12,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author Daniel Serdyukov
  */
@@ -49,6 +51,11 @@ public class SignInActivity1Test {
                 .withId(droidkit.test.R.id.action_settings))
                 .perform(ViewActions.click());
         Assert.assertTrue(mActivity.mSettingsClicked);
+    }
+
+    @Test
+    public void testLoaderCallbacks() throws Exception {
+        Assert.assertTrue(mActivity.mLoaderLatch.await(5, TimeUnit.SECONDS));
     }
 
 }

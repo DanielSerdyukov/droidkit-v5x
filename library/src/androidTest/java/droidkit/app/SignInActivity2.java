@@ -1,7 +1,10 @@
 package droidkit.app;
 
 import android.app.Activity;
+import android.content.Loader;
 import android.os.Bundle;
+
+import droidkit.annotation.OnCreateLoader;
 
 /**
  * @author Daniel Serdyukov

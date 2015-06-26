@@ -1,20 +1,28 @@
 package droidkit.app;
 
 import android.app.Activity;
+import android.content.AsyncTaskLoader;
+import android.content.Loader;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.util.concurrent.CountDownLatch;
+
 import droidkit.annotation.InjectView;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
+import droidkit.annotation.OnCreateLoader;
+import droidkit.annotation.OnLoadFinished;
 
 /**
  * @author Daniel Serdyukov
  */
 public class SignInActivity1 extends Activity {
+
+    final CountDownLatch mLoaderLatch = new CountDownLatch(1);
 
     @InjectView(droidkit.test.R.id.login)
     EditText mLogin;
@@ -33,6 +41,7 @@ public class SignInActivity1 extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(droidkit.test.R.layout.sign_in);
+        Loaders.init(getLoaderManager(), 0, Bundle.EMPTY, this);
     }
 
     @Override
@@ -64,6 +73,26 @@ public class SignInActivity1 extends Activity {
     @OnActionClick(droidkit.test.R.id.action_settings)
     void onSettingsClick() {
         mSettingsClicked = true;
+    }
+
+    @OnCreateLoader(0)
+    Loader<Object> onCreateLoader() {
+        return new AsyncTaskLoader<Object>(getApplicationContext()) {
+            @Override
+            public Object loadInBackground() {
+                return new Object();
+            }
+
+            @Override
+            protected void onStartLoading() {
+                forceLoad();
+            }
+        };
+    }
+
+    @OnLoadFinished(0)
+    void onLoadFinished(Object object) {
+        mLoaderLatch.countDown();
     }
 
 }

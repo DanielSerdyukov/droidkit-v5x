@@ -76,7 +76,8 @@ public class AnnotationProcessor extends AbstractProcessor {
             if (InjectView.class.getName().equals(fqcn)
                     || InstanceState.class.getName().equals(fqcn)
                     || OnClick.class.getName().equals(fqcn)
-                    || OnActionClick.class.getName().equals(fqcn)) {
+                    || OnActionClick.class.getName().equals(fqcn)
+                    || OnCreateLoader.class.getName().equals(fqcn)) {
                 if (Utils.isSubtype(enclosingElement, "android.app.Activity")) {
                     return putIfAbsent(enclosingElement, new ActivityApt((TypeElement) enclosingElement));
                 } else if (Utils.isSubtype(enclosingElement, "android.app.Fragment")
@@ -85,8 +86,6 @@ public class AnnotationProcessor extends AbstractProcessor {
                 }
             } else if (SQLiteObject.class.getName().equals(fqcn)) {
                 return putIfAbsent(element, new SQLiteObjectApt((TypeElement) element));
-            } else if (OnCreateLoader.class.getName().equals(fqcn)) {
-                return putIfAbsent(enclosingElement, new LoaderCallbacksApt((TypeElement) enclosingElement));
             }
         }
         JavacEnv.get().logE(element, "Unsupported annotation: %s", annotation);

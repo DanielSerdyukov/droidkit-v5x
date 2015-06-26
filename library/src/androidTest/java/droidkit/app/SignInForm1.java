@@ -1,6 +1,8 @@
 package droidkit.app;
 
 import android.app.Fragment;
+import android.content.AsyncTaskLoader;
+import android.content.Loader;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -12,14 +14,20 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.util.concurrent.CountDownLatch;
+
 import droidkit.annotation.InjectView;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
+import droidkit.annotation.OnCreateLoader;
+import droidkit.annotation.OnLoadFinished;
 
 /**
  * @author Daniel Serdyukov
  */
 public class SignInForm1 extends Fragment {
+
+    final CountDownLatch mLoaderLatch = new CountDownLatch(1);
 
     @InjectView(droidkit.test.R.id.login)
     EditText mLogin;
@@ -50,6 +58,7 @@ public class SignInForm1 extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         setHasOptionsMenu(true);
+        Loaders.init(getLoaderManager(), 0, Bundle.EMPTY, this);
     }
 
     public Button getSignIn() {
@@ -65,6 +74,26 @@ public class SignInForm1 extends Fragment {
     boolean onSettingsClick(MenuItem item) {
         mSettingsClicked = true;
         return true;
+    }
+
+    @OnCreateLoader(0)
+    Loader<Object> onCreateLoader() {
+        return new AsyncTaskLoader<Object>(getActivity().getApplicationContext()) {
+            @Override
+            public Object loadInBackground() {
+                return new Object();
+            }
+
+            @Override
+            protected void onStartLoading() {
+                forceLoad();
+            }
+        };
+    }
+
+    @OnLoadFinished(0)
+    void onLoadFinished(Object object) {
+        mLoaderLatch.countDown();
     }
 
 }

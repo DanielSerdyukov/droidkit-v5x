@@ -82,12 +82,16 @@ class LifecycleApt implements Apt {
 
     private final TypeElement mElement;
 
+    private final LoaderCallbacksApt mLoaderCallbacksApt;
+
     public LifecycleApt(TypeElement element) {
         mElement = element;
+        mLoaderCallbacksApt = new LoaderCallbacksApt(element);
     }
 
     @Override
     public void process(RoundEnvironment roundEnv) {
+        mLoaderCallbacksApt.process(roundEnv);
         if (mProcessSingle.compareAndSet(false, true)) {
             final List<? extends Element> elements = mElement.getEnclosedElements();
             for (final Element element : elements) {
@@ -104,8 +108,10 @@ class LifecycleApt implements Apt {
 
     @Override
     public void finishProcessing() throws IOException {
+        mLoaderCallbacksApt.finishProcessing();
         final TypeSpec spec = TypeSpec.classBuilder(mElement.getSimpleName() + "$Proxy")
                 .superclass(TypeName.get(mElement.getSuperclass()))
+                .addModifiers(Modifier.ABSTRACT)
                 .addFields(fields())
                 .addMethods(methods())
                 .build();
