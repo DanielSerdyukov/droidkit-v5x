@@ -46,6 +46,15 @@ dependencies {
     androidTestCompile 'org.sqlite.android:sqlite:3.8.10.2'
 }
 
+gradle.taskGraph.whenReady {
+    connectedDebugAndroidTest << {
+        copy {
+            from("${project.buildDir}/outputs/androidTest-results/connected")
+            into("${project.buildDir}/test-results/debug")
+        }
+    }
+}
+
 if (project.hasProperty("bintrayUser")) {
     apply from: 'bintray.gradle'
 }

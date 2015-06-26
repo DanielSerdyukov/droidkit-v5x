@@ -1,7 +1,16 @@
 debug:
   script:
     - gradle -version
-    - gradle clean assembleDebug
+    - gradle clean testDebugUnitTest
+  tags:
+    - android
+  except:
+    - tags
+
+sonar:
+  script:
+    - gradle sonarqube
+  type: deploy
   tags:
     - android
   except:
