@@ -120,30 +120,6 @@ public class TypedBundleTest {
         Assert.assertEquals(mBundle.<Location>getParcelable("location"), location.<Location>get());
     }
 
-    public void testWrapper() throws Exception {
-        Assert.assertSame(mBundle, mExtra.pack());
-        Assert.assertSame(mBundle, mExtra.create());
-        Assert.assertSame(mBundle, mExtra.build());
-    }
-
-    @Test
-    public void testPack() throws Exception {
-        final Extra extra = TypedBundle.from(Extra.class);
-        extra.version().set(1);
-        extra.name().set("John");
-        extra.enabled().toggle();
-        extra.time().set(2014);
-        extra.lat().set(60.334455);
-        extra.distance().set(50f);
-        final Bundle pack = extra.pack();
-        Assert.assertEquals(1, pack.getInt("version"));
-        Assert.assertEquals("John", pack.getString("name"));
-        Assert.assertTrue(pack.getBoolean("enabled"));
-        Assert.assertEquals(2014, pack.getLong("time"));
-        Assert.assertEquals(60.334455, pack.getDouble("lat"), 0d);
-        Assert.assertEquals(50f, pack.getFloat("distance"), 0f);
-    }
-
     private interface Extra {
 
         IntValue version();
@@ -161,12 +137,6 @@ public class TypedBundleTest {
         StringListValue lines();
 
         ParcelableValue location();
-
-        Bundle pack();
-
-        Bundle create();
-
-        Bundle build();
 
     }
 
