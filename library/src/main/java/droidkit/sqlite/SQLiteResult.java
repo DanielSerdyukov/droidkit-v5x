@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -28,7 +29,7 @@ class SQLiteResult<T> extends AbstractList<T> {
 
     private final Class<T> mType;
 
-    private final ArrayList<T> mObjects;
+    private final List<T> mObjects;
 
     private final AtomicReference<Cursor> mCursorRef = new AtomicReference<>();
 
