@@ -123,7 +123,7 @@ public class TextDrawable extends ShapeDrawable {
         canvas.translate(rect.left, rect.top);
         final int width = mWidth < 0 ? rect.width() : mWidth;
         final int height = mHeight < 0 ? rect.height() : mHeight;
-        mTextPaint.setTextSize(mFontSize < 0 ? (Math.min(width, height) / 2) : mFontSize);
+        mTextPaint.setTextSize(mFontSize < 0 ? Math.min(width, height) / 2 : mFontSize);
         canvas.drawText(mText, width / 2, height / 2 - ((mTextPaint.descent() + mTextPaint.ascent()) / 2), mTextPaint);
         canvas.restoreToCount(count);
     }
