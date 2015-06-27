@@ -29,6 +29,7 @@ public interface SQLiteStatement extends Closeable {
 
     void bindString(int index, @NonNull String value);
 
+    @Override
     void close();
 
 }
