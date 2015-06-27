@@ -11,6 +11,9 @@ import java.io.IOException;
  */
 public final class IOUtils {
 
+    private IOUtils() {
+    }
+
     public static void closeQuietly(@NonNull Closeable... closeable) {
         for (final Closeable c : closeable) {
             try {
