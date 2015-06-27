@@ -204,7 +204,8 @@ public class SQLiteProvider extends ContentProvider implements SQLiteClient.Call
 
     @Override
     public void onDatabaseConfigure(@NonNull SQLiteDatabase db) {
-
+        // Called when the database connection is being configured, to enable features
+        // such as write-ahead logging or foreign key support.
     }
 
     @Override
