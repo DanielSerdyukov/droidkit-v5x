@@ -1,5 +1,6 @@
 package droidkit.util;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 
 import java.lang.reflect.Constructor;
@@ -58,6 +59,7 @@ public final class Dynamic {
     }
 
     @NonNull
+    @SuppressLint("NewApi")
     public static <T> T init(@NonNull Class<? extends T> clazz, Object... args) throws DynamicException {
         try {
             if (args.length == 0) {

@@ -1,5 +1,6 @@
 package droidkit.util;
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -27,6 +28,7 @@ public final class DynamicMethod {
 
     @Nullable
     @SuppressWarnings("unchecked")
+    @SuppressLint("NewApi")
     public static <T> T invoke(@Nullable Object target, @NonNull Method method, Object... args)
             throws DynamicException {
         final boolean isAccessible = method.isAccessible();

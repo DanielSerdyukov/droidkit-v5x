@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import droidkit.rx.functions.Func1;
+import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -20,7 +20,7 @@ public final class Iterables {
     }
 
     @SuppressWarnings("unchecked")
-    public static <R, T> List<R> transform(@NonNull Iterable<T> iterable, @NonNull Func1<R, T> func) {
+    public static <R, T> Collection<R> transform(@NonNull Iterable<T> iterable, @NonNull Func1<T, R> func) {
         final List<R> list = new ArrayList<>();
         for (final T element : iterable) {
             list.add(func.call(element));
