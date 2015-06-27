@@ -21,7 +21,7 @@ public final class Fonts {
 
     private static final String FONTS_PATH = FONTS_DIR + "/";
 
-    private static final LruCache<String, Typeface> FONTS = new LruCache<>(8);
+    private static final LruCache<String, Typeface> FONTS_CACHE = new LruCache<>(8);
 
     private Fonts() {
     }
@@ -37,10 +37,10 @@ public final class Fonts {
 
     @NonNull
     public static Typeface get(@NonNull AssetManager am, @NonNull String name) {
-        Typeface tf = FONTS.get(name);
+        Typeface tf = FONTS_CACHE.get(name);
         if (tf == null) {
             tf = Typeface.createFromAsset(am, FONTS_PATH + name);
-            FONTS.put(name, tf);
+            FONTS_CACHE.put(name, tf);
         }
         return tf;
     }
