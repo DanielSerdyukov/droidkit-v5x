@@ -202,16 +202,19 @@ public class SQLiteProvider extends ContentProvider implements SQLiteClient.Call
         mClient.shutdown();
     }
 
+    @Override
     public void onDatabaseConfigure(@NonNull SQLiteDatabase db) {
 
     }
 
+    @Override
     public void onDatabaseCreate(@NonNull SQLiteDatabase db) {
         for (final Map.Entry<String, String> entry : SCHEMA.entrySet()) {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + entry.getKey() + entry.getValue());
         }
     }
 
+    @Override
     public void onDatabaseUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         for (final String tableName : SCHEMA.keySet()) {
             db.execSQL("DROP TABLE IF EXISTS " + tableName);
