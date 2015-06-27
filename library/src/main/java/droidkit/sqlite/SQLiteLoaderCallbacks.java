@@ -9,7 +9,8 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import droidkit.rx.Observer;
+import rx.Observer;
+
 
 /**
  * @author Daniel Serdyukov
@@ -46,7 +47,7 @@ public class SQLiteLoaderCallbacks<T> implements LoaderManager.LoaderCallbacks<L
     public void onLoaderReset(Loader<List<T>> loader) {
         final Observer<List<T>> observer = mObserverRef.get();
         if (observer != null) {
-            observer.onComplete();
+            observer.onCompleted();
         }
     }
 

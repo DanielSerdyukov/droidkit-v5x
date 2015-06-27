@@ -4,13 +4,30 @@ import android.support.annotation.NonNull;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import rx.functions.Func3;
 
 /**
  * @author Daniel Serdyukov
  */
 class KeyValueProxy implements InvocationHandler {
+
+    private static final Map<Class<?>, Transform> TRANSFORM = new HashMap<>();
+
+    static {
+        TRANSFORM.put(IntValue.class, new IntValueTransform());
+        TRANSFORM.put(StringValue.class, new StringValueTransform());
+        TRANSFORM.put(BoolValue.class, new BoolValueTransform());
+        TRANSFORM.put(LongValue.class, new LongValueTransform());
+        TRANSFORM.put(DoubleValue.class, new DoubleValueTransform());
+        TRANSFORM.put(FloatValue.class, new FloatValueTransform());
+        TRANSFORM.put(StringSetValue.class, new StringSetValueTransform());
+        TRANSFORM.put(StringListValue.class, new StringListValueTransform());
+        TRANSFORM.put(ParcelableValue.class, new ParcelableValueTransform());
+    }
 
     private final Map<String, TypedValue> mKeyValue = new ConcurrentHashMap<>();
 
@@ -22,128 +39,160 @@ class KeyValueProxy implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        final String key = extractKey(method);
+        final String key = method.getName();
         final Class<?> returnType = method.getReturnType();
-        if (IntValue.class.isAssignableFrom(returnType)) {
-            return getIntValue(key, IntValue.EMPTY);
-        } else if (StringValue.class.isAssignableFrom(returnType)) {
-            return getStringValue(key, StringValue.EMPTY);
-        } else if (BoolValue.class.isAssignableFrom(returnType)) {
-            return getBoolValue(key, BoolValue.EMPTY);
-        } else if (LongValue.class.isAssignableFrom(returnType)) {
-            return getLongValue(key, LongValue.EMPTY);
-        } else if (DoubleValue.class.isAssignableFrom(returnType)) {
-            return getDoubleValue(key, DoubleValue.EMPTY);
-        } else if (FloatValue.class.isAssignableFrom(returnType)) {
-            return getFloatValue(key, FloatValue.EMPTY);
-        } else if (StringSetValue.class.isAssignableFrom(returnType)) {
-            return getStringSetValue(key);
-        } else if (StringListValue.class.isAssignableFrom(returnType)) {
-            return getStringListValue(key);
-        } else if (ParcelableValue.class.isAssignableFrom(returnType)) {
-            return getParcelableValue(key);
+        final Transform transform = TRANSFORM.get(returnType);
+        if (transform != null) {
+            return transform.call(mDelegate, mKeyValue, key);
         }
-        return invokeForKey(key, returnType);
+        throw new IllegalArgumentException("No such value for key='" + key + "' with type '" + returnType + "'");
     }
 
-    protected Object invokeForKey(String key, Class<?> returnType) {
-        throw new UnsupportedOperationException("No such value for key='" + key + "' with type '" + returnType + "'");
+    private interface Transform extends Func3<KeyValueDelegate, Map<String, TypedValue>, String, TypedValue> {
     }
 
-    @NonNull
-    private String extractKey(@NonNull Method method) {
-        return method.getName();
-    }
+    private static final class IntValueTransform implements Transform {
 
-    @NonNull
-    private IntValue getIntValue(@NonNull String key, int defaultValue) {
-        IntValue value = (IntValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new IntValue(mDelegate, key, defaultValue);
-            mKeyValue.put(key, value);
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            IntValue value = (IntValue) map.get(key);
+            if (value == null) {
+                value = new IntValue(delegate, key, IntValue.EMPTY);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
-    @NonNull
-    private StringValue getStringValue(@NonNull String key, String defaultValue) {
-        StringValue value = (StringValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new StringValue(mDelegate, key, defaultValue);
-            mKeyValue.put(key, value);
+    private static final class StringValueTransform implements Transform {
+
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            StringValue value = (StringValue) map.get(key);
+            if (value == null) {
+                value = new StringValue(delegate, key, StringValue.EMPTY);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
-    @NonNull
-    private BoolValue getBoolValue(@NonNull String key, boolean defaultValue) {
-        BoolValue value = (BoolValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new BoolValue(mDelegate, key, defaultValue);
-            mKeyValue.put(key, value);
+    private static final class BoolValueTransform implements Transform {
+
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            BoolValue value = (BoolValue) map.get(key);
+            if (value == null) {
+                value = new BoolValue(delegate, key, BoolValue.EMPTY);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
-    @NonNull
-    private LongValue getLongValue(@NonNull String key, long defaultValue) {
-        LongValue value = (LongValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new LongValue(mDelegate, key, defaultValue);
-            mKeyValue.put(key, value);
+    private static final class LongValueTransform implements Transform {
+
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            LongValue value = (LongValue) map.get(key);
+            if (value == null) {
+                value = new LongValue(delegate, key, LongValue.EMPTY);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
-    @NonNull
-    private DoubleValue getDoubleValue(@NonNull String key, double defaultValue) {
-        DoubleValue value = (DoubleValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new DoubleValue(mDelegate, key, defaultValue);
-            mKeyValue.put(key, value);
+    private static final class DoubleValueTransform implements Transform {
+
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            DoubleValue value = (DoubleValue) map.get(key);
+            if (value == null) {
+                value = new DoubleValue(delegate, key, DoubleValue.EMPTY);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
-    @NonNull
-    private FloatValue getFloatValue(@NonNull String key, float defaultValue) {
-        FloatValue value = (FloatValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new FloatValue(mDelegate, key, defaultValue);
-            mKeyValue.put(key, value);
+    private static final class FloatValueTransform implements Transform {
+
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            FloatValue value = (FloatValue) map.get(key);
+            if (value == null) {
+                value = new FloatValue(delegate, key, FloatValue.EMPTY);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
+    private static final class StringSetValueTransform implements Transform {
 
-    @NonNull
-    private StringSetValue getStringSetValue(@NonNull String key) {
-        StringSetValue value = (StringSetValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new StringSetValue(mDelegate, key);
-            mKeyValue.put(key, value);
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            StringSetValue value = (StringSetValue) map.get(key);
+            if (value == null) {
+                value = new StringSetValue(delegate, key);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
-    @NonNull
-    private StringListValue getStringListValue(@NonNull String key) {
-        StringListValue value = (StringListValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new StringListValue(mDelegate, key);
-            mKeyValue.put(key, value);
+    private static final class StringListValueTransform implements Transform {
+
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            StringListValue value = (StringListValue) map.get(key);
+            if (value == null) {
+                value = new StringListValue(delegate, key);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
-    @NonNull
-    private ParcelableValue getParcelableValue(@NonNull String key) {
-        ParcelableValue value = (ParcelableValue) mKeyValue.get(key);
-        if (value == null) {
-            value = new ParcelableValue(mDelegate, key);
-            mKeyValue.put(key, value);
+    private static final class ParcelableValueTransform implements Transform {
+
+        @NonNull
+        @Override
+        public TypedValue call(@NonNull KeyValueDelegate delegate, @NonNull Map<String, TypedValue> map,
+                               @NonNull String key) {
+            ParcelableValue value = (ParcelableValue) map.get(key);
+            if (value == null) {
+                value = new ParcelableValue(delegate, key);
+                map.put(key, value);
+            }
+            return value;
         }
-        return value;
+
     }
 
 }

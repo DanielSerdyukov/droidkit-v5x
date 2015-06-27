@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import droidkit.rx.Func1;
+import droidkit.rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov

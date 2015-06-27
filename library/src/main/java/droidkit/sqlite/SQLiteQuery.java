@@ -16,9 +16,9 @@ import java.util.Collections;
 import java.util.List;
 
 import droidkit.content.StringValue;
-import droidkit.rx.Action1;
-import droidkit.rx.Observer;
-import droidkit.rx.Observers;
+import rx.Observer;
+import rx.functions.Action1;
+import rx.observers.Observers;
 
 /**
  * @author Daniel Serdyukov

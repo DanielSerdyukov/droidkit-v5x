@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import droidkit.io.IOUtils;
-import droidkit.rx.Func1;
+import droidkit.rx.functions.Func1;
 import droidkit.util.Iterables;
 
 /**
