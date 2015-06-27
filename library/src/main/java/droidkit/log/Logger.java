@@ -17,6 +17,9 @@ import droidkit.util.Dynamic;
  */
 public final class Logger {
 
+    private Logger() {
+    }
+
     public static void debug(@NonNull Object format, Object... args) {
         Log.d(makeTag(Dynamic.getCaller()), formatMessage(format, args));
     }
