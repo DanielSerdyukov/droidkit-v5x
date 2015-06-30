@@ -15,6 +15,8 @@ import android.graphics.drawable.shapes.RoundRectShape;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 
+import droidkit.content.StringValue;
+
 /**
  * @author Daniel Serdyukov
  */
@@ -75,33 +77,13 @@ public class TextDrawable extends ShapeDrawable {
     }
 
     @NonNull
-    public static TextDrawable rect() {
-        return builder().buildRect();
-    }
-
-    @NonNull
     public static TextDrawable rect(@NonNull String text) {
-        return builder().text(text, true).buildRect();
-    }
-
-    @NonNull
-    public static TextDrawable rect(@NonNull String text, @ColorInt int color) {
-        return builder().text(text, false).color(color).buildRect();
-    }
-
-    @NonNull
-    public static TextDrawable circle() {
-        return builder().buildCircle();
+        return builder().color(text).text(text, 1).buildRect();
     }
 
     @NonNull
     public static TextDrawable circle(@NonNull String text) {
-        return builder().text(text, true).buildCircle();
-    }
-
-    @NonNull
-    public static TextDrawable circle(@NonNull String text, @ColorInt int color) {
-        return builder().text(text, false).color(color).buildCircle();
+        return builder().color(text).text(text, 1).buildCircle();
     }
 
     @Override
@@ -173,27 +155,33 @@ public class TextDrawable extends ShapeDrawable {
 
         private boolean mFontBold;
 
-        private String mText;
+        private String mText = StringValue.EMPTY;
 
         @NonNull
         public Builder text(@NonNull String text) {
-            return text(text, false);
+            return text(text, text.length());
         }
 
         @NonNull
-        public Builder text(@NonNull String text, boolean colorize) {
-            mText = text.substring(0, 1);
-            if (colorize) {
-                color(ColorPalette.MATERIAL.getColor(text));
-                fontColor(ColorPalette.MATERIAL.getColorSpec(mColor).primary());
+        public Builder text(@NonNull String text, int length) {
+            final int textLength = Math.min(length, text.length());
+            if (textLength > 0) {
+                mText = text.substring(0, textLength);
+            } else {
+                mText = text;
             }
             return this;
         }
 
         @NonNull
+        public Builder color(@NonNull Object color) {
+            return color(ColorPalette.MATERIAL.getColor(color));
+        }
+
+        @NonNull
         public Builder color(@ColorInt int color) {
             mColor = color;
-            return this;
+            return fontColor(ColorPalette.MATERIAL.getColorSpec(color).primary());
         }
 
         @NonNull

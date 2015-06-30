@@ -143,7 +143,7 @@ public final class SQLite {
             synchronized (SQLite.class) {
                 instance = sInstance;
                 if (instance == null) {
-                    throw new IllegalStateException();
+                    throw new IllegalStateException("SQLite not initialized yet.");
                 }
             }
         }
