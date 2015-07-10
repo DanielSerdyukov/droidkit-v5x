@@ -15,7 +15,6 @@ import javax.lang.model.element.TypeElement;
 import droidkit.annotation.InjectView;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
-import droidkit.annotation.OnCreateLoader;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -28,8 +27,7 @@ class LifecycleHandler implements AnnotationHandler {
     private static final List<String> ANNOTATIONS = ImmutableList.of(
             InjectView.class.getName(),
             OnClick.class.getName(),
-            OnActionClick.class.getName(),
-            OnCreateLoader.class.getName()
+            OnActionClick.class.getName()
     );
 
     private final Set<TypeElement> mDistinctTypes = new LinkedHashSet<>();

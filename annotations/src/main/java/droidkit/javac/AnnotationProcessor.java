@@ -35,6 +35,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         super.init(processingEnv);
         mHandlers.add(new LifecycleHandler(processingEnv));
         mHandlers.add(new SQLiteObjectHandler(processingEnv));
+        mHandlers.add(new LoaderCallbacksHandler(processingEnv));
     }
 
     @Override

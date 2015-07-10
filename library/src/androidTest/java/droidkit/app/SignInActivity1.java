@@ -48,7 +48,7 @@ public class SignInActivity1 extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(droidkit.test.R.layout.sign_in);
-        //Loaders.init(getLoaderManager(), 0, Bundle.EMPTY, this);
+        Loaders.init(getLoaderManager(), 0, Bundle.EMPTY, this);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class SignInActivity1 extends Activity {
     }
 
     @OnLoadFinished(0)
-    void onLoadFinished(Object object) {
+    void onLoadFinished(Object data) {
         mLoaderLatch.countDown();
     }
 

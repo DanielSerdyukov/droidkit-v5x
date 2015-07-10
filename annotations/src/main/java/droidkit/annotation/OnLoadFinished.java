@@ -14,6 +14,4 @@ public @interface OnLoadFinished {
 
     int[] value();
 
-    boolean support() default false;
-
 }

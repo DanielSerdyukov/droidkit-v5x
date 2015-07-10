@@ -8,8 +8,6 @@
 
         <activity android:name=".app.SignInActivity2" />
 
-        <activity android:name=".app.SignInActivity3" />
-
         <provider
             android:name=".sqlite.TestSQLiteProvider"
             android:authorities="droidkit.sqlite"

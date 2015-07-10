@@ -1,1 +1,1 @@
-include ':library', ':apt', ':annotations'
+include ':library', ':annotations'

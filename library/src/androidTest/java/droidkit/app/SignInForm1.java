@@ -58,7 +58,7 @@ public class SignInForm1 extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         setHasOptionsMenu(true);
-        //Loaders.init(getLoaderManager(), 0, Bundle.EMPTY, this);
+        Loaders.init(getLoaderManager(), 0, Bundle.EMPTY, this);
     }
 
     public Button getSignIn() {
@@ -76,7 +76,7 @@ public class SignInForm1 extends Fragment {
         return true;
     }
 
-    @OnCreateLoader(0)
+    @OnCreateLoader({0})
     Loader<Object> onCreateLoader() {
         return new AsyncTaskLoader<Object>(getActivity().getApplicationContext()) {
             @Override

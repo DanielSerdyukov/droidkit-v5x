@@ -14,6 +14,4 @@ public @interface OnResetLoader {
 
     int[] value();
 
-    boolean support() default false;
-
 }
