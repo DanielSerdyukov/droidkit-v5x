@@ -23,8 +23,9 @@ class Utils {
     }
 
     static void error(ProcessingEnvironment processingEnv, Element element, String format, Object... args) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                String.format(Locale.US, format, args), element);
+        final String message = String.format(Locale.US, format, args);
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message, element);
+        throw new IllegalArgumentException(message);
     }
 
     static void checkArgument(boolean expression, ProcessingEnvironment processingEnv, Element element, String format,

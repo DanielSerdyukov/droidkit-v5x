@@ -68,6 +68,6 @@ project(':library') {
     }
 }
 
-project(':apt') {
+project(':annotations') {
     sonarqube { skipProject = true }
 }

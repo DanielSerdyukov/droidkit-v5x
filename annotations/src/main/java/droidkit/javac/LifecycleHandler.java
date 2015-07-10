@@ -51,7 +51,12 @@ class LifecycleHandler implements AnnotationHandler {
                     .subscribe(new Action1<TypeElement>() {
                         @Override
                         public void call(TypeElement element) {
-                            final LifecycleVisitor visitor = new LifecycleVisitor(mProcessingEnv, element);
+                            final LifecycleVisitor visitor;
+                            if (Utils.isSubtype(mProcessingEnv, element, "android.app.Activity")) {
+                                visitor = new ActivityVisitor(mProcessingEnv, element);
+                            } else {
+                                visitor = new FragmentVisitor(mProcessingEnv, element);
+                            }
                             element.accept(visitor, null);
                             visitor.brewJavaClass();
                         }
