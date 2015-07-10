@@ -14,7 +14,7 @@ Gradle
 --------
 
     dependencies {
-        compile 'droidkit:droidkit:5.0.3'
+        compile 'droidkit:droidkit:5.0.1'
     }
 
 License
