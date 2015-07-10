@@ -1,8 +1,6 @@
 package droidkit.javac;
 
 import com.google.common.collect.ImmutableList;
-import com.sun.source.util.Trees;
-import com.sun.tools.javac.tree.JCTree;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -38,11 +36,8 @@ class LifecycleHandler implements AnnotationHandler {
 
     private final ProcessingEnvironment mProcessingEnv;
 
-    private final Trees mTrees;
-
     LifecycleHandler(ProcessingEnvironment processingEnv) {
         mProcessingEnv = processingEnv;
-        mTrees = Trees.instance(processingEnv);
     }
 
     @Override
@@ -51,17 +46,20 @@ class LifecycleHandler implements AnnotationHandler {
             Observable.from(roundEnv.getElementsAnnotatedWith(annotation))
                     .filter(new NotInNestedClass())
                     .map(new GetEnclosingElement())
+                    .filter(new ActivityOrFragment(mProcessingEnv))
                     .filter(new DistinctTypes(mDistinctTypes))
                     .subscribe(new Action1<TypeElement>() {
                         @Override
                         public void call(TypeElement element) {
-                            ((JCTree) mTrees.getTree(element)).accept(new LifecycleVisitor(mProcessingEnv, element));
+                            final LifecycleVisitor visitor = new LifecycleVisitor(mProcessingEnv, element);
+                            element.accept(visitor, null);
+                            visitor.brewJavaClass();
                         }
                     });
         }
     }
 
-    //region Reactive functions
+    //region Filters
     private static final class NotInNestedClass implements Func1<Element, Boolean> {
 
         private NotInNestedClass() {
@@ -85,6 +83,24 @@ class LifecycleHandler implements AnnotationHandler {
         @Override
         public TypeElement call(Element element) {
             return (TypeElement) element.getEnclosingElement();
+        }
+
+    }
+
+    private static final class ActivityOrFragment implements Func1<TypeElement, Boolean> {
+
+        private final ProcessingEnvironment mProcessingEnv;
+
+        private ActivityOrFragment(ProcessingEnvironment processingEnv) {
+            mProcessingEnv = processingEnv;
+        }
+
+        @Override
+        public Boolean call(TypeElement element) {
+            return Utils.isSubtype(mProcessingEnv, element, "android.app.Activity")
+                    || Utils.isSubtype(mProcessingEnv, element, "android.app.Fragment")
+                    || Utils.isSubtype(mProcessingEnv, element, "android.support.v4.app.Fragment");
+
         }
 
     }

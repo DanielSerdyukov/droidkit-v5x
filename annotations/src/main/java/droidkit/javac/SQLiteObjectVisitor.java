@@ -20,6 +20,9 @@ import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 
+import droidkit.annotation.SQLiteColumn;
+import droidkit.annotation.SQLitePk;
+
 /**
  * @author Daniel Serdyukov
  */
@@ -56,9 +59,9 @@ class SQLiteObjectVisitor extends TreeTranslator {
                 @Override
                 public void visitAnnotation(JCTree.JCAnnotation jcAnnotation) {
                     super.visitAnnotation(jcAnnotation);
-                    if ("droidkit.annotation.SQLitePk".equals(jcAnnotation.type.toString())) {
+                    if (SQLitePk.class.getName().equals(jcAnnotation.type.toString())) {
                         visitPrimaryKey(jcVariableDecl, jcAnnotation);
-                    } else if ("droidkit.annotation.SQLiteColumn".equals(jcAnnotation.type.toString())) {
+                    } else if (SQLiteColumn.class.getName().equals(jcAnnotation.type.toString())) {
                         visitColumn(jcVariableDecl, jcAnnotation);
                     }
                 }

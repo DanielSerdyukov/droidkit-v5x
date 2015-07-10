@@ -146,7 +146,7 @@ class SQLiteObjectMaker {
                     .addMethods(methods())
                     .build();
             final JavaFile javaFile = JavaFile.builder(mPackageName, typeSpec)
-                    .addFileComment("AUTO-GENERATED FILE. DO NOT MODIFY.")
+                    .addFileComment(Utils.AUTO_GENERATED_FILE)
                     .build();
             final JavaFileObject sourceFile = mProcessingEnv.getFiler().createSourceFile(
                     javaFile.packageName + "." + typeSpec.name, mElement);

@@ -1,9 +1,9 @@
-debug:
+development:
   script:
     - gradle -version
     - gradle clean testDebugUnitTest
     - gradle sonarqube
   tags:
     - android
-  except:
-    - tags
+  only:
+    - master

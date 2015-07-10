@@ -16,6 +16,8 @@ import javax.tools.Diagnostic;
  */
 class Utils {
 
+    static final String AUTO_GENERATED_FILE = "AUTO-GENERATED FILE. DO NOT MODIFY.";
+
     static void error(ProcessingEnvironment processingEnv, String format, Object... args) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format(Locale.US, format, args));
     }
