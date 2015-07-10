@@ -94,7 +94,7 @@ class LoaderCallbacksApt implements Apt {
         final JavaFile javaFile = JavaFile.builder(mElement.getEnclosingElement().toString(), spec)
                 .addFileComment(AUTO_GENERATED)
                 .build();
-        final JavaFileObject sourceFile = JavacEnv.get().createSourceFile(javaFile, spec, mElement);
+        final JavaFileObject sourceFile = JavacEnv.createSourceFile(javaFile, spec, mElement);
         try (final Writer writer = new BufferedWriter(sourceFile.openWriter())) {
             javaFile.writeTo(writer);
         }
@@ -200,7 +200,7 @@ class LoaderCallbacksApt implements Apt {
     private void tryInjectOnCreateLoader(ExecutableElement method, OnCreateLoader annotation) {
         if (annotation != null) {
             mSupportImpl = annotation.support();
-            JavacEnv.get().<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
+            JavacEnv.<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
             for (final int loaderId : annotation.value()) {
                 final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.isEmpty()) {
@@ -213,18 +213,18 @@ class LoaderCallbacksApt implements Apt {
                             .addStatement("return delegate.$L(id)", method.getSimpleName())
                             .build());
                 } else if (parameters.size() == 1 &&
-                        Utils.isSubtype(parameters.get(0), "android.os.Bundle")) {
+                        JavacEnv.isSubtype(parameters.get(0), "android.os.Bundle")) {
                     mOnCreate.put(loaderId, CodeBlock.builder()
                             .addStatement("return delegate.$L(args)", method.getSimpleName())
                             .build());
                 } else if (parameters.size() == 2 &&
                         TypeKind.INT == parameters.get(0).asType().getKind() &&
-                        Utils.isSubtype(parameters.get(1), "android.os.Bundle")) {
+                        JavacEnv.isSubtype(parameters.get(1), "android.os.Bundle")) {
                     mOnCreate.put(loaderId, CodeBlock.builder()
                             .addStatement("return delegate.$L(id, args)", method.getSimpleName())
                             .build());
                 } else {
-                    JavacEnv.get().logE(method, "Unexpected method signature.");
+                    JavacEnv.logE(method, "Unexpected method signature.");
                 }
             }
         }
@@ -232,7 +232,7 @@ class LoaderCallbacksApt implements Apt {
 
     private void tryInjectOnLoadFinished(ExecutableElement method, OnLoadFinished annotation) {
         if (annotation != null) {
-            JavacEnv.get().<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
+            JavacEnv.<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
             for (final int loaderId : annotation.value()) {
                 final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.isEmpty()) {
@@ -253,7 +253,7 @@ class LoaderCallbacksApt implements Apt {
                                     parameters.get(1).asType())
                             .build());
                 } else {
-                    JavacEnv.get().logE(method, "Unexpected method signature.");
+                    JavacEnv.logE(method, "Unexpected method signature.");
                 }
             }
         }
@@ -261,7 +261,7 @@ class LoaderCallbacksApt implements Apt {
 
     private void tryInjectOnLoaderReset(ExecutableElement method, OnResetLoader annotation) {
         if (annotation != null) {
-            JavacEnv.get().<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
+            JavacEnv.<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
             for (final int loaderId : annotation.value()) {
                 final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.isEmpty()) {
@@ -275,7 +275,7 @@ class LoaderCallbacksApt implements Apt {
                                     parameters.get(0).asType())
                             .build());
                 } else {
-                    JavacEnv.get().logE(method, "Unexpected method signature.");
+                    JavacEnv.logE(method, "Unexpected method signature.");
                 }
             }
         }

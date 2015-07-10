@@ -18,7 +18,8 @@ import droidkit.io.IOUtils;
 /**
  * @author Daniel Serdyukov
  */
-@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+@SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "deprecation"})
+// FIXME: 09.07.15 remove deprecation in release 5.1.1
 class SQLiteGuard<T> extends PhantomReference<SQLiteResult<T>> {
 
     private static final Set<Reference<?>> REFERENCES = new CopyOnWriteArraySet<>();

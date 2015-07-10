@@ -28,6 +28,8 @@ import droidkit.util.Iterables;
  */
 public class SQLiteProvider extends ContentProvider implements SQLiteClient.Callbacks {
 
+    static final String CONTENT = "content";
+
     static final ConcurrentMap<String, String> SCHEMA = new ConcurrentHashMap<>();
 
     private static final String DATABASE_NAME = "data.db";
@@ -73,7 +75,7 @@ public class SQLiteProvider extends ContentProvider implements SQLiteClient.Call
             mClient = createClient(context);
             SQLite.initWithClient(context, mClient, info);
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("Try to clean and rebuild project", e);
         }
     }
 

@@ -1,6 +1,5 @@
 import org.gradle.internal.jvm.Jvm
 
-group 'droidkit.apt'
 version = rootProject.version
 
 apply plugin: 'java'
@@ -10,12 +9,7 @@ targetCompatibility = JavaVersion.VERSION_1_7
 
 dependencies {
     compile files(Jvm.current().getToolsJar())
-    compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.guava:guava:18.0'
-}
-
-jar {
-    from configurations.compile.findAll {
-        it.name.contains('javapoet')
-    }.collect { zipTree(it) }
+    compile 'com.squareup:javapoet:1.2.0'
+    compile 'io.reactivex:rxjava:1.0.12'
 }

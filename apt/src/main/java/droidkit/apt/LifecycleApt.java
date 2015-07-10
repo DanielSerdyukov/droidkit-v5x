@@ -118,11 +118,11 @@ class LifecycleApt implements Apt {
         final JavaFile javaFile = JavaFile.builder(mElement.getEnclosingElement().toString(), spec)
                 .addFileComment(AUTO_GENERATED)
                 .build();
-        final JavaFileObject sourceFile = JavacEnv.get().createSourceFile(javaFile, spec, mElement);
+        final JavaFileObject sourceFile = JavacEnv.createSourceFile(javaFile, spec, mElement);
         try (final Writer writer = new BufferedWriter(sourceFile.openWriter())) {
             javaFile.writeTo(writer);
         }
-        JavacEnv.get().<JCTree.JCClassDecl>getTree(mElement).extending = JCSelector.get(spec.name).ident();
+        JavacEnv.<JCTree.JCClassDecl>getTree(mElement).extending = JavacEnv.ident(spec.name);
     }
 
     protected void injectView(TypeElement clazz, Element view, int viewId) {
@@ -217,10 +217,10 @@ class LifecycleApt implements Apt {
         final List<? extends VariableElement> params = method.getParameters();
         if (params.isEmpty()) {
             codeBlock.addStatement("target.$L()", method.getSimpleName());
-        } else if (params.size() == 1 && Utils.isSubtype(params.get(0), "android.view.View")) {
+        } else if (params.size() == 1 && JavacEnv.isSubtype(params.get(0), "android.view.View")) {
             codeBlock.addStatement("target.$L(clickedView)", method.getSimpleName());
         } else {
-            JavacEnv.get().logE(method, "Unexpected method signature");
+            JavacEnv.logE(method, "Unexpected method signature");
         }
         return codeBlock.unindent().add("}\n").unindent().add("});\n").build();
     }
@@ -247,14 +247,14 @@ class LifecycleApt implements Apt {
 
     private void tryInjectView(Element element, InjectView injectView) {
         if (injectView != null) {
-            JavacEnv.get().<JCTree.JCVariableDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
+            JavacEnv.<JCTree.JCVariableDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
             injectView(mElement, element, injectView.value());
         }
     }
 
     private void tryInjectOnClick(ExecutableElement element, OnClick annotation) {
         if (annotation != null) {
-            JavacEnv.get().<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
+            JavacEnv.<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
             for (final int viewId : annotation.value()) {
                 injectOnClick(mElement, element, viewId);
             }
@@ -263,7 +263,7 @@ class LifecycleApt implements Apt {
 
     private void tryInjectOnActionClick(ExecutableElement element, OnActionClick annotation) {
         if (annotation != null) {
-            JavacEnv.get().<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
+            JavacEnv.<JCTree.JCMethodDecl>getTree(element).mods.flags &= ~Flags.PRIVATE;
             for (final int viewId : annotation.value()) {
                 final CodeBlock.Builder codeBlock = CodeBlock.builder()
                         .addStatement("final $T target = ($T) this", mElement, mElement)
@@ -272,7 +272,7 @@ class LifecycleApt implements Apt {
                         .add("public boolean onMenuItemClick($T menuItem) {\n", MENU_ITEM).indent();
                 final TypeKind kind = element.getReturnType().getKind();
                 if (TypeKind.VOID != kind && TypeKind.BOOLEAN != kind) {
-                    JavacEnv.get().logE(element, "Unexpected method signature");
+                    JavacEnv.logE(element, "Unexpected method signature");
                 }
                 final List<? extends VariableElement> params = element.getParameters();
                 if (params.isEmpty()) {
@@ -282,7 +282,7 @@ class LifecycleApt implements Apt {
                     } else {
                         codeBlock.addStatement("return target.$L()", element.getSimpleName());
                     }
-                } else if (params.size() == 1 && Utils.isSubtype(params.get(0), "android.view.MenuItem")) {
+                } else if (params.size() == 1 && JavacEnv.isSubtype(params.get(0), "android.view.MenuItem")) {
                     if (TypeKind.VOID == kind) {
                         codeBlock.addStatement("target.$L(menuItem)", element.getSimpleName());
                         codeBlock.addStatement("return true");
@@ -290,7 +290,7 @@ class LifecycleApt implements Apt {
                         codeBlock.addStatement("return target.$L(menuItem)", element.getSimpleName());
                     }
                 } else {
-                    JavacEnv.get().logE(element, "Unexpected method signature");
+                    JavacEnv.logE(element, "Unexpected method signature");
                 }
                 codeBlock.unindent().add("}\n").unindent().add("});\n");
                 mOnActionClick.add(MethodSpec.methodBuilder("setupOnActionClickListener" + viewId)
@@ -303,7 +303,7 @@ class LifecycleApt implements Apt {
 
     private void tryInjectInstanceState(VariableElement field, InstanceState annotation) {
         if (annotation != null) {
-            JavacEnv.get().<JCTree.JCVariableDecl>getTree(field).mods.flags &= ~Flags.PRIVATE;
+            JavacEnv.<JCTree.JCVariableDecl>getTree(field).mods.flags &= ~Flags.PRIVATE;
             final String key = annotation.value().isEmpty() ? field.getSimpleName().toString() : annotation.value();
             final TypeMirror mirror = field.asType();
             if (JAVA_TO_STATE.containsKey(mirror.getKind())) {
@@ -312,12 +312,12 @@ class LifecycleApt implements Apt {
                 mRestoreInstanceState.addStatement(STATE_TO_JAVA.get(mirror.getKind()),
                         mElement, field.getSimpleName(), key);
             } else if (TypeKind.DECLARED == mirror.getKind()) {
-                if (Utils.isSubtype(mirror, "android.os.Bundle")) {
+                if (JavacEnv.isSubtype(mirror, "android.os.Bundle")) {
                     mSaveInstanceState.addStatement("outState.putBundle($S, (($T) this).$L)",
                             key, mElement, field.getSimpleName());
                     mRestoreInstanceState.addStatement("(($T) this).$L = savedInstanceState.getBundle($S)",
                             mElement, field.getSimpleName(), key);
-                } else if (Utils.isSubtype(mirror, "android.os.Parcelable")) {
+                } else if (JavacEnv.isSubtype(mirror, "android.os.Parcelable")) {
                     mSaveInstanceState.addStatement("outState.putParcelable($S, (($T) this).$L)",
                             key, mElement, field.getSimpleName());
                     mRestoreInstanceState.addStatement("(($T) this).$L = savedInstanceState.getParcelable($S)",

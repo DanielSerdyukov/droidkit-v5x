@@ -8,10 +8,10 @@ import java.lang.annotation.Target;
 /**
  * @author Daniel Serdyukov
  */
-@Target({ElementType.TYPE})
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)
-public @interface SQLiteObject {
+public @interface OnActionClick {
 
-    String value();
+    int[] value();
 
 }

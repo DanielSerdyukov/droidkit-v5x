@@ -20,7 +20,7 @@ public class TestUser {
     @SQLitePk
     private long mId;
 
-    @SQLiteColumn("name")
+    @SQLiteColumn(value = "name")
     private String mName;
 
     @SQLiteColumn("weight")
@@ -37,6 +37,9 @@ public class TestUser {
 
     @SQLiteColumn("last_modified")
     private DateTime mLastModified;
+
+    @SQLiteColumn
+    private byte[] mBlob;
 
     public long getId() {
         return mId;

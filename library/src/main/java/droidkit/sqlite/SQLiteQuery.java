@@ -229,6 +229,15 @@ public class SQLiteQuery<T> {
         return equalTo(BaseColumns._ID, id).one();
     }
 
+    /**
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Nullable
+    @Deprecated
+    public T first() {
+        return one();
+    }
+
     @Nullable
     public T one() {
         final List<T> list = limit(1).list();
@@ -238,7 +247,20 @@ public class SQLiteQuery<T> {
         return list.get(0);
     }
 
+    /**
+     * @see #list()
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
     @NonNull
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    public SQLiteResult<T> all() {
+        return new SQLiteResult<>(this, mType, cursor());
+    }
+
+    @NonNull
+    @SuppressWarnings("deprecation")
+    // FIXME: 09.07.15 remove deprecation in release 5.1.1
     public List<T> list() {
         return new SQLiteResult<>(this, mType, cursor());
     }

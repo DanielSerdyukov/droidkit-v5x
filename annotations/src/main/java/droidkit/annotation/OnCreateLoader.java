@@ -8,10 +8,12 @@ import java.lang.annotation.Target;
 /**
  * @author Daniel Serdyukov
  */
-@Target({ElementType.TYPE})
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)
-public @interface SQLiteObject {
+public @interface OnCreateLoader {
 
-    String value();
+    int[] value();
+
+    boolean support() default false;
 
 }

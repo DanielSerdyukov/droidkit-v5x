@@ -7,7 +7,7 @@ version = rootProject.version
 task androidJar(type: Jar, dependsOn: ['assembleRelease']) {
     group 'Build'
     from zipTree('build/intermediates/bundles/release/classes.jar')
-    from zipTree("../apt/build/libs/apt-${version}.jar")
+    from zipTree("../apt/build/libs/annotations-${version}.jar")
 }
 
 task sourcesJar(type: Jar) {

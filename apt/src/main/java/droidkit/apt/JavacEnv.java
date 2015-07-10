@@ -1,5 +1,7 @@
 package droidkit.apt;
 
+import com.google.common.collect.Iterators;
+import com.google.common.collect.UnmodifiableIterator;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import com.sun.source.util.Trees;
@@ -10,7 +12,6 @@ import com.sun.tools.javac.util.Names;
 
 import java.io.IOException;
 import java.util.Locale;
-import java.util.Objects;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -21,88 +22,68 @@ import javax.tools.JavaFileObject;
 /**
  * @author Daniel Serdyukov
  */
-final class JavacEnv {
+class JavacEnv {
 
-    private static JavacEnv sInstance;
+    static volatile JavacProcessingEnvironment sEnv;
 
-    private final JavacProcessingEnvironment mEnv;
+    static volatile TreeMaker sTreeMaker;
 
-    private final TreeMaker mTreeMaker;
+    static volatile Names sNames;
 
-    private final Names mNames;
+    static volatile Trees sTrees;
 
-    private final Trees mTrees;
-
-    private JavacEnv(ProcessingEnvironment env) {
-        mEnv = (JavacProcessingEnvironment) env;
-        mTreeMaker = TreeMaker.instance(mEnv.getContext());
-        mNames = Names.instance(mEnv.getContext());
-        mTrees = Trees.instance(mEnv);
+    static void init(ProcessingEnvironment env) {
+        sEnv = (JavacProcessingEnvironment) env;
+        sTreeMaker = TreeMaker.instance(sEnv.getContext());
+        sNames = Names.instance(sEnv.getContext());
+        sTrees = Trees.instance(sEnv);
     }
 
-    public static JavacEnv init(ProcessingEnvironment env) {
-        JavacEnv instance = sInstance;
-        if (instance == null) {
-            synchronized (JavacEnv.class) {
-                instance = sInstance;
-                if (instance == null) {
-                    instance = sInstance = new JavacEnv(env);
-                }
-            }
+    static void logE(Element element, String format, Object... args) {
+        if (element == null) {
+            sEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format(Locale.US, format, args));
+        } else {
+            sEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format(Locale.US, format, args), element);
         }
-        return instance;
     }
 
-    public static JavacEnv get() {
-        return Objects.requireNonNull(sInstance, "Add JavacEnv.init(env) in AbstractProcessor.init(env)");
+    static boolean isSubtype(Element element, String fqcn) {
+        return sEnv.getTypeUtils().isSubtype(element.asType(), sEnv.getElementUtils().getTypeElement(fqcn).asType());
     }
 
-    public TreeMaker maker() {
-        return mTreeMaker;
+    static boolean isSubtype(TypeMirror element, String fqcn) {
+        return sEnv.getTypeUtils().isSubtype(element, sEnv.getElementUtils().getTypeElement(fqcn).asType());
     }
 
-    public Names names() {
-        return mNames;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends JCTree> T getTree(Element element) {
-        return (T) mTrees.getTree(element);
+    static boolean isSubtype(TypeMirror element, Class<?> type) {
+        return sEnv.getTypeUtils().isSubtype(element, sEnv.getElementUtils().getTypeElement(type.getName()).asType());
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Element> T getElement(TypeMirror mirror) {
-        return (T) mEnv.getTypeUtils().asElement(mirror);
+    static <T extends JCTree> T getTree(Element element) {
+        return (T) sTrees.getTree(element);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends Element> T getElement(String element) {
-        return (T) mEnv.getElementUtils().getTypeElement(element);
-    }
-
-    public boolean isSubtype(Element element1, Element element2) {
-        return mEnv.getTypeUtils().isSubtype(element1.asType(), element2.asType());
-    }
-
-    public JavaFileObject createSourceFile(JavaFile javaFile, TypeSpec typeSpec, Element... ordinatingElements)
+    static JavaFileObject createSourceFile(JavaFile javaFile, TypeSpec typeSpec, Element... ordinatingElements)
             throws IOException {
-        return mEnv.getFiler().createSourceFile(javaFile.packageName + "." + typeSpec.name, ordinatingElements);
+        return sEnv.getFiler().createSourceFile(javaFile.packageName + "." + typeSpec.name, ordinatingElements);
     }
 
-    public void logI(Element element, String format, Object... args) {
-        if (element == null) {
-            mEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format(Locale.US, format, args));
-        } else {
-            mEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format(Locale.US, format, args), element);
-        }
+    static JCTree.JCExpression thisIdent(String selector) {
+        return sTreeMaker.Select(sTreeMaker.Ident(sNames._this), sNames.fromString(selector));
     }
 
-    public void logE(Element element, String format, Object... args) {
-        if (element == null) {
-            mEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format(Locale.US, format, args));
-        } else {
-            mEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format(Locale.US, format, args), element);
+    static JCTree.JCExpression select(String... selectors) {
+        final UnmodifiableIterator<String> iterator = Iterators.forArray(selectors);
+        JCTree.JCExpression selector = sTreeMaker.Ident(sNames.fromString(iterator.next()));
+        while (iterator.hasNext()) {
+            selector = sTreeMaker.Select(selector, sNames.fromString(iterator.next()));
         }
+        return selector;
+    }
+
+    static JCTree.JCExpression ident(String selector) {
+        return sTreeMaker.Ident(sNames.fromString(selector));
     }
 
 }

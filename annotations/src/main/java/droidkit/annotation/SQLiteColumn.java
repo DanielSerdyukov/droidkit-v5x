@@ -8,10 +8,12 @@ import java.lang.annotation.Target;
 /**
  * @author Daniel Serdyukov
  */
-@Target({ElementType.TYPE})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.SOURCE)
-public @interface SQLiteObject {
+public @interface SQLiteColumn {
 
-    String value();
+    String value() default "";
+
+    String setter() default "";
 
 }

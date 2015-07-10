@@ -41,6 +41,7 @@ public abstract class SQLiteClient {
         final SQLiteStatement stmt = compileStatement(db, sql);
         try {
             stmt.rebind(bindArgs);
+            stmt.execute();
         } finally {
             if (!db.inTransaction()) {
                 IOUtils.closeQuietly(stmt);

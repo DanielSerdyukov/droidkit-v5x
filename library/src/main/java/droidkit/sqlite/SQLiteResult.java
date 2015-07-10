@@ -15,15 +15,20 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.database.DatabaseUtils;
+import droidkit.util.Dynamic;
 import droidkit.util.DynamicException;
 import droidkit.util.DynamicMethod;
 
 /**
  * @author Daniel Serdyukov
+ * @see {@link SQLiteQuery#list()}
+ * @deprecated since 5.0.1, will be removed in 5.1.1
  */
-class SQLiteResult<T> extends AbstractList<T> {
+@Deprecated
+// FIXME: 09.07.15 remove deprecation in release 5.1.1
+public class SQLiteResult<T> extends AbstractList<T> {
 
-    private static final ConcurrentMap<Class<?>, Method> CREATE = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class<?>, Method> INSTANTIATE = new ConcurrentHashMap<>();
 
     private final SQLiteQuery<T> mQuery;
 
@@ -94,19 +99,14 @@ class SQLiteResult<T> extends AbstractList<T> {
     }
 
     @Nullable
+    @SuppressWarnings("unchecked")
     private T instantiate(@NonNull Cursor cursor) {
         try {
-            Method create = CREATE.get(mType);
-            if (create == null) {
-                final Method method = mType.getDeclaredMethod("_create", SQLiteClient.class, Cursor.class);
-                create = CREATE.putIfAbsent(mType, method);
-                if (create == null) {
-                    create = method;
-                }
-            }
-            return DynamicMethod.invokeStatic(create, SQLite.obtainClient(), cursor);
-        } catch (NoSuchMethodException | DynamicException e) {
-            throw new IllegalArgumentException(e);
+            return DynamicMethod.invokeStatic(DynamicMethod.find(INSTANTIATE,
+                    Dynamic.forName(mType.getName() + "$SQLite"), "instantiate",
+                    SQLiteClient.class, Cursor.class), SQLite.obtainClient(), cursor);
+        } catch (DynamicException e) {
+            throw new IllegalArgumentException("Check that " + mType + " annotated with @SQLiteObject", e);
         }
     }
 

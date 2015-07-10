@@ -58,7 +58,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             for (final Apt apt : mApt.values()) {
                 apt.finishProcessing();
             }
-            SQLiteObjectApt.brewClass();
+            SQLiteObjectApt.brewSchemaClass();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -71,24 +71,22 @@ public class AnnotationProcessor extends AbstractProcessor {
             return mApt.get(element);
         } else if (mApt.containsKey(enclosingElement)) {
             return mApt.get(enclosingElement);
-        } else {
-            final String fqcn = annotation.getQualifiedName().toString();
-            if (InjectView.class.getName().equals(fqcn)
-                    || InstanceState.class.getName().equals(fqcn)
-                    || OnClick.class.getName().equals(fqcn)
-                    || OnActionClick.class.getName().equals(fqcn)
-                    || OnCreateLoader.class.getName().equals(fqcn)) {
-                if (Utils.isSubtype(enclosingElement, "android.app.Activity")) {
-                    return putIfAbsent(enclosingElement, new ActivityApt((TypeElement) enclosingElement));
-                } else if (Utils.isSubtype(enclosingElement, "android.app.Fragment")
-                        || Utils.isSubtype(enclosingElement, "android.support.v4.app.Fragment")) {
-                    return putIfAbsent(enclosingElement, new FragmentApt((TypeElement) enclosingElement));
-                }
-            } else if (SQLiteObject.class.getName().equals(fqcn)) {
-                return putIfAbsent(element, new SQLiteObjectApt((TypeElement) element));
-            }
         }
-        JavacEnv.get().logE(element, "Unsupported annotation: %s", annotation);
+        final String fqcn = annotation.getQualifiedName().toString();
+        if (InjectView.class.getName().equals(fqcn)
+                || OnClick.class.getName().equals(fqcn)
+                || OnActionClick.class.getName().equals(fqcn)
+                || InstanceState.class.getName().equals(fqcn)
+                || OnCreateLoader.class.getName().equals(fqcn)) {
+            if (JavacEnv.isSubtype(enclosingElement, "android.app.Activity")) {
+                return putIfAbsent(enclosingElement, new ActivityApt((TypeElement) enclosingElement));
+            } else if (JavacEnv.isSubtype(enclosingElement, "android.app.Fragment")
+                    || JavacEnv.isSubtype(enclosingElement, "android.support.v4.app.Fragment")) {
+                return putIfAbsent(enclosingElement, new FragmentApt((TypeElement) enclosingElement));
+            }
+        } else if (SQLiteObject.class.getName().equals(fqcn)) {
+            return putIfAbsent(element, new SQLiteObjectApt((TypeElement) element));
+        }
         throw new IllegalArgumentException("Unsupported annotation: " + annotation);
     }
 
