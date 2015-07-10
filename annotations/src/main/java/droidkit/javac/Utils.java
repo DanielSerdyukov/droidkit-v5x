@@ -1,15 +1,18 @@
 package droidkit.javac;
 
-import com.google.common.collect.Lists;
 import com.sun.tools.javac.tree.JCTree;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Locale;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+
+import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -65,9 +68,10 @@ class Utils {
                 processingEnv.getElementUtils().getTypeElement(type.getName()).asType());
     }
 
-    static <T> Iterable<T> slice(Iterable<T> iterable, int from) {
-        final List<T> list = Lists.newArrayList(iterable);
-        return list.subList(from, list.size());
+    static <T> Collection<T> slice(Collection<T> collection, int from) {
+        return new ArrayList<>(collection).subList(from, collection.size());
     }
+
+
 
 }

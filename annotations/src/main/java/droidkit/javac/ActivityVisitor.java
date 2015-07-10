@@ -1,12 +1,12 @@
 package droidkit.javac;
 
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -55,7 +55,8 @@ class ActivityVisitor extends LifecycleVisitor {
 
     @Override
     protected List<MethodSpec> methods() {
-        return ImmutableList.<MethodSpec>builder().add(
+        final List<MethodSpec> methods = new ArrayList<>();
+        Collections.addAll(methods,
                 setContentView1(),
                 setContentView2(),
                 setContentView3(),
@@ -63,8 +64,10 @@ class ActivityVisitor extends LifecycleVisitor {
                 onOptionsItemSelected(),
                 onResume(Modifier.PROTECTED),
                 onPause(Modifier.PROTECTED),
-                onDestroy(Modifier.PROTECTED)
-        ).addAll(mOnClick).addAll(mOnActionClick).build();
+                onDestroy(Modifier.PROTECTED));
+        methods.addAll(mOnClick);
+        methods.addAll(mOnActionClick);
+        return methods;
     }
 
     private MethodSpec setContentView1() {

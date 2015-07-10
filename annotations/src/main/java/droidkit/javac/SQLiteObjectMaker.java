@@ -1,10 +1,5 @@
 package droidkit.javac;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -23,8 +18,10 @@ import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +34,7 @@ import javax.lang.model.type.TypeKind;
 import javax.tools.JavaFileObject;
 
 import droidkit.annotation.SQLiteObject;
+import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -49,7 +47,7 @@ class SQLiteObjectMaker {
 
     private static final ClassName DB_UTILS = ClassName.get("droidkit.database", "DatabaseUtils");
 
-    private static final Set<TypeConversion> TYPE_CONVERSIONS = ImmutableSet.of(
+    private static final Set<TypeConversion> TYPE_CONVERSIONS = new LinkedHashSet<>(Arrays.asList(
             new IntConversion(),
             new LongConversion(),
             new DoubleConversion(),
@@ -61,7 +59,7 @@ class SQLiteObjectMaker {
             new BigDecimalConversion(),
             new ByteArrayConversion(),
             new ShortConversion()
-    );
+    ));
 
     private static final String[] CONFLICT_VALUES = new String[]{
             "",
@@ -157,7 +155,7 @@ class SQLiteObjectMaker {
             Utils.error(mProcessingEnv, mElement, e.getMessage());
         }
         SCHEMA.addStatement("SQLiteProvider.SCHEMA.putIfAbsent($S, \"($L)\")", mTableName,
-                Joiner.on(", ").join(mColumnsDef));
+                Strings.join(", ", mColumnsDef));
     }
 
     String getPackageName() {
@@ -173,7 +171,7 @@ class SQLiteObjectMaker {
     }
 
     private List<FieldSpec> fields() {
-        return ImmutableList.of(
+        return Collections.singletonList(
                 FieldSpec.builder(String.class, "TABLE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                         .initializer("$S", mTableName)
                         .build()
@@ -181,7 +179,7 @@ class SQLiteObjectMaker {
     }
 
     private List<MethodSpec> methods() {
-        return ImmutableList.of(instantiate(), insert(), update());
+        return Arrays.asList(instantiate(), insert(), update());
     }
 
     private MethodSpec instantiate() {
@@ -198,7 +196,6 @@ class SQLiteObjectMaker {
     }
 
     private MethodSpec insert() {
-        final Joiner joiner = Joiner.on(", ");
         return MethodSpec.methodBuilder("insert")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(TypeName.LONG)
@@ -206,15 +203,14 @@ class SQLiteObjectMaker {
                 .addParameter(ClassName.get(mElement), "object")
                 .beginControlFlow("if (object.$L > 0)", mPrimaryKey)
                 .addStatement("client.executeInsert(\"INSERT INTO $L($L) VALUES($L);\", $L)",
-                        mTableName, joiner.join(mColumnsToFields.keySet()),
-                        joiner.join(Collections.nCopies(mColumnsToFields.size(), "?")),
-                        joiner.join(Iterables.transform(mColumnsToFields.values(), new FieldFunction())))
+                        mTableName, Strings.join(", ", mColumnsToFields.keySet()),
+                        Strings.join(", ", Collections.nCopies(mColumnsToFields.size(), "?")),
+                        Strings.join(", ", mColumnsToFields.values(), new FieldFunction()))
                 .nextControlFlow("else")
                 .addStatement("object.$L = client.executeInsert(\"INSERT INTO $L($L) VALUES($L);\", $L)",
-                        mPrimaryKey, mTableName, joiner.join(Utils.slice(mColumnsToFields.keySet(), 1)),
-                        joiner.join(Collections.nCopies(mColumnsToFields.size() - 1, "?")),
-                        joiner.join(Iterables.transform(Utils.slice(mColumnsToFields.values(), 1),
-                                new FieldFunction())))
+                        mPrimaryKey, mTableName, Strings.join(", ", mColumnsToFields.keySet(), 1),
+                        Strings.join(", ", Collections.nCopies(mColumnsToFields.size() - 1, "?")),
+                        Strings.join(", ", mColumnsToFields.values(), new FieldFunction(), 1))
                 .endControlFlow()
                 .addStatement("object.mClientRef = new $T<>(client)", ClassName.get(WeakReference.class))
                 .addStatement("return object.$L", mPrimaryKey)
@@ -437,9 +433,9 @@ class SQLiteObjectMaker {
     }
     //endregion
 
-    private static class FieldFunction implements Function<String, String> {
+    private static class FieldFunction implements Func1<String, String> {
         @Override
-        public String apply(String fieldName) {
+        public String call(String fieldName) {
             return "object." + fieldName;
         }
     }

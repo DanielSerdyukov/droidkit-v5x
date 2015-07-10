@@ -1,7 +1,6 @@
 package droidkit.javac;
 
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -28,7 +27,7 @@ import rx.functions.Action1;
 })
 public class AnnotationProcessor extends AbstractProcessor {
 
-    private final List<AnnotationHandler> mHandlers = Lists.newArrayList();
+    private final List<AnnotationHandler> mHandlers = new ArrayList<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {

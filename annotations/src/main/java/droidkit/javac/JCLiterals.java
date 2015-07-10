@@ -1,12 +1,12 @@
 package droidkit.javac;
 
-import com.google.common.base.Objects;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * @author Daniel Serdyukov
@@ -66,7 +66,7 @@ class JCLiterals {
                 NoSuchFieldException {
             if (type.isEnum()) {
                 for (final Object value : type.getEnumConstants()) {
-                    if (Objects.equal(valueName, String.valueOf(value))) {
+                    if (Objects.equals(valueName, String.valueOf(value))) {
                         return value;
                     }
                 }

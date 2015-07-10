@@ -1,8 +1,5 @@
 package droidkit.javac;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
@@ -16,6 +13,7 @@ import java.lang.ref.Reference;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
@@ -101,7 +99,7 @@ class SQLiteObjectVisitor extends TreeTranslator {
     @Override
     public void visitClassDef(JCTree.JCClassDecl jcClassDecl) {
         super.visitClassDef(jcClassDecl);
-        if (Objects.equal(jcClassDecl.getSimpleName(), mElement.getSimpleName())) {
+        if (Objects.equals(jcClassDecl.getSimpleName(), mElement.getSimpleName())) {
             final ListBuffer<JCTree> defs = new ListBuffer<>();
             defs.addAll(jcClassDecl.defs);
             defs.add(mTreeMaker.VarDef(
@@ -138,16 +136,16 @@ class SQLiteObjectVisitor extends TreeTranslator {
 
     private String getColumnName(String fieldName) {
         if (fieldName.startsWith("m")) {
-            return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, fieldName.substring(1));
+            return Strings.toUnderScope(fieldName.substring(1));
         }
-        return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, fieldName);
+        return Strings.toUnderScope(fieldName);
     }
 
     private String getSetterName(String fieldName) {
         if (fieldName.startsWith("m")) {
             return "set" + fieldName.substring(1);
         }
-        return "set" + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, fieldName);
+        return "set" + Strings.capitalize(fieldName);
     }
 
 }

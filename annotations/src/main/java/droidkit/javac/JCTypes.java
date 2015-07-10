@@ -1,11 +1,11 @@
 package droidkit.javac;
 
-import com.google.common.collect.Lists;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Names;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +29,7 @@ class JCTypes {
     }
 
     JCTree.JCExpression getClass(Class<?> type) {
-        final List<String> names = Lists.newArrayList();
+        final List<String> names = new ArrayList<>();
         for (Class<?> c = type; c != null; c = c.getEnclosingClass()) {
             names.add(c.getSimpleName());
         }

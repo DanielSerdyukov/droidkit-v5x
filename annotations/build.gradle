@@ -9,7 +9,6 @@ targetCompatibility = JavaVersion.VERSION_1_7
 
 dependencies {
     compile files(Jvm.current().getToolsJar())
-    compile 'com.google.guava:guava:18.0'
     compile 'com.squareup:javapoet:1.2.0'
     compile 'io.reactivex:rxjava:1.0.12'
 }

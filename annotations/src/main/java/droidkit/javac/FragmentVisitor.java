@@ -1,11 +1,11 @@
 package droidkit.javac;
 
-import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -55,14 +55,17 @@ class FragmentVisitor extends LifecycleVisitor {
 
     @Override
     protected List<MethodSpec> methods() {
-        return ImmutableList.<MethodSpec>builder().add(
+        final List<MethodSpec> methods = new ArrayList<>();
+        Collections.addAll(methods,
                 onViewCreated(),
                 onActivityCreated(),
                 onOptionsItemSelected(),
                 onResume(Modifier.PUBLIC),
                 onPause(Modifier.PUBLIC),
-                onDestroy(Modifier.PUBLIC)
-        ).addAll(mOnClick).addAll(mOnActionClick).build();
+                onDestroy(Modifier.PUBLIC));
+        methods.addAll(mOnClick);
+        methods.addAll(mOnActionClick);
+        return methods;
     }
 
     private MethodSpec onViewCreated() {

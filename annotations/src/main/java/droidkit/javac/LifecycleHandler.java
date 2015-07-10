@@ -1,7 +1,6 @@
 package droidkit.javac;
 
-import com.google.common.collect.ImmutableList;
-
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +23,7 @@ import rx.functions.Func1;
  */
 class LifecycleHandler implements AnnotationHandler {
 
-    private static final List<String> ANNOTATIONS = ImmutableList.of(
+    private static final List<String> ANNOTATIONS = Arrays.asList(
             InjectView.class.getName(),
             OnClick.class.getName(),
             OnActionClick.class.getName()

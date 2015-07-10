@@ -1,7 +1,5 @@
 package droidkit.javac;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -21,6 +19,9 @@ import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,11 +46,13 @@ import rx.functions.Action3;
  */
 class LoaderCallbacksVisitor extends ElementScanner7<Void, Void> {
 
-    private static final Map<Class<? extends Annotation>, MethodInjector> METHOD_INJECTORS = ImmutableMap.of(
-            OnCreateLoader.class, new OnCreateLoaderInjector(),
-            OnLoadFinished.class, new OnLoadFinishedInjector(),
-            OnResetLoader.class, new OnResetLoaderInjector()
-    );
+    private static final Map<Class<? extends Annotation>, MethodInjector> METHOD_INJECTORS = new HashMap<>();
+
+    static {
+        METHOD_INJECTORS.put(OnCreateLoader.class, new OnCreateLoaderInjector());
+        METHOD_INJECTORS.put(OnLoadFinished.class, new OnLoadFinishedInjector());
+        METHOD_INJECTORS.put(OnResetLoader.class, new OnResetLoaderInjector());
+    }
 
     private final Map<Integer, CodeBlock> mOnCreate = new LinkedHashMap<>();
 
@@ -106,7 +109,7 @@ class LoaderCallbacksVisitor extends ElementScanner7<Void, Void> {
     }
 
     protected List<FieldSpec> fields() {
-        return ImmutableList.of(
+        return Collections.singletonList(
                 FieldSpec.builder(ParameterizedTypeName.get(
                                 ClassName.get(Reference.class),
                                 ClassName.get(mElement)),
@@ -116,7 +119,7 @@ class LoaderCallbacksVisitor extends ElementScanner7<Void, Void> {
     }
 
     protected List<MethodSpec> methods() {
-        return ImmutableList.of(
+        return Arrays.asList(
                 init(),
                 onCreateLoader(),
                 onLoadFinished(),

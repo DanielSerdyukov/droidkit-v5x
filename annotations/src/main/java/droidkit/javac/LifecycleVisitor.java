@@ -1,7 +1,5 @@
 package droidkit.javac;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -20,6 +18,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,15 +49,15 @@ abstract class LifecycleVisitor extends ElementScanner7<Void, Void> {
 
     static final ClassName DROIDKIT_VIEWS = ClassName.get("droidkit.view", "Views");
 
-    private static final Map<Class<? extends Annotation>, FieldInjector> FIELD_INJECTORS =
-            ImmutableMap.<Class<? extends Annotation>, FieldInjector>of(
-                    InjectView.class, new ViewInjector()
-            );
+    private static final Map<Class<? extends Annotation>, FieldInjector> FIELD_INJECTORS = new HashMap<>();
 
-    private static final Map<Class<? extends Annotation>, MethodInjector> METHOD_INJECTORS = ImmutableMap.of(
-            OnClick.class, new OnClickInjector(),
-            OnActionClick.class, new OnActionClickInjector()
-    );
+    private static final Map<Class<? extends Annotation>, MethodInjector> METHOD_INJECTORS = new HashMap<>();
+
+    static {
+        FIELD_INJECTORS.put(InjectView.class, new ViewInjector());
+        METHOD_INJECTORS.put(OnClick.class, new OnClickInjector());
+        METHOD_INJECTORS.put(OnActionClick.class, new OnActionClickInjector());
+    }
 
     private final ProcessingEnvironment mProcessingEnv;
 
@@ -118,7 +119,7 @@ abstract class LifecycleVisitor extends ElementScanner7<Void, Void> {
                 javaFile.writeTo(writer);
             }
             ((JCTree.JCClassDecl) mTrees.getTree(mElement)).extending =
-                    mTypes.ident(ImmutableList.of(mPackageName, typeSpec.name));
+                    mTypes.ident(Arrays.asList(mPackageName, typeSpec.name));
         } catch (IOException e) {
             Utils.error(mProcessingEnv, mElement, e.getMessage());
         }
@@ -140,7 +141,7 @@ abstract class LifecycleVisitor extends ElementScanner7<Void, Void> {
     }
 
     protected List<FieldSpec> fields() {
-        return ImmutableList.of(
+        return Arrays.asList(
                 FieldSpec.builder(ParameterizedTypeName.get(
                                 ClassName.get("android.support.v4.util", "SimpleArrayMap"),
                                 ANDROID_VIEW, ClassName.get("android.view", "View", "OnClickListener")),
@@ -157,7 +158,7 @@ abstract class LifecycleVisitor extends ElementScanner7<Void, Void> {
     }
 
     protected List<MethodSpec> methods() {
-        return ImmutableList.of();
+        return Collections.emptyList();
     }
 
     protected MethodSpec onOptionsItemSelected() {

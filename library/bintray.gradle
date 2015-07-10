@@ -7,7 +7,7 @@ version = rootProject.version
 task androidJar(type: Jar, dependsOn: ['assembleRelease']) {
     group 'Build'
     from zipTree('build/intermediates/bundles/release/classes.jar')
-    from zipTree("../apt/build/libs/annotations-${version}.jar")
+    from zipTree("../annotations/build/libs/annotations-${version}.jar")
 }
 
 task sourcesJar(type: Jar) {
@@ -65,8 +65,8 @@ publishing {
 }
 
 bintray {
-    user = bintrayUser
-    key = bintrayKey
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
     configurations = ['archives']
     publications = ['mavenAndroid']
     pkg {
