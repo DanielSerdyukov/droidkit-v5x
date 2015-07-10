@@ -7,3 +7,11 @@ development:
     - android
   only:
     - master
+
+bintray:
+  script:
+    - gradle clean assembleRelease
+  tags:
+    - android
+  only:
+    - /^v.*$/
