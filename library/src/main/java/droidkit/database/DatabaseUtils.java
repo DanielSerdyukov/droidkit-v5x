@@ -9,10 +9,13 @@ import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 
 import droidkit.sqlite.SQLiteException;
 import droidkit.sqlite.SQLiteStatement;
 import droidkit.util.Dynamic;
+import droidkit.util.Objects;
 import droidkit.util.Strings;
 
 /**
@@ -21,6 +24,17 @@ import droidkit.util.Strings;
 public final class DatabaseUtils {
 
     private static final boolean JODA_TIME_SUPPORT = Dynamic.inClasspath("org.joda.time.DateTime");
+
+    private static final List<ValueBinder> BINDERS = Arrays.asList(
+            new NullBinder(),
+            new DoubleBinder(),
+            new LongBinder(),
+            new BooleanBinder(),
+            new BlobBinder(),
+            new EnumBinder(),
+            new DateTimeBinder(),
+            new StringBinder()
+    );
 
     private DatabaseUtils() {
     }
@@ -97,31 +111,142 @@ public final class DatabaseUtils {
     }
 
     public static void bindObjectToStatement(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
-        if (value == null) {
+        for (final ValueBinder binder : BINDERS) {
+            if (binder.canBind(value)) {
+                binder.bind(stmt, index, value);
+                return;
+            }
+        }
+        throw new SQLiteException("Unsupported sqlite type: " + Objects.requireNonNull(value).getClass());
+    }
+
+    //region Binders
+    private interface ValueBinder {
+
+        boolean canBind(@Nullable Object value);
+
+        void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value);
+
+    }
+
+    private static class NullBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return value == null;
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
             stmt.bindNull(index);
-        } else if (value instanceof Double || value instanceof Float
-                || value instanceof BigDecimal) {
-            stmt.bindDouble(index, ((Number) value).doubleValue());
-        } else if (value instanceof Number) {
-            stmt.bindLong(index, ((Number) value).longValue());
-        } else if (value instanceof Boolean) {
-            boolean bool = (boolean) value;
+        }
+
+    }
+
+    private static class LongBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return value instanceof Number;
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
+            stmt.bindLong(index, Objects.requireNonNull((Number) value).longValue());
+        }
+
+    }
+
+    private static class DoubleBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return value instanceof Double
+                    || value instanceof Float
+                    || value instanceof BigDecimal;
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
+            stmt.bindDouble(index, Objects.requireNonNull((Number) value).doubleValue());
+        }
+
+    }
+
+    private static class BooleanBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return value instanceof Boolean;
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
+            final boolean bool = Objects.requireNonNull((Boolean) value);
             if (bool) {
                 stmt.bindLong(index, 1);
             } else {
                 stmt.bindLong(index, 0);
             }
-        } else if (value instanceof byte[]) {
-            stmt.bindBlob(index, (byte[]) value);
-        } else if (value instanceof Enum) {
-            stmt.bindString(index, ((Enum) value).name());
-        } else if (JODA_TIME_SUPPORT && value instanceof DateTime) {
-            stmt.bindLong(index, ((DateTime) value).getMillis());
-        } else if (value instanceof String) {
-            stmt.bindString(index, (String) value);
-        } else {
-            throw new SQLiteException("Unsupported sqlite type: " + value.getClass());
         }
+
     }
+
+    private static class BlobBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return value instanceof byte[];
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
+            stmt.bindBlob(index, Objects.requireNonNull((byte[]) value));
+        }
+
+    }
+
+    private static class StringBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return value instanceof String;
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
+            stmt.bindString(index, Objects.requireNonNull((String) value));
+        }
+
+    }
+
+    private static class EnumBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return value instanceof Enum;
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
+            stmt.bindString(index, Objects.requireNonNull((Enum) value).name());
+        }
+
+    }
+
+    private static class DateTimeBinder implements ValueBinder {
+
+        @Override
+        public boolean canBind(@Nullable Object value) {
+            return JODA_TIME_SUPPORT && value instanceof DateTime;
+        }
+
+        @Override
+        public void bind(@NonNull SQLiteStatement stmt, int index, @Nullable Object value) {
+            stmt.bindLong(index, Objects.requireNonNull((DateTime) value).getMillis());
+        }
+
+    }
+    //endregion
 
 }

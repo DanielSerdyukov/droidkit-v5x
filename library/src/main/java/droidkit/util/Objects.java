@@ -16,6 +16,14 @@ public final class Objects {
     }
 
     @NonNull
+    public static <T> T requireNonNull(@Nullable T object) {
+        if (object == null) {
+            throw new NullPointerException();
+        }
+        return object;
+    }
+
+    @NonNull
     public static <T> T requireNonNull(@Nullable T object, @NonNull T nullDefault) {
         if (object == null) {
             return nullDefault;
