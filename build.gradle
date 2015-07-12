@@ -30,14 +30,6 @@ int calculateVersionCode() {
 
 apply plugin: 'org.sonarqube'
 
-subprojects {
-    apply plugin: 'jacoco'
-
-    jacoco {
-        toolVersion = '0.7.4.201502262128'
-    }
-}
-
 sonarqube {
     properties {
         properties["sonar.projectName"] = 'DroidKit'
@@ -63,7 +55,6 @@ project(':library') {
             properties["sonar.java.binaries"] = files(["${project.buildDir}/intermediates/classes/debug"])
             properties["sonar.java.test.binaries"] = files(["${project.buildDir}/intermediates/classes/test/debug"])
             properties["sonar.junit.reportsPath"] = "${project.buildDir}/test-results/debug"
-            properties["sonar.jacoco.reportPath"] = "${project.buildDir}/jacoco/testDebugUnitTest.exec"
         }
     }
 }
