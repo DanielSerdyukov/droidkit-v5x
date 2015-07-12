@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import rx.functions.Func1;
 
@@ -19,36 +18,22 @@ public final class Iterables {
     private Iterables() {
     }
 
-    @SuppressWarnings("unchecked")
-    public static <R, T> Collection<R> transform(@NonNull Iterable<T> iterable, @NonNull Func1<T, R> func) {
-        final List<R> list = new ArrayList<>();
-        for (final T element : iterable) {
-            list.add(func.call(element));
-        }
-        return list;
-    }
-
     @NonNull
     public static <T> T getFirst(@NonNull Iterable<T> iterable) {
         if (iterable instanceof List) {
-            final List<T> list = (List<T>) iterable;
-            if (list.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            return list.get(0);
+            return Lists.getFirst((List<T>) iterable);
         }
         return iterable.iterator().next();
     }
 
     @Nullable
-    public static <T> T getFirst(@NonNull Iterable<T> iterable, @Nullable T defaultValue) {
+    public static <T> T getFirst(@NonNull Iterable<T> iterable, @Nullable T emptyValue) {
         if (iterable instanceof Collection) {
             final Collection<T> collection = (Collection<T>) iterable;
             if (collection.isEmpty()) {
-                return defaultValue;
+                return emptyValue;
             } else if (iterable instanceof List) {
-                final List<T> list = (List<T>) iterable;
-                return list.get(0);
+                return Lists.getFirst((List<T>) iterable, emptyValue);
             }
         }
         return iterable.iterator().next();
@@ -57,27 +42,34 @@ public final class Iterables {
     @NonNull
     public static <T> T getLast(@NonNull Iterable<T> iterable) {
         if (iterable instanceof List) {
-            final List<T> list = (List<T>) iterable;
-            if (list.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            return list.get(list.size() - 1);
+            return Lists.getLast((List<T>) iterable);
         }
         return getLast(iterable.iterator());
     }
 
     @Nullable
-    public static <T> T getLast(@NonNull Iterable<T> iterable, @Nullable T defaultValue) {
+    public static <T> T getLast(@NonNull Iterable<T> iterable, @Nullable T emptyValue) {
         if (iterable instanceof Collection) {
             final Collection<T> collection = (Collection<T>) iterable;
             if (collection.isEmpty()) {
-                return defaultValue;
+                return emptyValue;
             } else if (iterable instanceof List) {
-                final List<T> list = (List<T>) iterable;
-                return list.get(list.size() - 1);
+                return Lists.getLast((List<T>) iterable, emptyValue);
             }
         }
         return getLast(iterable.iterator());
+    }
+
+    @NonNull
+    public static <T, R> Iterable<R> transform(@NonNull Iterable<T> iterable, @NonNull Func1<T, R> transform) {
+        if (iterable instanceof List) {
+            return Lists.transform((List<T>) iterable, transform);
+        }
+        final List<R> transformed = new ArrayList<>();
+        for (final T element : iterable) {
+            transformed.add(transform.call(element));
+        }
+        return transformed;
     }
 
     private static <T> T getLast(@NonNull Iterator<T> iterator) {

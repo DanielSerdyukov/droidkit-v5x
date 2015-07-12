@@ -8,6 +8,9 @@ import android.support.annotation.Nullable;
 
 import droidkit.util.Dynamic;
 import droidkit.util.DynamicException;
+import rx.functions.Action0;
+import rx.functions.Action1;
+import rx.functions.Func0;
 
 /**
  * @author Daniel Serdyukov
@@ -57,6 +60,47 @@ public final class Loaders {
                                                                   @NonNull Exception wrapped) {
         return new IllegalArgumentException("No such found LoaderCallbacks for " + target +
                 ", loaderId=" + loaderId, wrapped);
+    }
+
+    public static <T> LoaderManager.LoaderCallbacks<T> callbacks(@NonNull final Func0<Loader<T>> onCreate,
+                                                                 @NonNull final Action1<T> onLoad,
+                                                                 @NonNull final Action0 onReset) {
+        return new LoaderManager.LoaderCallbacks<T>() {
+            @Override
+            public Loader<T> onCreateLoader(int id, Bundle args) {
+                return onCreate.call();
+            }
+
+            @Override
+            public void onLoadFinished(Loader<T> loader, T data) {
+                onLoad.call(data);
+            }
+
+            @Override
+            public void onLoaderReset(Loader<T> loader) {
+                onReset.call();
+            }
+        };
+    }
+
+    public static <T> LoaderManager.LoaderCallbacks<T> callbacks(@NonNull final Func0<Loader<T>> onCreate,
+                                                                 @NonNull final Action1<T> onLoad) {
+        return new LoaderManager.LoaderCallbacks<T>() {
+            @Override
+            public Loader<T> onCreateLoader(int id, Bundle args) {
+                return onCreate.call();
+            }
+
+            @Override
+            public void onLoadFinished(Loader<T> loader, T data) {
+                onLoad.call(data);
+            }
+
+            @Override
+            public void onLoaderReset(Loader<T> loader) {
+
+            }
+        };
     }
 
 }

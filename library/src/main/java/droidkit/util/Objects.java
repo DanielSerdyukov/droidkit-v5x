@@ -8,17 +8,11 @@ import android.support.annotation.Nullable;
  */
 public final class Objects {
 
-    private static final String EMPTY_STRING = "";
-
     private Objects() {
     }
 
-    @NonNull
-    public static <T> T requireNonNull(@Nullable T object, @NonNull String throwMessage) {
-        if (object == null) {
-            throw new NullPointerException(throwMessage);
-        }
-        return object;
+    public static boolean equal(@Nullable Object a, @Nullable Object b) {
+        return a == b || (a != null && a.equals(b));
     }
 
     @NonNull
@@ -30,14 +24,9 @@ public final class Objects {
     }
 
     @NonNull
-    public static String stringNonNull(@Nullable String object) {
-        return stringNonNull(object, EMPTY_STRING);
-    }
-
-    @NonNull
-    public static String stringNonNull(@Nullable String object, @NonNull String nullString) {
+    public static <T> T requireNonNull(@Nullable T object, @NonNull String throwMessage) {
         if (object == null) {
-            return nullString;
+            throw new NullPointerException(throwMessage);
         }
         return object;
     }

@@ -8,9 +8,7 @@ import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
@@ -21,46 +19,45 @@ import rx.functions.Func1;
  */
 @Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
-public class IterablesTest {
+public class ListsTest {
 
-    private Set<String> mIterable;
+    private List<String> mList;
 
     @Before
     public void setUp() throws Exception {
-        mIterable = new LinkedHashSet<>(Arrays.asList("first", "middle", "last"));
+        mList = Arrays.asList("first", "middle", "last");
     }
 
     @Test
     public void testGetFirst() throws Exception {
-        Assert.assertEquals("first", Iterables.getFirst(mIterable));
+        Assert.assertEquals("first", Lists.getFirst(mList));
     }
 
     @Test
     public void testGetFirstWithValue() throws Exception {
-        Assert.assertEquals("defaultFirst", Iterables.getFirst(Collections.emptySet(), "defaultFirst"));
+        Assert.assertEquals("emptyFirst", Lists.getFirst(Collections.emptyList(), "emptyFirst"));
     }
 
     @Test
     public void testGetLast() throws Exception {
-        Assert.assertEquals("last", Iterables.getLast(mIterable));
+        Assert.assertEquals("last", Lists.getLast(mList));
     }
 
     @Test
     public void testGetLastWithValue() throws Exception {
-        Assert.assertEquals("defaultLast", Iterables.getLast(Collections.emptySet(), "defaultLast"));
+        Assert.assertEquals("emptyLast", Lists.getLast(Collections.emptyList(), "emptyLast"));
     }
 
     @Test
     public void testTransform() throws Exception {
-        final Iterator<String> expected = mIterable.iterator();
-        final Iterator<String> actual = Iterables.transform(mIterable, new Func1<String, String>() {
+        final List<String> actual = Lists.transform(mList, new Func1<String, String>() {
             @Override
             public String call(String s) {
                 return "t:" + s;
             }
-        }).iterator();
-        while (expected.hasNext() && actual.hasNext()) {
-            Assert.assertEquals("t:" + expected.next(), actual.next());
+        });
+        for (int i = 0; i < mList.size(); ++i) {
+            Assert.assertEquals("t:" + mList.get(i), actual.get(i));
         }
     }
 

@@ -13,7 +13,7 @@ import java.math.BigInteger;
 import droidkit.sqlite.SQLiteException;
 import droidkit.sqlite.SQLiteStatement;
 import droidkit.util.Dynamic;
-import droidkit.util.Objects;
+import droidkit.util.Strings;
 
 /**
  * @author Daniel Serdyukov
@@ -27,7 +27,7 @@ public final class DatabaseUtils {
 
     @NonNull
     public static String getString(@NonNull Cursor cursor, @NonNull String columnName) {
-        return Objects.stringNonNull(cursor.getString(cursor.getColumnIndex(columnName)));
+        return Strings.nullToEmpty(cursor.getString(cursor.getColumnIndex(columnName)));
     }
 
     public static long getLong(@NonNull Cursor cursor, @NonNull String columnName) {
