@@ -24,8 +24,13 @@ ext {
 }
 
 int calculateVersionCode() {
-    int[] build = version.split('\\.').collect { Integer.parseInt(it) }
-    return build[0] * 100000 + build[1] * 1000 + build[2]
+    def versionCode = 1
+    (version =~ /(\d+)/).collect {
+        it[0].toInteger()
+    }.eachWithIndex { num, index ->
+        versionCode += (num * (100000 / Math.pow(100, index)))
+    }
+    return versionCode as int
 }
 
 apply plugin: 'org.sonarqube'

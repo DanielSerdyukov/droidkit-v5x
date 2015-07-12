@@ -41,14 +41,6 @@ public final class SQLite {
         mAuthority = authority;
     }
 
-    /**
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    public static SQLite of(@NonNull Context context) {
-        return obtainReference();
-    }
-
     @NonNull
     @SuppressWarnings("ConstantConditions")
     public static String tableOf(@NonNull Class<?> type) {

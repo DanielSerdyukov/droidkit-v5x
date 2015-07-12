@@ -21,11 +21,7 @@ import droidkit.util.DynamicMethod;
 
 /**
  * @author Daniel Serdyukov
- * @see {@link SQLiteQuery#list()}
- * @deprecated since 5.0.1, will be removed in 5.1.1
  */
-@Deprecated
-// FIXME: 09.07.15 remove deprecation in release 5.1.1
 public class SQLiteResult<T> extends AbstractList<T> {
 
     private static final ConcurrentMap<Class<?>, Method> INSTANTIATE = new ConcurrentHashMap<>();
