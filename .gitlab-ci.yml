@@ -10,7 +10,7 @@ development:
 
 bintray:
   script:
-    - gradle clean assembleRelease
+    - gradle clean assembleRelease bintrayUpload
   tags:
     - android
   only:

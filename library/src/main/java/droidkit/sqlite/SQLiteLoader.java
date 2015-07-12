@@ -14,13 +14,9 @@ import java.util.List;
  */
 public class SQLiteLoader<T> extends AsyncTaskLoader<List<T>> {
 
-    private final ContentObserver mObserver = new ForceLoadContentObserver();
-
     private final SQLiteQuery<T> mQuery;
 
-    private final Uri mObserveOn;
-
-    private final boolean mNotifyForDescendants;
+    private ContentObserver mObserver;
 
     private List<T> mResult;
 
@@ -40,17 +36,15 @@ public class SQLiteLoader<T> extends AsyncTaskLoader<List<T>> {
                         boolean notifyForDescendants) {
         super(context);
         mQuery = query;
-        mObserveOn = observeOn;
-        mNotifyForDescendants = notifyForDescendants;
+        if (observeOn != null) {
+            mObserver = new ForceLoadContentObserver();
+            getContext().getContentResolver().registerContentObserver(observeOn, notifyForDescendants, mObserver);
+        }
     }
 
     @Override
     public List<T> loadInBackground() {
-        final List<T> result = mQuery.list();
-        if (mObserveOn != null) {
-            getContext().getContentResolver().registerContentObserver(mObserveOn, mNotifyForDescendants, mObserver);
-        }
-        return result;
+        return mQuery.list();
     }
 
     @Override
@@ -82,8 +76,11 @@ public class SQLiteLoader<T> extends AsyncTaskLoader<List<T>> {
     @Override
     protected void onReset() {
         onStopLoading();
-        getContext().getContentResolver().unregisterContentObserver(mObserver);
+        if (mObserver != null) {
+            getContext().getContentResolver().unregisterContentObserver(mObserver);
+        }
         mResult = null;
+        mObserver = null;
     }
 
 }

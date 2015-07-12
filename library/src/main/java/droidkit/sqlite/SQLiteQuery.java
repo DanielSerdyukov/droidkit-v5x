@@ -5,7 +5,6 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,9 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import droidkit.content.StringValue;
-import rx.Observer;
-import rx.functions.Action1;
-import rx.observers.Observers;
+import rx.Observable;
 
 /**
  * @author Daniel Serdyukov
@@ -89,6 +86,7 @@ public class SQLiteQuery<T> {
         mType = type;
     }
 
+    //region Conditions
     @NonNull
     public SQLiteQuery<T> distinct() {
         mDistinct = true;
@@ -228,6 +226,7 @@ public class SQLiteQuery<T> {
     public T withId(long id) {
         return equalTo(BaseColumns._ID, id).one();
     }
+    //endregion
 
     /**
      * @deprecated since 5.0.1, will be removed in 5.1.1
@@ -289,6 +288,7 @@ public class SQLiteQuery<T> {
                 mBindArgs.toArray(new Object[mBindArgs.size()]));
     }
 
+    //region Functions
     @NonNull
     public Number min(@NonNull String column) {
         return applyFunc("MIN", column);
@@ -308,20 +308,15 @@ public class SQLiteQuery<T> {
     public Number count(@NonNull String column) {
         return applyFunc("COUNT", column);
     }
+    //endregion
 
     @NonNull
     public Loader<List<T>> loader() {
         return new SQLiteLoader<>(SQLite.obtainContext(), this);
     }
 
-    @NonNull
-    public Loader<List<T>> loadOn(@NonNull LoaderManager lm, int loaderId, @NonNull Observer<List<T>> observer) {
-        return lm.initLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(this, observer));
-    }
-
-    @NonNull
-    public Loader<List<T>> loadOn(@NonNull LoaderManager lm, int loaderId, @NonNull Action1<List<T>> onNext) {
-        return lm.initLoader(loaderId, Bundle.EMPTY, new SQLiteLoaderCallbacks<>(this, Observers.create(onNext)));
+    public Observable<List<T>> observable(@NonNull LoaderManager lm, int loaderId) {
+        return Observable.create(new SQLiteOnSubscribe<>(lm, loader(), loaderId));
     }
 
     @Override

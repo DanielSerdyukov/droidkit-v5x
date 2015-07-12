@@ -5,50 +5,38 @@ import android.content.Loader;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 import java.util.List;
 
-import rx.Observer;
+import rx.Subscriber;
 
 
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteLoaderCallbacks<T> implements LoaderManager.LoaderCallbacks<List<T>> {
+class SQLiteLoaderCallbacks<T> implements LoaderManager.LoaderCallbacks<List<T>> {
 
-    private final SQLiteQuery<T> mQuery;
+    private final Loader<List<T>> mLoader;
 
-    private final Reference<Observer<List<T>>> mObserverRef;
+    private final Subscriber<? super List<T>> mSubscriber;
 
-    public SQLiteLoaderCallbacks(@NonNull SQLiteQuery<T> query, @NonNull Observer<List<T>> observer) {
-        mQuery = query;
-        mObserverRef = new WeakReference<>(observer);
+    public SQLiteLoaderCallbacks(@NonNull Subscriber<? super List<T>> subscriber, @NonNull Loader<List<T>> loader) {
+        mSubscriber = subscriber;
+        mLoader = loader;
     }
 
     @Override
     public Loader<List<T>> onCreateLoader(int id, Bundle args) {
-        final Observer<List<T>> observer = mObserverRef.get();
-        if (observer != null) {
-            return new SQLiteLoader<>(SQLite.obtainContext(), mQuery);
-        }
-        return null;
+        return mLoader;
     }
 
     @Override
     public void onLoadFinished(Loader<List<T>> loader, List<T> data) {
-        final Observer<List<T>> observer = mObserverRef.get();
-        if (observer != null) {
-            observer.onNext(data);
-        }
+        mSubscriber.onNext(data);
     }
 
     @Override
     public void onLoaderReset(Loader<List<T>> loader) {
-        final Observer<List<T>> observer = mObserverRef.get();
-        if (observer != null) {
-            observer.onCompleted();
-        }
+        mSubscriber.onCompleted();
     }
 
 }
