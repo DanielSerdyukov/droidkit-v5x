@@ -57,6 +57,6 @@ gradle.taskGraph.whenReady {
     }
 }
 
-if (System.getenv('BINTRAY_USER')) {
+if (System.getenv('BINTRAY_USER') || project.hasProperty('bintrayUser')) {
     apply from: 'bintray.gradle'
 }

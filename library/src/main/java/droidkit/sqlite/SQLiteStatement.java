@@ -7,7 +7,7 @@ import java.io.Closeable;
 /**
  * @author Daniel Serdyukov
  */
-public interface SQLiteStatement extends Closeable {
+interface SQLiteStatement extends Closeable {
 
     void rebind(@NonNull Object... args);
 

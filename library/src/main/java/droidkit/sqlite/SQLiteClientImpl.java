@@ -9,7 +9,6 @@ import android.support.annotation.Nullable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
-import droidkit.database.DatabaseUtils;
 import droidkit.util.Objects;
 
 /**
@@ -140,7 +139,7 @@ class SQLiteClientImpl extends SQLiteClient {
         public void rebind(@NonNull Object... args) {
             mStmt.clearBindings();
             for (int i = 0; i < args.length; ++i) {
-                DatabaseUtils.bindObjectToStatement(this, i + 1, args[i]);
+                bindObjectToStatement(this, i + 1, args[i]);
             }
         }
 

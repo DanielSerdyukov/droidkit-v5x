@@ -22,7 +22,7 @@ import droidkit.util.DynamicMethod;
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteResult<T> extends AbstractList<T> {
+class SQLiteResult<T> extends AbstractList<T> {
 
     private static final ConcurrentMap<Class<?>, Method> INSTANTIATE = new ConcurrentHashMap<>();
 

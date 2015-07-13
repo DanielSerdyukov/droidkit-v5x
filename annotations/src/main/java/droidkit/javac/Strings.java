@@ -62,7 +62,7 @@ final class Strings {
     }
 
     static String toUnderScope(String camelCase) {
-        return capitalize(camelCase).replaceAll("([A-Z])([a-z])", "$1_$2");
+        return camelCase.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
     }
 
     static String capitalize(String string) {

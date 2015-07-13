@@ -10,13 +10,12 @@ import org.sqlite.database.sqlite.SQLiteOpenHelper;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
-import droidkit.database.DatabaseUtils;
 import droidkit.util.Objects;
 
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteOrgClient extends SQLiteClient {
+class SQLiteOrgClient extends SQLiteClient {
 
     private final SQLiteOpenHelper mHelper;
 
@@ -141,7 +140,7 @@ public class SQLiteOrgClient extends SQLiteClient {
         public void rebind(@NonNull Object... args) {
             mStmt.clearBindings();
             for (int i = 0; i < args.length; ++i) {
-                DatabaseUtils.bindObjectToStatement(this, i + 1, args[i]);
+                bindObjectToStatement(this, i + 1, args[i]);
             }
         }
 

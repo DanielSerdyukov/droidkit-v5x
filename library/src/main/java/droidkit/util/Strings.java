@@ -29,4 +29,12 @@ public final class Strings {
         return string;
     }
 
+    public static String toUnderScope(String string) {
+        return string.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
+    }
+
+    public static String capitalize(String string) {
+        return Character.toUpperCase(string.charAt(0)) + string.substring(1);
+    }
+
 }

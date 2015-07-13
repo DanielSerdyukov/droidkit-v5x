@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 /**
  * @author Daniel Serdyukov
  */
-public interface SQLiteDatabase {
+interface SQLiteDatabase {
 
     boolean inTransaction();
 
