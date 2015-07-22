@@ -51,6 +51,7 @@ class SQLiteObjectMaker {
             new IntConversion(),
             new LongConversion(),
             new DoubleConversion(),
+            new BooleanConversion(),
             new StringConversion(),
             new DateTimeConversion(),
             new FloatConversion(),
@@ -298,6 +299,22 @@ class SQLiteObjectMaker {
                            String fieldName, String columnName, Type type) {
             columns.add(columnName + " REAL");
             instantiate.addStatement("object.$L = $T.getDouble(cursor, $S)", fieldName, DB_UTILS, columnName);
+        }
+
+    }
+
+    private static class BooleanConversion extends IntConversion {
+
+        @Override
+        public boolean isAcceptable(ProcessingEnvironment processingEnv, Type type) {
+            return TypeKind.BOOLEAN == type.getKind();
+        }
+
+        @Override
+        public void accept(List<String> columns, CodeBlock.Builder instantiate,
+                           String fieldName, String columnName, Type type) {
+            columns.add(columnName + " INTEGER");
+            instantiate.addStatement("object.$L = $T.getBoolean(cursor, $S)", fieldName, DB_UTILS, columnName);
         }
 
     }

@@ -57,9 +57,9 @@ class SQLiteObjectVisitor extends TreeTranslator {
                 @Override
                 public void visitAnnotation(JCTree.JCAnnotation jcAnnotation) {
                     super.visitAnnotation(jcAnnotation);
-                    if (SQLitePk.class.getName().equals(jcAnnotation.type.toString())) {
+                    if (SQLitePk.class.getName().equals(String.valueOf(jcAnnotation.type))) {
                         visitPrimaryKey(jcVariableDecl, jcAnnotation);
-                    } else if (SQLiteColumn.class.getName().equals(jcAnnotation.type.toString())) {
+                    } else if (SQLiteColumn.class.getName().equals(String.valueOf(jcAnnotation.type))) {
                         visitColumn(jcVariableDecl, jcAnnotation);
                     }
                 }

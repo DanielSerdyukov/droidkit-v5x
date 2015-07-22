@@ -4,7 +4,8 @@ development:
     - gradle clean testDebugUnitTest
     - gradle sonarqube
   tags:
-    - android-23.0.0-rc3
+    - android-sdk
+    - build-tools-latest
   only:
     - master
 
@@ -12,6 +13,7 @@ bintray:
   script:
     - gradle clean assembleRelease bintrayUpload
   tags:
-    - android-23.0.0-rc3
+    - android-sdk
+    - build-tools-latest
   only:
     - /^v.*$/
