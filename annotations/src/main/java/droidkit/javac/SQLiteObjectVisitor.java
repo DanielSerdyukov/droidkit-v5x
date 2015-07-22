@@ -122,7 +122,7 @@ class SQLiteObjectVisitor extends ElementScanner7<Void, Void> {
                     final ListBuffer<JCTree> defs = new ListBuffer<>();
                     defs.addAll(jcClassDecl.defs);
                     defs.add(mTreeMaker.VarDef(
-                            mTreeMaker.Modifiers(0),
+                            mTreeMaker.Modifiers(Flags.TRANSIENT),
                             mNames.fromString("mClientRef"),
                             mTreeMaker.TypeApply(
                                     mTypes.getClass(Reference.class),
