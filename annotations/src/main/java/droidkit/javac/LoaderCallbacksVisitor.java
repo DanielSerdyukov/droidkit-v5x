@@ -150,7 +150,8 @@ class LoaderCallbacksVisitor extends ElementScanner7<Void, Void> {
             for (final Map.Entry<Integer, CodeBlock> entry : mOnCreate.entrySet()) {
                 builder.addCode(CodeBlock.builder()
                         .indent().add("case $L:\n", entry.getKey())
-                        .indent().add(entry.getValue()).unindent().unindent()
+                        .indent().add(entry.getValue())
+                        .unindent().unindent()
                         .build());
             }
             builder.endControlFlow();
@@ -177,7 +178,9 @@ class LoaderCallbacksVisitor extends ElementScanner7<Void, Void> {
             for (final Map.Entry<Integer, CodeBlock> entry : mOnLoad.entrySet()) {
                 builder.addCode(CodeBlock.builder()
                         .indent().add("case $L:\n", entry.getKey())
-                        .indent().add(entry.getValue()).unindent().unindent()
+                        .indent().add(entry.getValue())
+                        .addStatement("break")
+                        .unindent().unindent()
                         .build());
             }
             builder.endControlFlow();
@@ -203,7 +206,9 @@ class LoaderCallbacksVisitor extends ElementScanner7<Void, Void> {
             for (final Map.Entry<Integer, CodeBlock> entry : mOnReset.entrySet()) {
                 builder.addCode(CodeBlock.builder()
                         .indent().add("case $L:\n", entry.getKey())
-                        .indent().add(entry.getValue()).unindent().unindent()
+                        .indent().add(entry.getValue())
+                        .addStatement("break")
+                        .unindent().unindent()
                         .build());
             }
             builder.endControlFlow();
