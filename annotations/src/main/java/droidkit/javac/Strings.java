@@ -73,4 +73,11 @@ final class Strings {
         return string == null || string.isEmpty();
     }
 
+    static String nonEmpty(String string, String emptyValue) {
+        if (isNullOrEmpty(string)) {
+            return emptyValue;
+        }
+        return string;
+    }
+
 }

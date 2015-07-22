@@ -1,8 +1,5 @@
 package droidkit.javac;
 
-import com.sun.source.util.Trees;
-import com.sun.tools.javac.tree.JCTree;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -21,11 +18,8 @@ class SQLiteObjectHandler implements AnnotationHandler {
 
     private final ProcessingEnvironment mProcessingEnv;
 
-    private final Trees mTrees;
-
     SQLiteObjectHandler(ProcessingEnvironment processingEnv) {
         mProcessingEnv = processingEnv;
-        mTrees = Trees.instance(processingEnv);
     }
 
     @Override
@@ -33,11 +27,18 @@ class SQLiteObjectHandler implements AnnotationHandler {
         if (SQLiteObject.class.getName().equals(annotation.getQualifiedName().toString())) {
             Observable.from(roundEnv.getElementsAnnotatedWith(annotation))
                     .filter(new NotInNestedClass())
-                    .subscribe(new Action1<Element>() {
+                    .map(new Func1<Element, TypeElement>() {
                         @Override
-                        public void call(Element element) {
-                            ((JCTree) mTrees.getTree(element)).accept(new SQLiteObjectVisitor(
-                                    mProcessingEnv, (TypeElement) element));
+                        public TypeElement call(Element element) {
+                            return (TypeElement) element;
+                        }
+                    })
+                    .subscribe(new Action1<TypeElement>() {
+                        @Override
+                        public void call(TypeElement element) {
+                            final SQLiteObjectVisitor visitor = new SQLiteObjectVisitor(mProcessingEnv, element);
+                            element.accept(visitor, null);
+                            visitor.brewJavaClass();
                         }
                     });
         }

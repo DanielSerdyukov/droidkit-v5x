@@ -1,18 +1,13 @@
 package droidkit.javac;
 
-import com.sun.tools.javac.tree.JCTree;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Locale;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
-
-import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -38,21 +33,6 @@ class Utils {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    static <T> T getAnnotationValue(JCTree.JCAnnotation jcAnnotation, String key, T defaultValue) {
-        for (final JCTree.JCExpression arg : jcAnnotation.args) {
-            if (arg instanceof JCTree.JCAssign) {
-                final JCTree.JCAssign assign = (JCTree.JCAssign) arg;
-                if (key.equals(assign.lhs.toString())) {
-                    if (assign.rhs instanceof JCTree.JCLiteral) {
-                        return (T) ((JCTree.JCLiteral) assign.rhs).value;
-                    }
-                }
-            }
-        }
-        return defaultValue;
-    }
-
     static boolean isSubtype(ProcessingEnvironment processingEnv, Element element, String fqcn) {
         return processingEnv.getTypeUtils().isSubtype(element.asType(),
                 processingEnv.getElementUtils().getTypeElement(fqcn).asType());
@@ -71,7 +51,6 @@ class Utils {
     static <T> Collection<T> slice(Collection<T> collection, int from) {
         return new ArrayList<>(collection).subList(from, collection.size());
     }
-
 
 
 }

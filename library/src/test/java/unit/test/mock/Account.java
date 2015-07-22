@@ -1,5 +1,7 @@
 package unit.test.mock;
 
+import android.database.sqlite.SQLiteDatabase;
+
 import droidkit.annotation.SQLiteColumn;
 import droidkit.annotation.SQLiteObject;
 import droidkit.annotation.SQLitePk;
@@ -10,10 +12,12 @@ import droidkit.annotation.SQLitePk;
 @SQLiteObject("accounts")
 public class Account {
 
-    @SQLitePk(3)
+    public static final String COMMENT = "comment_text";
+
+    @SQLitePk(SQLiteDatabase.CONFLICT_FAIL)
     private long mId;
 
-    @SQLiteColumn
+    @SQLiteColumn(COMMENT)
     private String mComment;
 
     @SQLiteColumn
