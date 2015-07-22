@@ -32,7 +32,7 @@ android {
 
 dependencies {
     compile project(':annotations')
-    compile 'com.android.support:support-v13:22.2.0'
+    compile 'com.android.support:support-v13:22.2.1'
     compile 'io.reactivex:rxandroid:0.24.0'
     compile 'com.squareup:javapoet:1.2.0'
     provided 'org.sqlite.android:sqlite:3.8.10.2'
