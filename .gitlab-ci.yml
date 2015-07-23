@@ -1,9 +1,7 @@
-image: exzogeni/android-build-tools
-
 development:
   script:
     - gradle -version
-    - gradle clean testDebugUnitTest
+    - gradle clean testDebugUnitTest --info
     - gradle sonarqube
   tags:
     - android-sdk
