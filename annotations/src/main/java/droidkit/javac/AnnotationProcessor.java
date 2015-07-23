@@ -1,18 +1,12 @@
 package droidkit.javac;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-
-import rx.Observable;
-import rx.functions.Action1;
 
 /**
  * @author Daniel Serdyukov
@@ -27,7 +21,17 @@ import rx.functions.Action1;
 })
 public class AnnotationProcessor extends AbstractProcessor {
 
-    private final List<AnnotationHandler> mHandlers = new ArrayList<>();
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        return false;
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
+    }
+
+    /*private final List<AnnotationHandler> mHandlers = new ArrayList<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -60,6 +64,6 @@ public class AnnotationProcessor extends AbstractProcessor {
         });
         SQLiteObjectMaker.brewSchemaClass(processingEnv);
         return true;
-    }
+    }*/
 
 }

@@ -22,8 +22,7 @@ public final class Sequence {
     }
 
     public int nextInt() {
-        nextLong();
-        return mInitialValue.intValue();
+        return (int) nextLong();
     }
 
     private static final class Holder {

@@ -12,7 +12,7 @@ import rx.functions.Func1;
 /**
  * @author Daniel Serdyukov
  */
-public final class Lists {
+public abstract class Lists {
 
     private Lists() {
     }

@@ -13,7 +13,9 @@ import java.util.Map;
 
 /**
  * @author Daniel Serdyukov
+ * @deprecated since 5.0.1
  */
+@Deprecated
 public final class Dynamic {
 
     private static final Map<Class<?>, Class<?>> BOXING = new HashMap<>();

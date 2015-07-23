@@ -13,7 +13,7 @@ import rx.functions.Func1;
 /**
  * @author Daniel Serdyukov
  */
-public final class Iterables {
+public abstract class Iterables {
 
     private Iterables() {
     }

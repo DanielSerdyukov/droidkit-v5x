@@ -38,14 +38,10 @@ dependencies {
     provided 'org.sqlite.android:sqlite:3.8.10.2'
     provided 'net.danlew:android.joda:2.8.1'
     testCompile 'junit:junit:4.12'
-    testCompile('org.robolectric:robolectric:3.0-rc3') {
-        exclude group: 'commons-logging', module: 'commons-logging'
-        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-    }
+    testCompile 'org.robolectric:robolectric:3.0'
     testCompile 'org.apache.maven:maven-ant-tasks:2.1.3'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2'
     androidTestCompile 'com.android.support.test:runner:0.3'
-    androidTestCompile 'org.sqlite.android:sqlite:3.8.10.2'
 }
 
 gradle.taskGraph.whenReady {

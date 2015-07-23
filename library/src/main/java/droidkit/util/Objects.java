@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 /**
  * @author Daniel Serdyukov
  */
-public final class Objects {
+public abstract class Objects {
 
     private Objects() {
     }

@@ -8,7 +8,7 @@ import droidkit.content.StringValue;
 /**
  * @author Daniel Serdyukov
  */
-public final class Strings {
+public abstract class Strings {
 
     private Strings() {
     }

@@ -10,7 +10,9 @@ import java.util.List;
 
 /**
  * @author Daniel Serdyukov
+ * @deprecated since 5.0.1
  */
+@Deprecated
 public final class DynamicField {
 
     private DynamicField() {

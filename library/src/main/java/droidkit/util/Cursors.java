@@ -1,4 +1,4 @@
-package droidkit.database;
+package droidkit.util;
 
 import android.database.Cursor;
 import android.support.annotation.NonNull;
@@ -15,9 +15,9 @@ import droidkit.util.Strings;
 /**
  * @author Daniel Serdyukov
  */
-public final class DatabaseUtils {
+public final class Cursors {
 
-    private DatabaseUtils() {
+    private Cursors() {
     }
 
     @NonNull

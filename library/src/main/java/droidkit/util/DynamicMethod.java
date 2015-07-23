@@ -14,7 +14,9 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Daniel Serdyukov
+ * @deprecated since 5.0.1
  */
+@Deprecated
 public final class DynamicMethod {
 
     private DynamicMethod() {

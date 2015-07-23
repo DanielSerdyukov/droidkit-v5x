@@ -14,4 +14,6 @@ public @interface SQLiteObject {
 
     String value();
 
+    boolean activeRecord() default false;
+
 }
