@@ -56,7 +56,7 @@ project(':library') {
         properties {
             properties["sonar.sources"] = android.sourceSets.main.java.srcDirs
             properties["sonar.tests"] = android.sourceSets.test.java.srcDirs
-            properties["sonar.tests"] += android.sourceSets.androidTest.java.srcDirs
+            //properties["sonar.tests"] += android.sourceSets.androidTest.java.srcDirs
             properties["sonar.java.binaries"] = files(["${project.buildDir}/intermediates/classes/debug"])
             properties["sonar.java.test.binaries"] = files(["${project.buildDir}/intermediates/classes/test/debug"])
             properties["sonar.junit.reportsPath"] = "${project.buildDir}/test-results/debug"
