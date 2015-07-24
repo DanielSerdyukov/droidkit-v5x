@@ -30,7 +30,17 @@ public final class ConstructorLookup {
 
     @NonNull
     @SuppressWarnings("unchecked")
-    <T> ConstructorHandle<T> find(@NonNull Class<T> clazz, @NonNull Class<?>... argTypes)
+    public <T> ConstructorHandle<T> find(@NonNull String fqcn, @NonNull Class<?>... argTypes) throws DynamicException {
+        try {
+            return (ConstructorHandle<T>) find(Class.forName(fqcn), argTypes);
+        } catch (DynamicException | ClassNotFoundException e) {
+            throw new DynamicException(e);
+        }
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public <T> ConstructorHandle<T> find(@NonNull Class<T> clazz, @NonNull Class<?>... argTypes)
             throws DynamicException {
         final String methodKey = makeKey(clazz, argTypes);
         ConstructorHandle<T> constructorHandle = (ConstructorHandle<T>) mCache.get(methodKey);

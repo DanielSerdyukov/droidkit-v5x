@@ -47,6 +47,8 @@ class SQLiteObjectVisitor extends ElementScanner {
 
     private static final String PRIMARY_KEY = "INTEGER PRIMARY KEY";
 
+    private static final ClassName CURSORS = ClassName.get("droidkit.util", "Cursors");
+
     private static final List<TypeConversion> CONVERSIONS = Arrays.asList(
             new LongConversion(),
             new IntConversion(),
@@ -177,6 +179,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " INTEGER" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getLong(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -192,6 +197,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " INTEGER" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getInt(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -207,6 +215,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " INTEGER" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getShort(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -222,6 +233,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " REAL" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getDouble(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -237,6 +251,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " REAL" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getFloat(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -252,6 +269,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " INTEGER" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getBoolean(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -267,6 +287,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " TEXT" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getString(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -282,6 +305,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " INTEGER" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getBigInt(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -297,21 +323,34 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " REAL" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getBigDec(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
 
     private static class EnumConversion implements TypeConversion {
 
+        private ClassName mEnumType;
+
         @Override
         public Boolean call(SQLiteObjectVisitor visitor, VariableElement field) {
-            return visitor.isTypeOfKind(ElementKind.ENUM, field.asType());
+            if (visitor.isTypeOfKind(ElementKind.ENUM, field.asType())) {
+                mEnumType = ClassName.get((TypeElement) visitor.asElement(field.asType()));
+                return true;
+            }
+            return false;
         }
 
         @Override
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " TEXT" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getEnum(cursor, $S, $T.class)",
+                            fieldName, CURSORS, columnName, mEnumType)
+                    .build());
         }
 
     }
@@ -327,6 +366,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " INTEGER" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getDateTime(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -343,6 +385,9 @@ class SQLiteObjectVisitor extends ElementScanner {
         public void call(SQLiteObjectVisitor visitor, String fieldName, String columnName,
                          ConflictResolution conflictResolution) {
             visitor.addColumn(fieldName, columnName, " BLOB" + conflictResolution.call());
+            visitor.addInitStatement(CodeBlock.builder()
+                    .addStatement("object.$L = $T.getBlob(cursor, $S)", fieldName, CURSORS, columnName)
+                    .build());
         }
 
     }
@@ -379,6 +424,9 @@ class SQLiteObjectVisitor extends ElementScanner {
                 final String fieldName = String.valueOf(field.getSimpleName());
                 visitor.addSetter(fieldName, Strings.nonEmpty(column.setter(), getSetterName(fieldName)));
                 visitor.addColumn(fieldName, ROWID, PRIMARY_KEY + CONFLICT_RESOLUTIONS.get(column.value()).call());
+                visitor.addInitStatement(CodeBlock.builder()
+                        .addStatement("object.$L = $T.getLong(cursor, $S)", fieldName, CURSORS, ROWID)
+                        .build());
             } else {
                 visitor.printMessage(Diagnostic.Kind.ERROR, field, "Unexpected primary key type (expected 'long')");
             }

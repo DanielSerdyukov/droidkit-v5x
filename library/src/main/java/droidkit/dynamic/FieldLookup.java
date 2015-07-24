@@ -28,7 +28,7 @@ public final class FieldLookup {
     }
 
     @NonNull
-    FieldHandle find(@NonNull Class<?> clazz, @NonNull String name)
+    public FieldHandle find(@NonNull Class<?> clazz, @NonNull String name)
             throws DynamicException {
         final String methodKey = makeKey(clazz, name);
         FieldHandle fieldHandle = mCache.get(methodKey);

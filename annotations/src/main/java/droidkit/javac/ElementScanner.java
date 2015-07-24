@@ -81,6 +81,10 @@ class ElementScanner extends ElementScanner7<Void, Void> {
                 && kind == mTypes.asElement(t1).getKind();
     }
 
+    Element asElement(TypeMirror t1) {
+        return mTypes.asElement(t1);
+    }
+
     JavaFileObject createSourceFile(CharSequence name, Element... originatingElements) throws IOException {
         return mFiler.createSourceFile(name, originatingElements);
     }

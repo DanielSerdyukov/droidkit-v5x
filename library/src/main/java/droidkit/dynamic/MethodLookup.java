@@ -29,7 +29,18 @@ public final class MethodLookup {
     }
 
     @NonNull
-    MethodHandle find(@NonNull Class<?> clazz, @NonNull String name, @NonNull Class<?>... argTypes)
+    public MethodHandle find(@NonNull String fqcn, @NonNull String name, @NonNull Class<?>... argTypes)
+            throws DynamicException {
+        try {
+            return find(Class.forName(fqcn), name, argTypes);
+        } catch (DynamicException | ClassNotFoundException e) {
+            throw new DynamicException(e);
+        }
+    }
+
+
+    @NonNull
+    public MethodHandle find(@NonNull Class<?> clazz, @NonNull String name, @NonNull Class<?>... argTypes)
             throws DynamicException {
         final String methodKey = makeKey(clazz, name, argTypes);
         MethodHandle methodHandle = mCache.get(methodKey);
