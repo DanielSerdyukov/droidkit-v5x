@@ -2,6 +2,7 @@ package droidkit.javac;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -32,6 +33,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 import droidkit.annotation.SQLiteColumn;
+import droidkit.annotation.SQLiteObject;
 import droidkit.annotation.SQLitePk;
 import rx.functions.Action3;
 import rx.functions.Action4;
@@ -89,6 +91,8 @@ class SQLiteObjectVisitor extends ElementScanner {
 
     private TypeElement mOriginElement;
 
+    private String mTableName;
+
     public SQLiteObjectVisitor(ProcessingEnvironment processingEnv) {
         super(processingEnv);
         mTrees = Trees.instance(processingEnv);
@@ -105,6 +109,8 @@ class SQLiteObjectVisitor extends ElementScanner {
     public Void visitType(TypeElement element, Void aVoid) {
         if (mOriginElement == null) {
             mOriginElement = element;
+            final SQLiteObject annotation = element.getAnnotation(SQLiteObject.class);
+            mTableName = annotation.value();
         }
         return super.visitType(element, aVoid);
     }
@@ -127,7 +133,8 @@ class SQLiteObjectVisitor extends ElementScanner {
             final TypeSpec typeSpec = TypeSpec.classBuilder(mOriginElement.getSimpleName() + "$SQLite")
                     .addModifiers(Modifier.PUBLIC)
                     .addOriginatingElement(mOriginElement)
-                    .addMethod(new InstantiateMethod().call(mOriginElement, mInitBlock.build()))
+                    .addField(table())
+                    .addMethod(instantiate())
                     .build();
             printMessage(Diagnostic.Kind.NOTE, "%s", typeSpec);
             final JavaFile javaFile = JavaFile.builder(mOriginElement.getEnclosingElement().toString(), typeSpec)
@@ -157,6 +164,23 @@ class SQLiteObjectVisitor extends ElementScanner {
 
     private void addInitStatement(CodeBlock block) {
         mInitBlock.add(block);
+    }
+
+    private FieldSpec table() {
+        return FieldSpec.builder(String.class, "TABLE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$S", mTableName)
+                .build();
+    }
+
+    private MethodSpec instantiate() {
+        return MethodSpec.methodBuilder("instantiate")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(ClassName.get("android.database", "Cursor"), "cursor")
+                .returns(ClassName.get(mOriginElement))
+                .addStatement("final $1T object = new $1T()", ClassName.get(mOriginElement))
+                .addCode(mInitBlock.build())
+                .addStatement("return object")
+                .build();
     }
 
     private interface ConflictResolution extends Func0<String> {
@@ -495,19 +519,5 @@ class SQLiteObjectVisitor extends ElementScanner {
         }
     }
     //endregion
-
-    private static class InstantiateMethod implements Func2<TypeElement, CodeBlock, MethodSpec> {
-        @Override
-        public MethodSpec call(TypeElement originElement, CodeBlock codeBlock) {
-            return MethodSpec.methodBuilder("instantiate")
-                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .addParameter(ClassName.get("android.database", "Cursor"), "cursor")
-                    .returns(ClassName.get(originElement))
-                    .addStatement("final $1T object = new $1T()", ClassName.get(originElement))
-                    .addCode(codeBlock)
-                    .addStatement("return object")
-                    .build();
-        }
-    }
 
 }

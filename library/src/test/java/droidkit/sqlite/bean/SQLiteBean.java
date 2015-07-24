@@ -1,4 +1,4 @@
-package droidkit.sqlite;
+package droidkit.sqlite.bean;
 
 import org.joda.time.DateTime;
 
@@ -12,8 +12,10 @@ import droidkit.annotation.SQLitePk;
 /**
  * @author Daniel Serdyukov
  */
-@SQLiteObject("types1")
-class SQLiteTypes {
+@SQLiteObject("beans")
+public class SQLiteBean {
+
+    public static final String TABLE = "beans";
 
     public static final String[] COLUMNS = new String[]{
             "_id",

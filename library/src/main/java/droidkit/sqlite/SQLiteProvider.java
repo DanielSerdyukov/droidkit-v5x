@@ -14,16 +14,20 @@ import android.support.annotation.Nullable;
  */
 public class SQLiteProvider extends ContentProvider {
 
+    private static final String APP_DB = "app.db";
+
     private SQLiteClient mClient;
 
     @Override
     public boolean onCreate() {
+        mClient = createClient();
         return false;
     }
 
     @Override
     public void attachInfo(Context context, ProviderInfo info) {
         super.attachInfo(context, info);
+        SQLiteUris.attachInfo(info);
     }
 
     @Override
@@ -51,6 +55,10 @@ public class SQLiteProvider extends ContentProvider {
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String where,
                       @Nullable String[] bindArgs) {
         return 0;
+    }
+
+    protected SQLiteClient createClient() {
+        return new SQLiteClientAndroid(getContext(), APP_DB, 1);
     }
 
 }

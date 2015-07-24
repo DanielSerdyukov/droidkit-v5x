@@ -28,8 +28,16 @@ public final class FieldLookup {
     }
 
     @NonNull
-    public FieldHandle find(@NonNull Class<?> clazz, @NonNull String name)
-            throws DynamicException {
+    public FieldHandle find(@NonNull String fqcn, @NonNull String name) throws DynamicException {
+        try {
+            return find(Class.forName(fqcn), name);
+        } catch (ClassNotFoundException e) {
+            throw new DynamicException(e);
+        }
+    }
+
+    @NonNull
+    public FieldHandle find(@NonNull Class<?> clazz, @NonNull String name) throws DynamicException {
         final String methodKey = makeKey(clazz, name);
         FieldHandle fieldHandle = mCache.get(methodKey);
         if (fieldHandle == null) {

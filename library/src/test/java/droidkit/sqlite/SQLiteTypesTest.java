@@ -17,6 +17,7 @@ import java.security.SecureRandom;
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.dynamic.MethodLookup;
+import droidkit.sqlite.bean.SQLiteBean;
 
 /**
  * @author Daniel Serdyukov
@@ -27,7 +28,7 @@ public class SQLiteTypesTest {
 
     private Object[] mObjects;
 
-    private SQLiteTypes mInstance;
+    private SQLiteBean mInstance;
 
     @Before
     public void setUp() throws Exception {
@@ -44,14 +45,14 @@ public class SQLiteTypesTest {
                 BigDecimal.valueOf(random.nextDouble()),
                 BigInteger.valueOf(random.nextLong()),
                 new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9},
-                SQLiteTypes.Role.ADMIN,
+                SQLiteBean.Role.ADMIN,
                 DateTime.now().getMillis()
         };
-        final MatrixCursor cursor = new MatrixCursor(SQLiteTypes.COLUMNS);
+        final MatrixCursor cursor = new MatrixCursor(SQLiteBean.COLUMNS);
         cursor.addRow(mObjects);
         cursor.moveToFirst();
         mInstance = MethodLookup.local()
-                .find("droidkit.sqlite.Types1$SQLite", "instantiate", Cursor.class)
+                .find(SQLiteBean.class.getName() + "$SQLite", "instantiate", Cursor.class)
                 .invokeStatic(cursor);
     }
 
