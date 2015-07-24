@@ -16,11 +16,11 @@ public final class MethodLookup {
     private MethodLookup() {
     }
 
-    static MethodLookup local() {
+    public static MethodLookup local() {
         return new MethodLookup();
     }
 
-    static MethodLookup global() {
+    public static MethodLookup global() {
         return Holder.INSTANCE;
     }
 
@@ -29,7 +29,7 @@ public final class MethodLookup {
     }
 
     @NonNull
-    MethodHandle findMethod(@NonNull Class<?> clazz, @NonNull String name, @NonNull Class<?>... argTypes)
+    MethodHandle find(@NonNull Class<?> clazz, @NonNull String name, @NonNull Class<?>... argTypes)
             throws DynamicException {
         final String methodKey = makeKey(clazz, name, argTypes);
         MethodHandle methodHandle = mCache.get(methodKey);

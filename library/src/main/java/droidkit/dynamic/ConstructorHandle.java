@@ -19,14 +19,6 @@ public class ConstructorHandle<T> {
         mConstructor = constructor;
     }
 
-    public static ConstructorLookup lookup() {
-        return ConstructorLookup.local();
-    }
-
-    public static ConstructorLookup lookupGlobal() {
-        return ConstructorLookup.global();
-    }
-
     @NonNull
     static <T> ConstructorHandle<T> find(@NonNull Class<T> clazz, @NonNull Class<?>... argTypes)
             throws DynamicException {

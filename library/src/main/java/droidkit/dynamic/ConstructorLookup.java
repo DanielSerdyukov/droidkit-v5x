@@ -16,11 +16,11 @@ public final class ConstructorLookup {
     private ConstructorLookup() {
     }
 
-    static ConstructorLookup local() {
+    public static ConstructorLookup local() {
         return new ConstructorLookup();
     }
 
-    static ConstructorLookup global() {
+    public static ConstructorLookup global() {
         return Holder.INSTANCE;
     }
 
@@ -30,7 +30,7 @@ public final class ConstructorLookup {
 
     @NonNull
     @SuppressWarnings("unchecked")
-    <T> ConstructorHandle<T> findConstructor(@NonNull Class<T> clazz, @NonNull Class<?>... argTypes)
+    <T> ConstructorHandle<T> find(@NonNull Class<T> clazz, @NonNull Class<?>... argTypes)
             throws DynamicException {
         final String methodKey = makeKey(clazz, argTypes);
         ConstructorHandle<T> constructorHandle = (ConstructorHandle<T>) mCache.get(methodKey);

@@ -18,9 +18,9 @@ public class MethodHandleTest {
 
     @Test
     public void testInvokeStatic() throws Exception {
-        final MethodLookup lookup = MethodHandle.lookup();
-        Assert.assertTrue(lookup.findMethod(Bar.class, "foo").<Boolean>invokeStatic());
-        Assert.assertEquals(10.3, lookup.findMethod(Bar.class, "bar", Double.TYPE)
+        final MethodLookup lookup = MethodLookup.local();
+        Assert.assertTrue(lookup.find(Bar.class, "foo").<Boolean>invokeStatic());
+        Assert.assertEquals(10.3, lookup.find(Bar.class, "bar", Double.TYPE)
                 .<Double>invokeStatic(10.3), 0d);
 
     }
@@ -28,10 +28,10 @@ public class MethodHandleTest {
     @Test
     public void testInvokeVirtual() throws Exception {
         final Foo foo = new Bar();
-        final MethodLookup lookup = MethodHandle.lookup();
-        Assert.assertEquals(Integer.valueOf(10), lookup.findMethod(Bar.class, "foo", Integer.TYPE)
+        final MethodLookup lookup = MethodLookup.local();
+        Assert.assertEquals(Integer.valueOf(10), lookup.find(Bar.class, "foo", Integer.TYPE)
                 .<Integer>invokeVirtual(foo, 10));
-        Assert.assertFalse(lookup.findMethod(Bar.class, "bar", Boolean.TYPE)
+        Assert.assertFalse(lookup.find(Bar.class, "bar", Boolean.TYPE)
                 .<Boolean>invokeVirtual(foo, false));
     }
 

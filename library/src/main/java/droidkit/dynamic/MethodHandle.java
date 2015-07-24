@@ -19,14 +19,6 @@ public class MethodHandle {
         mMethod = method;
     }
 
-    public static MethodLookup lookup() {
-        return MethodLookup.local();
-    }
-
-    public static MethodLookup lookupGlobal() {
-        return MethodLookup.global();
-    }
-
     @NonNull
     static MethodHandle find(@NonNull Class<?> clazz, @NonNull String name, @NonNull Class<?>... argTypes)
             throws DynamicException {

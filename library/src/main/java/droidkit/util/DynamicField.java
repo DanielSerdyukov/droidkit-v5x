@@ -10,7 +10,8 @@ import java.util.List;
 
 /**
  * @author Daniel Serdyukov
- * @deprecated since 5.0.1
+ * @see droidkit.dynamic.FieldHandle
+ * @deprecated since 5.0.1 and will be removed in 5.1.1
  */
 @Deprecated
 public final class DynamicField {

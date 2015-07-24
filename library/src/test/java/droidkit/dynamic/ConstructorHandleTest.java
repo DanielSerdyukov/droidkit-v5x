@@ -20,10 +20,10 @@ public class ConstructorHandleTest {
 
     @Test
     public void testInstantiate() throws Exception {
-        final ConstructorLookup lookup = ConstructorHandle.lookup();
-        final Foo foo = lookup.findConstructor(Foo.class).instantiate();
+        final ConstructorLookup lookup = ConstructorLookup.local();
+        final Foo foo = lookup.find(Foo.class).instantiate();
         Assert.assertTrue(foo.isFoo());
-        final Bar bar = lookup.findConstructor(Bar.class, String.class).instantiate("test");
+        final Bar bar = lookup.find(Bar.class, String.class).instantiate("test");
         Assert.assertTrue(bar.isFoo());
         Assert.assertEquals("test", bar.getKey());
     }
