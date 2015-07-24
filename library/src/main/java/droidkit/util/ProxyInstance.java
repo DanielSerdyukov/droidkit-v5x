@@ -7,7 +7,9 @@ import java.lang.reflect.Method;
 
 /**
  * @author Daniel Serdyukov
+ * @deprecated since 5.0.1
  */
+@Deprecated
 class ProxyInstance implements InvocationHandler {
 
     private final Object mTarget;

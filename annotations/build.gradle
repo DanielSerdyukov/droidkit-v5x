@@ -10,5 +10,5 @@ targetCompatibility = JavaVersion.VERSION_1_7
 dependencies {
     compile files(Jvm.current().getToolsJar())
     compile 'com.squareup:javapoet:1.2.0'
-    compile 'io.reactivex:rxjava:1.0.12'
+    compile 'io.reactivex:rxjava:1.0.13'
 }

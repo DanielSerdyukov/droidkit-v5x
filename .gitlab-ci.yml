@@ -1,7 +1,7 @@
 development:
   script:
     - gradle -version
-    - gradle clean testDebugUnitTest --info
+    - gradle clean testDebugUnitTest
     - gradle sonarqube
   tags:
     - android-sdk

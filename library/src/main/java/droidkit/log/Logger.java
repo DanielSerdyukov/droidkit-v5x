@@ -10,7 +10,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import droidkit.io.IOUtils;
-import droidkit.util.Dynamic;
 
 /**
  * @author Daniel Serdyukov
@@ -21,27 +20,32 @@ public final class Logger {
     }
 
     public static void debug(@NonNull Object format, Object... args) {
-        Log.d(makeTag(Dynamic.getCaller()), formatMessage(format, args));
+        Log.d(makeTag(getCaller()), formatMessage(format, args));
     }
 
     public static void info(@NonNull Object format, Object... args) {
-        Log.i(makeTag(Dynamic.getCaller()), formatMessage(format, args));
+        Log.i(makeTag(getCaller()), formatMessage(format, args));
     }
 
     public static void warn(@NonNull Object format, Object... args) {
-        Log.w(makeTag(Dynamic.getCaller()), formatMessage(format, args));
+        Log.w(makeTag(getCaller()), formatMessage(format, args));
     }
 
     public static void error(@NonNull Object format, Object... args) {
-        Log.e(makeTag(Dynamic.getCaller()), formatMessage(format, args));
+        Log.e(makeTag(getCaller()), formatMessage(format, args));
     }
 
     public static void error(@NonNull Throwable e) {
-        Log.d(makeTag(Dynamic.getCaller()), formatMessage(e));
+        Log.d(makeTag(getCaller()), formatMessage(e));
     }
 
     public static void wtf(@NonNull Object format, Object... args) {
-        Log.wtf(makeTag(Dynamic.getCaller()), formatMessage(format, args));
+        Log.wtf(makeTag(getCaller()), formatMessage(format, args));
+    }
+
+    @NonNull
+    private static StackTraceElement getCaller() {
+        return new Throwable().fillInStackTrace().getStackTrace()[2];
     }
 
     @NonNull
