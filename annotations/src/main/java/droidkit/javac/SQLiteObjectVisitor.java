@@ -5,6 +5,8 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Flags;
@@ -14,14 +16,17 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ElementKind;
@@ -38,6 +43,7 @@ import droidkit.annotation.SQLitePk;
 import rx.functions.Action3;
 import rx.functions.Action4;
 import rx.functions.Func0;
+import rx.functions.Func1;
 import rx.functions.Func2;
 
 /**
@@ -75,7 +81,7 @@ class SQLiteObjectVisitor extends ElementScanner {
             new OnConflictReplace()
     );
 
-    private static final ConflictResolution DEFAULT_RESOLUTION = new OnConflictReplace();
+    private static final CodeBlock.Builder META_BLOCK = CodeBlock.builder();
 
     private final Map<Class<? extends Annotation>, Visitor> mVisitors = new LinkedHashMap<>();
 
@@ -93,23 +99,39 @@ class SQLiteObjectVisitor extends ElementScanner {
 
     private String mTableName;
 
+    private String mPrimaryKey;
+
     public SQLiteObjectVisitor(ProcessingEnvironment processingEnv) {
         super(processingEnv);
         mTrees = Trees.instance(processingEnv);
         mVisitors.put(SQLitePk.class, new SQLitePkVisitor());
         mVisitors.put(SQLiteColumn.class, new SQLiteColumnVisitor());
-        mColumns.put(ROWID, PRIMARY_KEY + DEFAULT_RESOLUTION.call());
     }
 
     static void brewSchema(ProcessingEnvironment processingEnv) {
-
+        final TypeSpec typeSpec = TypeSpec.classBuilder("SQLiteMetaData")
+                .addModifiers(Modifier.PUBLIC)
+                .addStaticBlock(META_BLOCK.build())
+                .build();
+        final JavaFile javaFile = JavaFile.builder("droidkit.sqlite", typeSpec)
+                .addFileComment(AUTO_GENERATED_FILE)
+                .build();
+        try {
+            final JavaFileObject sourceFile = processingEnv.getFiler()
+                    .createSourceFile(javaFile.packageName + "." + typeSpec.name);
+            try (final Writer writer = new BufferedWriter(sourceFile.openWriter())) {
+                javaFile.writeTo(writer);
+            }
+        } catch (IOException e) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getMessage());
+        }
     }
 
     @Override
     public Void visitType(TypeElement element, Void aVoid) {
-        if (mOriginElement == null) {
+        final SQLiteObject annotation = element.getAnnotation(SQLiteObject.class);
+        if (annotation != null) {
             mOriginElement = element;
-            final SQLiteObject annotation = element.getAnnotation(SQLiteObject.class);
             mTableName = annotation.value();
         }
         return super.visitType(element, aVoid);
@@ -129,14 +151,15 @@ class SQLiteObjectVisitor extends ElementScanner {
     @Override
     void brewJava() {
         if (ElementKind.PACKAGE == mOriginElement.getEnclosingElement().getKind()) {
-            printMessage(Diagnostic.Kind.NOTE, "%s", mColumns.keySet());
-            final TypeSpec typeSpec = TypeSpec.classBuilder(mOriginElement.getSimpleName() + "$SQLite")
+            final TypeSpec typeSpec = TypeSpec.classBuilder(mOriginElement.getSimpleName() + "$Helper")
                     .addModifiers(Modifier.PUBLIC)
                     .addOriginatingElement(mOriginElement)
-                    .addField(table())
+                    .addField(clientRef())
+                    .addMethod(attachInfo())
                     .addMethod(instantiate())
+                    .addMethod(insert())
+                    .addMethod(update())
                     .build();
-            printMessage(Diagnostic.Kind.NOTE, "%s", typeSpec);
             final JavaFile javaFile = JavaFile.builder(mOriginElement.getEnclosingElement().toString(), typeSpec)
                     .addFileComment(AUTO_GENERATED_FILE)
                     .build();
@@ -148,9 +171,19 @@ class SQLiteObjectVisitor extends ElementScanner {
                 }
             } catch (IOException e) {
                 printMessage(Diagnostic.Kind.ERROR, mOriginElement, e.getMessage());
-                Logger.getGlobal().throwing("SQLiteObjectVisitor", "brewJava", e);
             }
+            META_BLOCK.addStatement("$T.attachTableInfo($T.class, $S, $S)",
+                    ClassName.get("droidkit.sqlite", "SQLiteSchema"),
+                    ClassName.get(mOriginElement), mTableName,
+                    Strings.transformAndJoin(", ", mColumns.entrySet(), new EntryToString()));
+            META_BLOCK.addStatement("$T.attachHelper($T.class)",
+                    ClassName.get("droidkit.sqlite", "SQLiteProvider"),
+                    ClassName.get(javaFile.packageName, typeSpec.name));
         }
+    }
+
+    private void setPrimaryKey(String fieldName) {
+        mPrimaryKey = fieldName;
     }
 
     private void addColumn(String fieldName, String columnName, String columnDef) {
@@ -166,9 +199,19 @@ class SQLiteObjectVisitor extends ElementScanner {
         mInitBlock.add(block);
     }
 
-    private FieldSpec table() {
-        return FieldSpec.builder(String.class, "TABLE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                .initializer("$S", mTableName)
+    //region helper implementation
+    private FieldSpec clientRef() {
+        return FieldSpec.builder(ParameterizedTypeName.get(
+                ClassName.get(Reference.class),
+                ClassName.get("droidkit.sqlite", "SQLiteClient")
+        ), "sClientRef", Modifier.PRIVATE, Modifier.STATIC).build();
+    }
+
+    private MethodSpec attachInfo() {
+        return MethodSpec.methodBuilder("attachInfo")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(ClassName.get("droidkit.sqlite", "SQLiteClient"), "client")
+                .addStatement("sClientRef = new $T<>(client)", ClassName.get(WeakReference.class))
                 .build();
     }
 
@@ -182,6 +225,65 @@ class SQLiteObjectVisitor extends ElementScanner {
                 .addStatement("return object")
                 .build();
     }
+
+    private MethodSpec insert() {
+        return MethodSpec.methodBuilder("insert")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(ClassName.get("droidkit.sqlite", "SQLiteClient"), "client")
+                .addParameter(ClassName.get(mOriginElement), "object")
+                .returns(TypeName.LONG)
+                .beginControlFlow("if (object.$L > 0)", mPrimaryKey)
+                .addStatement("object.$L = client.executeInsert($S, $L)", mPrimaryKey,
+                        String.format(Locale.US, "INSERT INTO %s(%s) VALUES(%s);", mTableName,
+                                Strings.join(", ", mFields.values()),
+                                Strings.join(", ", Collections.nCopies(mFields.size(), "?"))),
+                        Strings.transformAndJoin(", ", mFields.keySet(), new Func1<String, String>() {
+                            @Override
+                            public String call(String fieldName) {
+                                return "object." + fieldName;
+                            }
+                        }))
+                .nextControlFlow("else")
+                .addStatement("object.$L = client.executeInsert($S, $L)", mPrimaryKey,
+                        String.format(Locale.US, "INSERT INTO %s(%s) VALUES(%s);", mTableName,
+                                Strings.join(", ", mFields.values(), 1),
+                                Strings.join(", ", Collections.nCopies(mFields.size() - 1, "?"))),
+                        Strings.transformAndJoin(", ", mFields.keySet(), new Func1<String, String>() {
+                            @Override
+                            public String call(String fieldName) {
+                                return "object." + fieldName;
+                            }
+                        }, 1))
+                .endControlFlow()
+                .addStatement("$T.notifyChange($T.class)",
+                        ClassName.get("droidkit.sqlite", "SQLiteSchema"),
+                        ClassName.get(mOriginElement))
+                .addStatement("return object.$L", mPrimaryKey)
+                .build();
+    }
+
+    private MethodSpec update() {
+        return MethodSpec.methodBuilder("update")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(String.class, "column")
+                .addParameter(Object.class, "value")
+                .addParameter(TypeName.LONG, "rowId")
+                .returns(TypeName.INT)
+                .addStatement("$T affectedRows = 0", TypeName.INT)
+                .addStatement("final $T client = sClientRef.get()", ClassName.get("droidkit.sqlite", "SQLiteClient"))
+                .beginControlFlow("if (client != null)")
+                .addStatement("affectedRows = client.executeUpdateDelete(\"UPDATE $L SET \" + column + \" = ?" +
+                        " WHERE _id = ?;\", $L)", mTableName, "rowId")
+                .beginControlFlow("if (affectedRows > 0)")
+                .addStatement("$T.notifyChange($T.class)",
+                        ClassName.get("droidkit.sqlite", "SQLiteSchema"),
+                        ClassName.get(mOriginElement))
+                .endControlFlow()
+                .endControlFlow()
+                .addStatement("return affectedRows")
+                .build();
+    }
+    //endregion
 
     private interface ConflictResolution extends Func0<String> {
 
@@ -446,6 +548,7 @@ class SQLiteObjectVisitor extends ElementScanner {
             if (TypeKind.LONG == field.asType().getKind()) {
                 final SQLitePk column = (SQLitePk) annotation;
                 final String fieldName = String.valueOf(field.getSimpleName());
+                visitor.setPrimaryKey(fieldName);
                 visitor.addSetter(fieldName, Strings.nonEmpty(column.setter(), getSetterName(fieldName)));
                 visitor.addColumn(fieldName, ROWID, PRIMARY_KEY + CONFLICT_RESOLUTIONS.get(column.value()).call());
                 visitor.addInitStatement(CodeBlock.builder()
@@ -519,5 +622,12 @@ class SQLiteObjectVisitor extends ElementScanner {
         }
     }
     //endregion
+
+    private static class EntryToString implements Func1<Map.Entry<String, String>, String> {
+        @Override
+        public String call(Map.Entry<String, String> entry) {
+            return entry.getKey() + entry.getValue();
+        }
+    }
 
 }

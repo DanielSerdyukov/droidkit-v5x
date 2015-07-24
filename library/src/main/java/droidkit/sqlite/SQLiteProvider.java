@@ -8,26 +8,69 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import droidkit.dynamic.DynamicException;
+import droidkit.dynamic.MethodLookup;
 
 /**
  * @author Daniel Serdyukov
  */
 public class SQLiteProvider extends ContentProvider {
 
+    private static final List<Class<?>> HELPERS = new CopyOnWriteArrayList<>();
+
     private static final String APP_DB = "app.db";
+
+    private static final String MIME_DIR = "vnd.android.cursor.dir/";
+
+    private static final String MIME_ITEM = "vnd.android.cursor.item/";
+
+    private static final int URI_MATCH_ALL = 1;
+
+    private static final int URI_MATCH_ID = 2;
 
     private SQLiteClient mClient;
 
+    static void attachHelper(@NonNull Class<?> helper) {
+        HELPERS.add(helper);
+    }
+
+    private static int matchUri(@NonNull Uri uri) {
+        final List<String> pathSegments = uri.getPathSegments();
+        final int pathSegmentsSize = pathSegments.size();
+        if (pathSegmentsSize == 1) {
+            return URI_MATCH_ALL;
+        } else if (pathSegmentsSize == 2
+                && TextUtils.isDigitsOnly(pathSegments.get(1))) {
+            return URI_MATCH_ID;
+        }
+        throw new SQLiteException("Unknown uri '" + uri + "'");
+    }
+
     @Override
     public boolean onCreate() {
-        mClient = createClient();
-        return false;
+
+        return true;
     }
 
     @Override
     public void attachInfo(Context context, ProviderInfo info) {
         super.attachInfo(context, info);
-        SQLiteUris.attachInfo(info);
+        mClient = createClient();
+        SQLiteSchema.attachInfo(info);
+        for (final Class<?> helper : HELPERS) {
+            try {
+                MethodLookup.local()
+                        .find(helper, "attachInfo", SQLiteClient.class)
+                        .invokeStatic(mClient);
+            } catch (DynamicException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -38,7 +81,10 @@ public class SQLiteProvider extends ContentProvider {
 
     @Override
     public String getType(@NonNull Uri uri) {
-        return null;
+        if (matchUri(uri) == URI_MATCH_ID) {
+            return MIME_ITEM + SQLiteSchema.tableOf(uri);
+        }
+        return MIME_DIR + SQLiteSchema.tableOf(uri);
     }
 
     @Override

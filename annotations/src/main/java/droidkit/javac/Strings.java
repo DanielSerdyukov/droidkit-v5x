@@ -21,9 +21,25 @@ final class Strings {
         });
     }
 
+    static <T> String join(String glue, Iterable<T> iterable, int offset) {
+        return transformAndJoin(glue, iterable, new Func1<T, String>() {
+            @Override
+            public String call(T t) {
+                return String.valueOf(t);
+            }
+        }, offset);
+    }
+
     static <T, R> String transformAndJoin(String glue, Iterable<T> iterable, Func1<T, R> func) {
+        return transformAndJoin(glue, iterable, func, 0);
+    }
+
+    static <T, R> String transformAndJoin(String glue, Iterable<T> iterable, Func1<T, R> func, int offset) {
         final StringBuilder sb = new StringBuilder();
         final Iterator<T> iterator = iterable.iterator();
+        for (int i = 0; i < offset && iterator.hasNext(); ++i) {
+            iterator.next();
+        }
         if (iterator.hasNext()) {
             do {
                 sb.append(func.call(iterator.next()));

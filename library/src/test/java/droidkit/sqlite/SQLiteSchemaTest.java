@@ -18,7 +18,7 @@ import droidkit.sqlite.util.SQLiteTestEnv;
  */
 @Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
-public class SQLiteUrisTest {
+public class SQLiteSchemaTest {
 
     @Before
     public void setUp() throws Exception {
@@ -26,13 +26,18 @@ public class SQLiteUrisTest {
     }
 
     @Test
-    public void testResolve() throws Exception {
+    public void testResolveTable() throws Exception {
+        Assert.assertEquals(SQLiteBean.TABLE, SQLiteSchema.resolveTable(SQLiteBean.class));
+    }
+
+    @Test
+    public void testResolveUri() throws Exception {
         final Uri expected = new Uri.Builder()
                 .scheme("content")
                 .authority(BuildConfig.APPLICATION_ID)
                 .path(SQLiteBean.TABLE)
                 .build();
-        final Uri actual = SQLiteUris.resolve(SQLiteBean.class);
+        final Uri actual = SQLiteSchema.resolveUri(SQLiteBean.class);
         Assert.assertEquals(expected, actual);
     }
 
