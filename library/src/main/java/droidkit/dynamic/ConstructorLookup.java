@@ -54,7 +54,7 @@ public final class ConstructorLookup {
         return constructorHandle;
     }
 
-    private static final class Holder {
+    private static abstract class Holder {
         public static final ConstructorLookup INSTANCE = new ConstructorLookup();
     }
 

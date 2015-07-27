@@ -50,7 +50,7 @@ public final class FieldLookup {
         return fieldHandle;
     }
 
-    private static final class Holder {
+    private static abstract class Holder {
         public static final FieldLookup INSTANCE = new FieldLookup();
     }
 

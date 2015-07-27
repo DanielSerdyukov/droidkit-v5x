@@ -3,6 +3,7 @@ package droidkit.util;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -52,6 +53,12 @@ public abstract class Lists {
             transformed.add(transform.call(element));
         }
         return transformed;
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public static <T> T[] toArray(@NonNull List<T> list, @NonNull Class<T> type) {
+        return list.toArray((T[]) Array.newInstance(type, list.size()));
     }
 
     private static <T> void checkNotEmpty(@NonNull List<T> list) {

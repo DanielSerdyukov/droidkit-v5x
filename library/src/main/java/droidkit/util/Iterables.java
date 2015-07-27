@@ -3,6 +3,7 @@ package droidkit.util;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -16,6 +17,13 @@ import rx.functions.Func1;
 public abstract class Iterables {
 
     private Iterables() {
+    }
+
+    public static boolean isEmpty(@NonNull Iterable<?> iterable) {
+        if (iterable instanceof Collection) {
+            return ((Collection) iterable).isEmpty();
+        }
+        return iterable.iterator().hasNext();
     }
 
     @NonNull
@@ -61,6 +69,24 @@ public abstract class Iterables {
     }
 
     @NonNull
+    @SuppressWarnings("unchecked")
+    public static <T> T[] toArray(@NonNull Iterable<T> iterable, @NonNull Class<T> type) {
+        if (iterable instanceof Collection) {
+            if (iterable instanceof List) {
+                return Lists.toArray((List<T>) iterable, type);
+            } else {
+                return Lists.toArray(new ArrayList<>((Collection<T>) iterable), type);
+            }
+        } else {
+            final List<T> list = new ArrayList<>();
+            for (final T value : iterable) {
+                list.add(value);
+            }
+            return list.toArray((T[]) Array.newInstance(type, list.size()));
+        }
+    }
+
+    @NonNull
     public static <T, R> Iterable<R> transform(@NonNull Iterable<T> iterable, @NonNull Func1<T, R> transform) {
         if (iterable instanceof List) {
             return Lists.transform((List<T>) iterable, transform);
@@ -72,7 +98,7 @@ public abstract class Iterables {
         return transformed;
     }
 
-    private static <T> T getLast(@NonNull Iterator<T> iterator) {
+    static <T> T getLast(@NonNull Iterator<T> iterator) {
         T last = iterator.next();
         while (iterator.hasNext()) {
             last = iterator.next();

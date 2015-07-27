@@ -59,7 +59,7 @@ public abstract class SQLiteSchema {
     }
 
     public static void notifyChange(@NonNull Class<?> type) {
-        
+
     }
 
     static void attachInfo(ProviderInfo info) {
@@ -89,8 +89,8 @@ public abstract class SQLiteSchema {
     }
 
     @NonNull
-    static String withId(@NonNull Uri uri) {
-        return Lists.getFirst(uri.getPathSegments());
+    static Uri baseUri(@NonNull Uri uri, @NonNull String table) {
+        return uri.buildUpon().path(table).build();
     }
 
     static void attachTableInfo(@NonNull Class<?> type, String table, String columns) {

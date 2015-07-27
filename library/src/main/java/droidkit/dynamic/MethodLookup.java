@@ -54,7 +54,7 @@ public final class MethodLookup {
         return methodHandle;
     }
 
-    private static final class Holder {
+    private static abstract class Holder {
         public static final MethodLookup INSTANCE = new MethodLookup();
     }
 
