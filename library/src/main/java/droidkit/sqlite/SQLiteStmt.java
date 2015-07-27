@@ -25,6 +25,7 @@ public interface SQLiteStmt extends Closeable {
 
     int executeUpdateDelete();
 
+    @Override
     void close();
 
 }

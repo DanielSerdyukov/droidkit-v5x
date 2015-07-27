@@ -123,6 +123,7 @@ public abstract class SQLiteClient implements Closeable {
         }
     }
 
+    @Override
     public void close() {
         closeStatements();
     }

@@ -24,6 +24,7 @@ public interface SQLiteDb extends Closeable {
 
     SQLiteStmt compileStatement(@NonNull String sql);
 
+    @Override
     void close();
 
 }

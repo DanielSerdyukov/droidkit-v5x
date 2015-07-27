@@ -21,6 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
+import droidkit.log.Logger;
 import droidkit.util.Sets;
 import rx.functions.Func1;
 
@@ -76,7 +77,7 @@ public class SQLiteProvider extends ContentProvider {
                         .find(helper, "attachInfo", SQLiteClient.class)
                         .invokeStatic(mClient);
             } catch (DynamicException e) {
-                e.printStackTrace();
+                Logger.error(e);
             }
         }
     }
