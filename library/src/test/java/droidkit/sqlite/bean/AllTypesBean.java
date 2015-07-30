@@ -12,8 +12,8 @@ import droidkit.annotation.SQLitePk;
 /**
  * @author Daniel Serdyukov
  */
-@SQLiteObject("beans")
-public class SQLiteBean {
+@SQLiteObject("all_types")
+public class AllTypesBean {
 
     public static final String TABLE = "beans";
 
@@ -80,48 +80,96 @@ public class SQLiteBean {
         return mLong;
     }
 
+    public void setLong(long aLong) {
+        mLong = aLong;
+    }
+
     public int getInt() {
         return mInt;
+    }
+
+    public void setInt(int anInt) {
+        mInt = anInt;
     }
 
     public short getShort() {
         return mShort;
     }
 
+    public void setShort(short aShort) {
+        mShort = aShort;
+    }
+
     public String getString() {
         return mString;
+    }
+
+    public void setString(String string) {
+        mString = string;
     }
 
     public boolean isBoolean() {
         return mBoolean;
     }
 
+    public void setBoolean(boolean aBoolean) {
+        mBoolean = aBoolean;
+    }
+
     public double getDouble() {
         return mDouble;
+    }
+
+    public void setDouble(double aDouble) {
+        mDouble = aDouble;
     }
 
     public float getFloat() {
         return mFloat;
     }
 
+    public void setFloat(float aFloat) {
+        mFloat = aFloat;
+    }
+
     public BigDecimal getBigDecimal() {
         return mBigDecimal;
+    }
+
+    public void setBigDecimal(BigDecimal bigDecimal) {
+        mBigDecimal = bigDecimal;
     }
 
     public BigInteger getBigInteger() {
         return mBigInteger;
     }
 
+    public void setBigInteger(BigInteger bigInteger) {
+        mBigInteger = bigInteger;
+    }
+
     public byte[] getByteArray() {
         return mByteArray;
+    }
+
+    public void setByteArray(byte[] byteArray) {
+        mByteArray = byteArray;
     }
 
     public Role getRole() {
         return mRole;
     }
 
+    public void setRole(Role role) {
+        mRole = role;
+    }
+
     public DateTime getDateTime() {
         return mDateTime;
+    }
+
+    public void setDateTime(DateTime dateTime) {
+        mDateTime = dateTime;
     }
 
     public enum Role {USER, ADMIN}

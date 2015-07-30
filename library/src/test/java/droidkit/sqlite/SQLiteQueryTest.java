@@ -7,7 +7,7 @@ import org.robolectric.annotation.Config;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.SQLiteBean;
+import droidkit.sqlite.bean.AllTypesBean;
 
 /**
  * @author Daniel Serdyukov
@@ -18,77 +18,77 @@ public class SQLiteQueryTest {
 
     @Test
     public void testEqualTo() throws Exception {
-        Assert.assertEquals(" WHERE _id = ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id = ?", new SQLiteQuery<>(AllTypesBean.class)
                 .equalTo("_id", 123)
                 .toString());
     }
 
     @Test
     public void testNotEqualTo() throws Exception {
-        Assert.assertEquals(" WHERE _id <> ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id <> ?", new SQLiteQuery<>(AllTypesBean.class)
                 .notEqualTo("_id", 123)
                 .toString());
     }
 
     @Test
     public void testLessThan() throws Exception {
-        Assert.assertEquals(" WHERE _id < ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id < ?", new SQLiteQuery<>(AllTypesBean.class)
                 .lessThan("_id", 123)
                 .toString());
     }
 
     @Test
     public void testLessThanOrEqualTo() throws Exception {
-        Assert.assertEquals(" WHERE _id <= ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id <= ?", new SQLiteQuery<>(AllTypesBean.class)
                 .lessThanOrEqualTo("_id", 123)
                 .toString());
     }
 
     @Test
     public void testGreaterThan() throws Exception {
-        Assert.assertEquals(" WHERE _id > ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id > ?", new SQLiteQuery<>(AllTypesBean.class)
                 .greaterThan("_id", 123)
                 .toString());
     }
 
     @Test
     public void testGreaterThanOrEqualTo() throws Exception {
-        Assert.assertEquals(" WHERE _id >= ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id >= ?", new SQLiteQuery<>(AllTypesBean.class)
                 .greaterThanOrEqualTo("_id", 123)
                 .toString());
     }
 
     @Test
     public void testLike() throws Exception {
-        Assert.assertEquals(" WHERE _id LIKE ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id LIKE ?", new SQLiteQuery<>(AllTypesBean.class)
                 .like("_id", "assert%")
                 .toString());
     }
 
     @Test
     public void testBetween() throws Exception {
-        Assert.assertEquals(" WHERE _id BETWEEN ? AND ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id BETWEEN ? AND ?", new SQLiteQuery<>(AllTypesBean.class)
                 .between("_id", 1, 2)
                 .toString());
     }
 
     @Test
     public void testIsNull() throws Exception {
-        Assert.assertEquals(" WHERE _id IS NULL", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id IS NULL", new SQLiteQuery<>(AllTypesBean.class)
                 .isNull("_id")
                 .toString());
     }
 
     @Test
     public void testNotNull() throws Exception {
-        Assert.assertEquals(" WHERE _id NOT NULL", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id NOT NULL", new SQLiteQuery<>(AllTypesBean.class)
                 .notNull("_id")
                 .toString());
     }
 
     @Test
     public void testAnd() throws Exception {
-        Assert.assertEquals(" WHERE _id = ? AND name <> ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id = ? AND name <> ?", new SQLiteQuery<>(AllTypesBean.class)
                 .equalTo("_id", 1)
                 .and()
                 .notEqualTo("name", "test")
@@ -97,7 +97,7 @@ public class SQLiteQueryTest {
 
     @Test
     public void testOr() throws Exception {
-        Assert.assertEquals(" WHERE _id = ? OR name <> ?", new SQLiteQuery<>(SQLiteBean.class)
+        Assert.assertEquals(" WHERE _id = ? OR name <> ?", new SQLiteQuery<>(AllTypesBean.class)
                 .equalTo("_id", 1)
                 .or()
                 .notEqualTo("name", "test")
@@ -107,7 +107,7 @@ public class SQLiteQueryTest {
     @Test
     public void testGroupWhere() throws Exception {
         Assert.assertEquals(" WHERE (_id = ? AND name <> ?) OR (_id > ? AND name = ?)",
-                new SQLiteQuery<>(SQLiteBean.class)
+                new SQLiteQuery<>(AllTypesBean.class)
                         .beginGroup()
                         .equalTo("_id", 1)
                         .and()

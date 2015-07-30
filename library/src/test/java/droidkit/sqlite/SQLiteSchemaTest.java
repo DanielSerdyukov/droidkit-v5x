@@ -10,7 +10,7 @@ import org.robolectric.annotation.Config;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.SQLiteBean;
+import droidkit.sqlite.bean.AllTypesBean;
 import droidkit.sqlite.util.SQLiteTestEnv;
 
 /**
@@ -27,7 +27,7 @@ public class SQLiteSchemaTest {
 
     @Test
     public void testResolveTable() throws Exception {
-        Assert.assertEquals(SQLiteBean.TABLE, SQLiteSchema.resolveTable(SQLiteBean.class));
+        Assert.assertEquals(AllTypesBean.TABLE, SQLiteSchema.resolveTable(AllTypesBean.class));
     }
 
     @Test
@@ -35,9 +35,9 @@ public class SQLiteSchemaTest {
         final Uri expected = new Uri.Builder()
                 .scheme("content")
                 .authority(BuildConfig.APPLICATION_ID)
-                .path(SQLiteBean.TABLE)
+                .path(AllTypesBean.TABLE)
                 .build();
-        final Uri actual = SQLiteSchema.resolveUri(SQLiteBean.class);
+        final Uri actual = SQLiteSchema.resolveUri(AllTypesBean.class);
         Assert.assertEquals(expected, actual);
     }
 

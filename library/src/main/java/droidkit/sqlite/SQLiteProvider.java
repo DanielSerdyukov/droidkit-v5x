@@ -62,15 +62,14 @@ public class SQLiteProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        createClientIfNecessary();
         return true;
     }
 
     @Override
     public void attachInfo(Context context, ProviderInfo info) {
         super.attachInfo(context, info);
-        createClientIfNecessary();
         SQLiteSchema.attachInfo(info);
+        createClientIfNecessary();
         for (final Class<?> helper : HELPERS) {
             try {
                 MethodLookup.local()
@@ -80,6 +79,7 @@ public class SQLiteProvider extends ContentProvider {
                 Logger.error(e);
             }
         }
+        SQLite.attach(mClient, context.getContentResolver());
     }
 
     @Override

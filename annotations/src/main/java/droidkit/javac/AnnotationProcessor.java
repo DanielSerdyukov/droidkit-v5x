@@ -59,6 +59,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                         .subscribe(new Action1<TypeElement>() {
                             @Override
                             public void call(TypeElement element) {
+                                System.out.println(element);
                                 element.accept(scanner, null);
                                 scanner.brewJava();
                             }
@@ -75,7 +76,6 @@ public class AnnotationProcessor extends AbstractProcessor {
             while (ElementKind.CLASS != element.getKind()) {
                 element = element.getEnclosingElement();
             }
-            System.out.println(element);
             return (TypeElement) element;
         }
     }

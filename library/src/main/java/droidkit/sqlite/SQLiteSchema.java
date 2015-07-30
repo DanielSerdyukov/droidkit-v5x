@@ -1,5 +1,6 @@
 package droidkit.sqlite;
 
+import android.content.ContentResolver;
 import android.content.pm.ProviderInfo;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.log.Logger;
 import droidkit.util.Lists;
+import droidkit.util.Maps;
 import rx.functions.Action1;
 import rx.functions.Action2;
 
@@ -28,6 +30,20 @@ public abstract class SQLiteSchema {
     private static final ConcurrentMap<Class<?>, String> TABLES = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<String, String> SCHEMA = new ConcurrentHashMap<>();
+
+    private static final ConcurrentMap<Class<?>, Action2<ContentResolver, Uri>> NOTIFICATION_BEHAVIORS;
+
+    private static final Action2<ContentResolver, Uri> DEFAULT_NOTIFICATION_BEHAVIOR;
+
+    static {
+        NOTIFICATION_BEHAVIORS = new ConcurrentHashMap<>();
+        DEFAULT_NOTIFICATION_BEHAVIOR = new Action2<ContentResolver, Uri>() {
+            @Override
+            public void call(@NonNull ContentResolver resolver, Uri uri) {
+                resolver.notifyChange(uri, null);
+            }
+        };
+    }
 
     private SQLiteSchema() {
     }
@@ -59,7 +75,7 @@ public abstract class SQLiteSchema {
     }
 
     public static void notifyChange(@NonNull Class<?> type) {
-
+        Maps.getNonNull(NOTIFICATION_BEHAVIORS, type, DEFAULT_NOTIFICATION_BEHAVIOR);
     }
 
     static void attachInfo(ProviderInfo info) {
