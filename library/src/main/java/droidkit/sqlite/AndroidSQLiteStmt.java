@@ -60,6 +60,11 @@ class AndroidSQLiteStmt implements SQLiteStmt {
     }
 
     @Override
+    public String queryForString() {
+        return mStatement.simpleQueryForString();
+    }
+
+    @Override
     public void close() {
         mStatement.close();
     }

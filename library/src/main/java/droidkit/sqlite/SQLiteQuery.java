@@ -3,6 +3,7 @@ package droidkit.sqlite;
 import android.app.LoaderManager;
 import android.content.Loader;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 import droidkit.content.StringValue;
+import droidkit.util.Lists;
 import rx.Observable;
 
 /**
@@ -192,35 +194,31 @@ public class SQLiteQuery<T> implements SQLiteOp {
     }
 
     @NonNull
-    public List<T> list() {
-        //return new SQLiteResult<>(this, mType, cursor());
-        throw new UnsupportedOperationException();
+    public SQLiteResult<T> list() {
+        return new SQLiteResult<>(this, cursor(), mType);
     }
 
     @NonNull
     public Cursor cursor() {
-        /*final Cursor cursor = SQLite.obtainClient().query(SQLiteQueryBuilder.buildQueryString(
+        final Cursor cursor = SQLite.obtainClient().query(SQLiteQueryBuilder.buildQueryString(
                 mDistinct,
-                SQLite.tableOf(mType),
+                SQLiteSchema.resolveTable(mType),
                 null, mWhere.toString(),
                 mGroupBy,
                 mHaving,
                 TextUtils.join(COMMA, mOrderBy),
                 mLimit
-        ), mBindArgs.toArray(new Object[mBindArgs.size()]));
-        cursor.setNotificationUri(SQLite.obtainContext().getContentResolver(), SQLite.uriOf(mType));
-        return cursor;*/
-        throw new UnsupportedOperationException();
+        ), Lists.toArray(mBindArgs, Object.class));
+        cursor.setNotificationUri(SQLite.obtainResolver(), SQLiteSchema.resolveUri(mType));
+        return cursor;
     }
 
     public int remove() {
-        throw new UnsupportedOperationException();
-        /*final StringBuilder sql = new StringBuilder("DELETE FROM ").append(SQLite.tableOf(mType));
+        final StringBuilder sql = new StringBuilder("DELETE FROM ").append(SQLiteSchema.resolveTable(mType));
         if (!TextUtils.isEmpty(mWhere)) {
             sql.append(WHERE).append(mWhere);
         }
-        return SQLite.obtainClient().executeUpdateDelete(sql.toString(),
-                mBindArgs.toArray(new Object[mBindArgs.size()]));*/
+        return SQLite.obtainClient().executeUpdateDelete(sql.toString(), Lists.toArray(mBindArgs, Object.class));
     }
 
     //region Functions
@@ -261,11 +259,6 @@ public class SQLiteQuery<T> implements SQLiteOp {
         return WHERE + mWhere.toString();
     }
 
-    /*@NonNull
-    Uri getUri() {
-        return SQLite.uriOf(mType);
-    }*/
-
     @NonNull
     private SQLiteQuery<T> appendWhere(@NonNull String column, @NonNull String op, @NonNull Object... values) {
         mWhere.append(column).append(op);
@@ -282,9 +275,8 @@ public class SQLiteQuery<T> implements SQLiteOp {
         if (!TextUtils.isEmpty(mWhere)) {
             sql.append(WHERE).append(mWhere);
         }
-        throw new UnsupportedOperationException();
-        /*return Double.parseDouble(SQLite.obtainClient().queryForString(sql.toString(),
-                mBindArgs.toArray(new Object[mBindArgs.size()])));*/
+        return Double.parseDouble(SQLite.obtainClient().queryForString(sql.toString(),
+                Lists.toArray(mBindArgs, Object.class)));
     }
 
 }

@@ -83,11 +83,11 @@ public abstract class SQLiteClient implements Closeable {
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
-            bindStatementValues(stmt, bindArgs);
+            clearAndBindValues(stmt, bindArgs);
             stmt.execute();
         } else {
             final SQLiteStmt stmt = db.compileStatement(sql);
-            bindStatementValues(stmt, bindArgs);
+            clearAndBindValues(stmt, bindArgs);
             stmt.execute();
             IOUtils.closeQuietly(stmt);
         }
@@ -97,14 +97,16 @@ public abstract class SQLiteClient implements Closeable {
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
-            bindStatementValues(stmt, bindArgs);
+            clearAndBindValues(stmt, bindArgs);
             return stmt.executeInsert();
         } else {
             final SQLiteStmt stmt = db.compileStatement(sql);
-            bindStatementValues(stmt, bindArgs);
-            final long rowId = stmt.executeInsert();
-            IOUtils.closeQuietly(stmt);
-            return rowId;
+            clearAndBindValues(stmt, bindArgs);
+            try {
+                return stmt.executeInsert();
+            } finally {
+                IOUtils.closeQuietly(stmt);
+            }
         }
     }
 
@@ -112,14 +114,28 @@ public abstract class SQLiteClient implements Closeable {
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
-            bindStatementValues(stmt, bindArgs);
+            clearAndBindValues(stmt, bindArgs);
             return stmt.executeUpdateDelete();
         } else {
             final SQLiteStmt stmt = db.compileStatement(sql);
-            bindStatementValues(stmt, bindArgs);
-            final int affectedRows = stmt.executeUpdateDelete();
+            clearAndBindValues(stmt, bindArgs);
+            try {
+                return stmt.executeUpdateDelete();
+            } finally {
+                IOUtils.closeQuietly(stmt);
+            }
+        }
+    }
+
+    @NonNull
+    public final String queryForString(@NonNull String sql, @Nullable Object... bindArgs) {
+        final SQLiteDb db = getReadableDatabase();
+        final SQLiteStmt stmt = db.compileStatement(sql);
+        clearAndBindValues(stmt, bindArgs);
+        try {
+            return stmt.queryForString();
+        } finally {
             IOUtils.closeQuietly(stmt);
-            return affectedRows;
         }
     }
 
@@ -178,13 +194,14 @@ public abstract class SQLiteClient implements Closeable {
         return stmt;
     }
 
-    private void bindStatementValues(@NonNull SQLiteStmt stmt, Object... bindArgs) {
+    private void clearAndBindValues(@NonNull SQLiteStmt stmt, Object... bindArgs) {
+        stmt.clearBindings();
         for (int index = 0; index < bindArgs.length; ++index) {
-            bindStatementValue(stmt, index + 1, bindArgs[index]);
+            bindValue(stmt, index + 1, bindArgs[index]);
         }
     }
 
-    private void bindStatementValue(@NonNull SQLiteStmt stmt, int index, Object value) {
+    private void bindValue(@NonNull SQLiteStmt stmt, int index, Object value) {
         for (final ValueBinder binder : BINDERS) {
             if (binder.canBind(value)) {
                 binder.bind(stmt, index, value);
