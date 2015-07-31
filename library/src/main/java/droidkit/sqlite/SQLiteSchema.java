@@ -75,7 +75,8 @@ public abstract class SQLiteSchema {
     }
 
     public static void notifyChange(@NonNull Class<?> type) {
-        Maps.getNonNull(NOTIFICATION_BEHAVIORS, type, DEFAULT_NOTIFICATION_BEHAVIOR);
+        Maps.getNonNull(NOTIFICATION_BEHAVIORS, type, DEFAULT_NOTIFICATION_BEHAVIOR)
+                .call(SQLite.obtainResolver(), SQLiteSchema.resolveUri(type));
     }
 
     static void attachInfo(ProviderInfo info) {

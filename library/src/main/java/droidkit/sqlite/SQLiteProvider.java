@@ -79,7 +79,7 @@ public class SQLiteProvider extends ContentProvider {
                 Logger.error(e);
             }
         }
-        SQLite.attach(mClient, context.getContentResolver());
+        SQLite.attach(mClient, context);
     }
 
     @Override

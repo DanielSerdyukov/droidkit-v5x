@@ -1,6 +1,7 @@
 package droidkit.sqlite;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import java.lang.ref.Reference;
@@ -13,6 +14,8 @@ import droidkit.dynamic.MethodLookup;
  * @author Daniel Serdyukov
  */
 public abstract class SQLite {
+
+    private static volatile Reference<Context> sContextRef;
 
     private static volatile Reference<SQLiteClient> sClientRef;
 
@@ -69,11 +72,21 @@ public abstract class SQLite {
         obtainResolver().notifyChange(SQLiteSchema.resolveUri(type), null);
     }
 
-    static void attach(@NonNull SQLiteClient client, @NonNull ContentResolver resolver) {
+    static void attach(@NonNull SQLiteClient client, @NonNull Context context) {
         synchronized (SQLite.class) {
             sClientRef = new WeakReference<>(client);
-            sResolverRef = new WeakReference<>(resolver);
+            sContextRef = new WeakReference<>(context.getApplicationContext());
+            sResolverRef = new WeakReference<>(context.getContentResolver());
         }
+    }
+
+    @NonNull
+    static Context obtainContext() {
+        final Context context = sContextRef.get();
+        if (context == null) {
+            throw notAttachedYet();
+        }
+        return context;
     }
 
     @NonNull

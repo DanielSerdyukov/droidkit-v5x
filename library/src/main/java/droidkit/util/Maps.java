@@ -14,8 +14,8 @@ public abstract class Maps {
         //no instance
     }
 
-    @Nullable
-    public static <K, V> V getNonNull(@NonNull Map<K, V> map, @Nullable K key, @Nullable V nullValue) {
+    @NonNull
+    public static <K, V> V getNonNull(@NonNull Map<K, V> map, @Nullable K key, @NonNull V nullValue) {
         final V value = map.get(key);
         if (value == null) {
             return nullValue;

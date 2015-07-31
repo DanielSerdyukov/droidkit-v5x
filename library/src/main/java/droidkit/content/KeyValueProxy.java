@@ -48,6 +48,7 @@ class KeyValueProxy implements InvocationHandler {
         throw new IllegalArgumentException("No such value for key='" + key + "' with type '" + returnType + "'");
     }
 
+    //region transformations
     private interface Transform extends Func3<KeyValueDelegate, Map<String, TypedValue>, String, TypedValue> {
     }
 
@@ -194,5 +195,6 @@ class KeyValueProxy implements InvocationHandler {
         }
 
     }
+    //endregion
 
 }

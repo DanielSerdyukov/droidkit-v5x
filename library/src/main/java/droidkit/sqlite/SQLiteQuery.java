@@ -244,9 +244,8 @@ public class SQLiteQuery<T> implements SQLiteOp {
     //endregion
 
     @NonNull
-    public Loader<List<T>> loader() {
-        throw new UnsupportedOperationException();
-        //return new SQLiteLoader<>(SQLite.obtainContext(), this);
+    public Loader<SQLiteResult<T>> loader() {
+        return new SQLiteLoader<>(SQLite.obtainContext(), this);
     }
 
     public Observable<List<T>> observable(@NonNull LoaderManager lm, int loaderId) {
@@ -277,6 +276,12 @@ public class SQLiteQuery<T> implements SQLiteOp {
         }
         return Double.parseDouble(SQLite.obtainClient().queryForString(sql.toString(),
                 Lists.toArray(mBindArgs, Object.class)));
+    }
+
+    @NonNull
+    @Deprecated
+    Class<T> getType() {
+        return mType;
     }
 
 }
