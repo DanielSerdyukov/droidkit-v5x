@@ -15,7 +15,7 @@ import droidkit.annotation.SQLitePk;
 @SQLiteObject("all_types")
 public class AllTypesBean {
 
-    public static final String TABLE = "beans";
+    public static final String TABLE = "all_types";
 
     public static final String[] COLUMNS = new String[]{
             "_id",
