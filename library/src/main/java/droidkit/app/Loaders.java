@@ -6,11 +6,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import droidkit.util.Dynamic;
-import droidkit.util.DynamicException;
-import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.functions.Func0;
+import droidkit.dynamic.ConstructorLookup;
+import droidkit.dynamic.DynamicException;
 
 /**
  * @author Daniel Serdyukov
@@ -28,8 +25,9 @@ public final class Loaders {
             return lm.initLoader(loaderId, args, (LoaderManager.LoaderCallbacks<D>) target);
         }
         try {
-            return lm.initLoader(loaderId, args, Dynamic.<LoaderManager.LoaderCallbacks<D>>init(
-                    target.getClass().getName() + "$LC", target));
+            return lm.initLoader(loaderId, args, ConstructorLookup.global()
+                    .<LoaderManager.LoaderCallbacks<D>>find(target.getClass().getName() + "$LC", target.getClass())
+                    .instantiate(target));
         } catch (DynamicException e) {
             throw noSuchLoaderCallbacks(target, loaderId, e);
         }
@@ -43,8 +41,9 @@ public final class Loaders {
             return lm.restartLoader(loaderId, args, (LoaderManager.LoaderCallbacks<D>) target);
         }
         try {
-            return lm.restartLoader(loaderId, args, Dynamic.<LoaderManager.LoaderCallbacks<D>>init(
-                    target.getClass().getName() + "$LC", target));
+            return lm.restartLoader(loaderId, args, ConstructorLookup.global()
+                    .<LoaderManager.LoaderCallbacks<D>>find(target.getClass().getName() + "$LC", target.getClass())
+                    .instantiate(target));
         } catch (DynamicException e) {
             throw noSuchLoaderCallbacks(target, loaderId, e);
         }
@@ -60,47 +59,6 @@ public final class Loaders {
                                                                   @NonNull Exception wrapped) {
         return new IllegalArgumentException("No such found LoaderCallbacks for " + target +
                 ", loaderId=" + loaderId, wrapped);
-    }
-
-    public static <T> LoaderManager.LoaderCallbacks<T> callbacks(@NonNull final Func0<Loader<T>> onCreate,
-                                                                 @NonNull final Action1<T> onLoad,
-                                                                 @NonNull final Action0 onReset) {
-        return new LoaderManager.LoaderCallbacks<T>() {
-            @Override
-            public Loader<T> onCreateLoader(int id, Bundle args) {
-                return onCreate.call();
-            }
-
-            @Override
-            public void onLoadFinished(Loader<T> loader, T data) {
-                onLoad.call(data);
-            }
-
-            @Override
-            public void onLoaderReset(Loader<T> loader) {
-                onReset.call();
-            }
-        };
-    }
-
-    public static <T> LoaderManager.LoaderCallbacks<T> callbacks(@NonNull final Func0<Loader<T>> onCreate,
-                                                                 @NonNull final Action1<T> onLoad) {
-        return new LoaderManager.LoaderCallbacks<T>() {
-            @Override
-            public Loader<T> onCreateLoader(int id, Bundle args) {
-                return onCreate.call();
-            }
-
-            @Override
-            public void onLoadFinished(Loader<T> loader, T data) {
-                onLoad.call(data);
-            }
-
-            @Override
-            public void onLoaderReset(Loader<T> loader) {
-
-            }
-        };
     }
 
 }

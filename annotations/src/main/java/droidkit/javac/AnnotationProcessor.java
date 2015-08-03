@@ -13,6 +13,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 
+import droidkit.annotation.OnCreateLoader;
 import droidkit.annotation.SQLiteObject;
 import rx.Observable;
 import rx.functions.Action1;
@@ -22,12 +23,12 @@ import rx.functions.Func1;
  * @author Daniel Serdyukov
  */
 @SupportedAnnotationTypes({
+        "droidkit.annotation.SQLiteObject",
+        "droidkit.annotation.OnCreateLoader",
         "droidkit.annotation.InjectView",
         "droidkit.annotation.InstanceState",
         "droidkit.annotation.OnClick",
-        "droidkit.annotation.OnActionClick",
-        "droidkit.annotation.OnCreateLoader",
-        "droidkit.annotation.SQLiteObject"
+        "droidkit.annotation.OnActionClick"
 })
 public class AnnotationProcessor extends AbstractProcessor {
 
@@ -42,6 +43,7 @@ public class AnnotationProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         mScanners.put(SQLiteObject.class.getName(), new SQLiteObjectVisitor(processingEnv));
+        mScanners.put(OnCreateLoader.class.getName(), new LoaderCallbacksVisitor(processingEnv));
     }
 
     @Override
@@ -59,7 +61,6 @@ public class AnnotationProcessor extends AbstractProcessor {
                         .subscribe(new Action1<TypeElement>() {
                             @Override
                             public void call(TypeElement element) {
-                                System.out.println(element);
                                 element.accept(scanner, null);
                                 scanner.brewJava();
                             }

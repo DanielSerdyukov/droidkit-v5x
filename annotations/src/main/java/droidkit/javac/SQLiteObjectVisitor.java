@@ -114,7 +114,7 @@ class SQLiteObjectVisitor extends ElementScanner {
 
     private String mPrimaryKey;
 
-    private boolean mActiveRevord;
+    private boolean mActiveRecord;
 
     public SQLiteObjectVisitor(ProcessingEnvironment processingEnv) {
         super(processingEnv);
@@ -155,7 +155,7 @@ class SQLiteObjectVisitor extends ElementScanner {
             mHelperPackageName = mOriginElement.getEnclosingElement().toString();
             mHelperClassName = mOriginElement.getSimpleName() + "$Helper";
             mTableName = annotation.value();
-            mActiveRevord = annotation.activeRecord();
+            mActiveRecord = annotation.activeRecord();
         }
         return super.visitType(element, aVoid);
     }
@@ -217,7 +217,7 @@ class SQLiteObjectVisitor extends ElementScanner {
                     ClassName.get("droidkit.sqlite", "SQLiteSchema"),
                     ClassName.get(mOriginElement), mTableName,
                     Strings.transformAndJoin(", ", mColumns.entrySet(), new EntryToString()));
-            if (mActiveRevord) {
+            if (mActiveRecord) {
                 META_BLOCK.addStatement("$T.attachHelper($T.class)",
                         ClassName.get("droidkit.sqlite", "SQLiteProvider"),
                         ClassName.get(javaFile.packageName, typeSpec.name));
@@ -350,6 +350,68 @@ class SQLiteObjectVisitor extends ElementScanner {
     private interface TypeConversion extends Func2<SQLiteObjectVisitor, VariableElement, Boolean>,
             Action4<SQLiteObjectVisitor, String, String, ConflictResolution> {
     }
+
+    //region field visitors
+    private static class Visitor implements Action3<SQLiteObjectVisitor, VariableElement, Annotation> {
+        @Override
+        public void call(SQLiteObjectVisitor visitor, VariableElement field, Annotation annotation) {
+            ((JCTree.JCVariableDecl) visitor.mTrees.getTree(field)).mods.flags &= ~Flags.PRIVATE;
+        }
+
+        protected String getColumnName(String fieldName) {
+            if (fieldName.startsWith("m")) {
+                return Strings.toUnderScope(fieldName.substring(1));
+            }
+            return Strings.toUnderScope(fieldName);
+        }
+
+        protected String getSetterName(String fieldName) {
+            if (fieldName.startsWith("m")) {
+                return "set" + fieldName.substring(1);
+            }
+            return "set" + Strings.capitalize(fieldName);
+        }
+    }
+
+    private static class SQLitePkVisitor extends Visitor {
+        @Override
+        public void call(SQLiteObjectVisitor visitor, VariableElement field, Annotation annotation) {
+            super.call(visitor, field, annotation);
+            if (TypeKind.LONG == field.asType().getKind()) {
+                final SQLitePk column = (SQLitePk) annotation;
+                final String fieldName = String.valueOf(field.getSimpleName());
+                visitor.mPrimaryKey = fieldName;
+                visitor.mFields.put(fieldName, ROWID);
+                visitor.mColumns.put(ROWID, PRIMARY_KEY + CONFLICT_RESOLUTIONS.get(column.value()).call());
+                visitor.mSetters.put(Strings.nonEmpty(column.setter(), getSetterName(fieldName)),
+                        new SetterVisitor(visitor.mJavacEnv, fieldName, ROWID));
+                visitor.mInitBlock.addStatement("object.$L = $T.getLong(cursor, $S)", fieldName, CURSORS, ROWID);
+            } else {
+                visitor.printMessage(Diagnostic.Kind.ERROR, field, "Unexpected primary key type (expected 'long')");
+            }
+        }
+    }
+
+    private static class SQLiteColumnVisitor extends Visitor {
+        @Override
+        public void call(SQLiteObjectVisitor visitor, VariableElement field, Annotation annotation) {
+            super.call(visitor, field, annotation);
+            final SQLiteColumn column = (SQLiteColumn) annotation;
+            final String fieldName = String.valueOf(field.getSimpleName());
+            final String columnName = getColumnName(Strings.nonEmpty(column.value(), fieldName));
+            visitor.mFields.put(fieldName, columnName);
+            visitor.mSetters.put(Strings.nonEmpty(column.setter(), getSetterName(fieldName)),
+                    new SetterVisitor(visitor.mJavacEnv, fieldName, columnName));
+            for (final TypeConversion conversion : CONVERSIONS) {
+                if (conversion.call(visitor, field)) {
+                    conversion.call(visitor, fieldName, columnName, CONFLICT_RESOLUTIONS.get(0));
+                    return;
+                }
+            }
+            visitor.printMessage(Diagnostic.Kind.ERROR, field, "Unsupported type conversion");
+        }
+    }
+    //endregion
 
     //region type conversions
     private static class LongConversion implements TypeConversion {
@@ -550,68 +612,6 @@ class SQLiteObjectVisitor extends ElementScanner {
             visitor.mInitBlock.addStatement("object.$L = $T.getBlob(cursor, $S)", fieldName, CURSORS, columnName);
         }
 
-    }
-    //endregion
-
-    //region field visitors
-    private static class Visitor implements Action3<SQLiteObjectVisitor, VariableElement, Annotation> {
-        @Override
-        public void call(SQLiteObjectVisitor visitor, VariableElement field, Annotation annotation) {
-            ((JCTree.JCVariableDecl) visitor.mTrees.getTree(field)).mods.flags &= ~Flags.PRIVATE;
-        }
-
-        protected String getColumnName(String fieldName) {
-            if (fieldName.startsWith("m")) {
-                return Strings.toUnderScope(fieldName.substring(1));
-            }
-            return Strings.toUnderScope(fieldName);
-        }
-
-        protected String getSetterName(String fieldName) {
-            if (fieldName.startsWith("m")) {
-                return "set" + fieldName.substring(1);
-            }
-            return "set" + Strings.capitalize(fieldName);
-        }
-    }
-
-    private static class SQLitePkVisitor extends Visitor {
-        @Override
-        public void call(SQLiteObjectVisitor visitor, VariableElement field, Annotation annotation) {
-            super.call(visitor, field, annotation);
-            if (TypeKind.LONG == field.asType().getKind()) {
-                final SQLitePk column = (SQLitePk) annotation;
-                final String fieldName = String.valueOf(field.getSimpleName());
-                visitor.mPrimaryKey = fieldName;
-                visitor.mFields.put(fieldName, ROWID);
-                visitor.mColumns.put(ROWID, PRIMARY_KEY + CONFLICT_RESOLUTIONS.get(column.value()).call());
-                visitor.mSetters.put(Strings.nonEmpty(column.setter(), getSetterName(fieldName)),
-                        new SetterVisitor(visitor.mJavacEnv, fieldName, ROWID));
-                visitor.mInitBlock.addStatement("object.$L = $T.getLong(cursor, $S)", fieldName, CURSORS, ROWID);
-            } else {
-                visitor.printMessage(Diagnostic.Kind.ERROR, field, "Unexpected primary key type (expected 'long')");
-            }
-        }
-    }
-
-    private static class SQLiteColumnVisitor extends Visitor {
-        @Override
-        public void call(SQLiteObjectVisitor visitor, VariableElement field, Annotation annotation) {
-            super.call(visitor, field, annotation);
-            final SQLiteColumn column = (SQLiteColumn) annotation;
-            final String fieldName = String.valueOf(field.getSimpleName());
-            final String columnName = getColumnName(Strings.nonEmpty(column.value(), fieldName));
-            visitor.mFields.put(fieldName, columnName);
-            visitor.mSetters.put(Strings.nonEmpty(column.setter(), getSetterName(fieldName)),
-                    new SetterVisitor(visitor.mJavacEnv, fieldName, columnName));
-            for (final TypeConversion conversion : CONVERSIONS) {
-                if (conversion.call(visitor, field)) {
-                    conversion.call(visitor, fieldName, columnName, CONFLICT_RESOLUTIONS.get(0));
-                    return;
-                }
-            }
-            visitor.printMessage(Diagnostic.Kind.ERROR, field, "Unsupported type conversion");
-        }
     }
     //endregion
 
