@@ -75,12 +75,12 @@ public final class Cursors {
     }
 
     @Nullable
-    public static BigInteger getBigInt(@NonNull Cursor cursor, @NonNull String columnName) {
+    public static BigInteger getBigInteger(@NonNull Cursor cursor, @NonNull String columnName) {
         return BigInteger.valueOf(getLong(cursor, columnName));
     }
 
     @Nullable
-    public static BigDecimal getBigDec(@NonNull Cursor cursor, @NonNull String columnName) {
+    public static BigDecimal getBigDecimal(@NonNull Cursor cursor, @NonNull String columnName) {
         return BigDecimal.valueOf(getDouble(cursor, columnName));
     }
 

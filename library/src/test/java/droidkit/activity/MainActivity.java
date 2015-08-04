@@ -11,6 +11,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import droidkit.annotation.InjectView;
+import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
 
 /**
@@ -64,22 +65,22 @@ public class MainActivity extends Activity {
 
     }
 
-    @OnClick(android.R.id.cut)
+    @OnActionClick(android.R.id.cut)
     private void onCutActionClick() {
 
     }
 
-    @OnClick(android.R.id.copy)
+    @OnActionClick(android.R.id.copy)
     private boolean onCopyActionClick() {
         return true;
     }
 
-    @OnClick(android.R.id.paste)
+    @OnActionClick(android.R.id.paste)
     private void onPasteActionClick(MenuItem item) {
 
     }
 
-    @OnClick(android.R.id.edit)
+    @OnActionClick(android.R.id.edit)
     private boolean onEditActionClick(MenuItem item) {
         return item.getItemId() == android.R.id.edit;
     }

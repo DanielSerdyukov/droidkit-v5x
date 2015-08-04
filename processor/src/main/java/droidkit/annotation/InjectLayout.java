@@ -10,10 +10,8 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.SOURCE)
-public @interface SQLiteObject {
+public @interface InjectLayout {
 
-    String value();
-
-    boolean activeRecord() default false;
+    int value();
 
 }

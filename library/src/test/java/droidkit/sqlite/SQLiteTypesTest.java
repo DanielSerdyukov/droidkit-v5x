@@ -52,7 +52,7 @@ public class SQLiteTypesTest {
         cursor.addRow(mObjects);
         cursor.moveToFirst();
         mInstance = MethodLookup.local()
-                .find(AllTypesBean.class.getName() + "$Helper", "instantiate", Cursor.class)
+                .find(AllTypesBean.class.getName() + "$SQLiteHelper", "instantiate", Cursor.class)
                 .invokeStatic(cursor);
     }
 

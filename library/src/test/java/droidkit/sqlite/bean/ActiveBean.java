@@ -7,7 +7,7 @@ import droidkit.annotation.SQLitePk;
 /**
  * @author Daniel Serdyukov
  */
-@SQLiteObject("active_beans")
+@SQLiteObject(value = "active_beans", activeRecord = true)
 public class ActiveBean {
 
     @SQLitePk

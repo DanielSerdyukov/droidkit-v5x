@@ -111,12 +111,12 @@ public class CursorsTest {
 
     @Test
     public void testGetBigInt() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("big_int")], Cursors.getBigInt(mCursor, "big_int"));
+        Assert.assertEquals(mValues[mCursor.getColumnIndex("big_int")], Cursors.getBigInteger(mCursor, "big_int"));
     }
 
     @Test
     public void testGetBigDec() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("big_dec")], Cursors.getBigDec(mCursor, "big_dec"));
+        Assert.assertEquals(mValues[mCursor.getColumnIndex("big_dec")], Cursors.getBigDecimal(mCursor, "big_dec"));
     }
 
     @Test
