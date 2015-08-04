@@ -102,7 +102,7 @@ public class SQLiteResult<T> extends AbstractList<T> {
     private T instantiate(@NonNull Cursor cursor) {
         try {
             return MethodLookup.global()
-                    .find(mType.getName() + "$Helper", "instantiate", Cursor.class)
+                    .find(mType.getName() + "$SQLiteHelper", "instantiate", Cursor.class)
                     .invokeStatic(cursor);
         } catch (DynamicException e) {
             throw new SQLiteException("Can't instantiate object", e);

@@ -47,7 +47,7 @@ public abstract class SQLite {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + "$Helper", "insert", SQLiteClient.class, type)
+                    .find(type.getName() + "$SQLiteHelper", "insert", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);
@@ -60,7 +60,7 @@ public abstract class SQLite {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + "$Helper", "update", SQLiteClient.class, type)
+                    .find(type.getName() + "$SQLiteHelper", "update", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);

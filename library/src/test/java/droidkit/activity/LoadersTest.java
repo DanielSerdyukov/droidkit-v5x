@@ -1,4 +1,4 @@
-package droidkit.app;
+package droidkit.activity;
 
 import android.app.LoaderManager;
 import android.content.Loader;
@@ -8,8 +8,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
-import org.robolectric.util.FragmentTestUtil;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,7 @@ import droidkit.DroidkitTestRunner;
 import droidkit.annotation.OnCreateLoader;
 import droidkit.annotation.OnLoadFinished;
 import droidkit.annotation.OnResetLoader;
+import droidkit.app.Loaders;
 import droidkit.concurrent.AsyncQueue;
 
 /**
@@ -28,7 +30,7 @@ import droidkit.concurrent.AsyncQueue;
 @RunWith(DroidkitTestRunner.class)
 public class LoadersTest {
 
-    private TestFragment mFragment;
+    private MainActivity mActivity;
 
     private CountDownLatch mOnLoadFinished;
 
@@ -36,15 +38,14 @@ public class LoadersTest {
 
     @Before
     public void setUp() throws Exception {
-        mFragment = new TestFragment();
+        mActivity = Robolectric.setupActivity(MainActivity.class);
         mOnLoadFinished = new CountDownLatch(1);
         mOnResetLoader = new CountDownLatch(1);
-        FragmentTestUtil.startFragment(mFragment);
     }
 
     @Test
     public void testLoaderCallbacksImpl() throws Exception {
-        final LoaderManager lm = mFragment.getLoaderManager();
+        final LoaderManager lm = mActivity.getLoaderManager();
         Assert.assertNotNull(lm);
         Loaders.init(lm, 0, Bundle.EMPTY, new LoaderManager.LoaderCallbacks<String>() {
             @Override
@@ -69,7 +70,7 @@ public class LoadersTest {
 
     @Test
     public void testLoaderCallbacks0() throws Exception {
-        final LoaderManager lm = mFragment.getLoaderManager();
+        final LoaderManager lm = mActivity.getLoaderManager();
         Assert.assertNotNull(lm);
         Loaders.init(lm, 0, Bundle.EMPTY, this);
         Assert.assertTrue(mOnLoadFinished.await(5, TimeUnit.SECONDS));
@@ -79,7 +80,7 @@ public class LoadersTest {
 
     @Test
     public void testLoaderCallbacks1_0() throws Exception {
-        final LoaderManager lm = mFragment.getLoaderManager();
+        final LoaderManager lm = mActivity.getLoaderManager();
         Assert.assertNotNull(lm);
         Loaders.init(lm, 10, Bundle.EMPTY, this);
         Assert.assertTrue(mOnLoadFinished.await(5, TimeUnit.SECONDS));
@@ -89,7 +90,7 @@ public class LoadersTest {
 
     @Test
     public void testLoaderCallbacks1_1() throws Exception {
-        final LoaderManager lm = mFragment.getLoaderManager();
+        final LoaderManager lm = mActivity.getLoaderManager();
         Assert.assertNotNull(lm);
         Loaders.init(lm, 11, Bundle.EMPTY, this);
         Assert.assertTrue(mOnLoadFinished.await(5, TimeUnit.SECONDS));
@@ -99,7 +100,7 @@ public class LoadersTest {
 
     @Test
     public void testLoaderCallbacks2_0() throws Exception {
-        final LoaderManager lm = mFragment.getLoaderManager();
+        final LoaderManager lm = mActivity.getLoaderManager();
         Assert.assertNotNull(lm);
         Loaders.init(lm, 20, Bundle.EMPTY, this);
         Assert.assertTrue(mOnLoadFinished.await(5, TimeUnit.SECONDS));
@@ -109,7 +110,7 @@ public class LoadersTest {
 
     @Test
     public void testLoaderCallbacks2_1() throws Exception {
-        final LoaderManager lm = mFragment.getLoaderManager();
+        final LoaderManager lm = mActivity.getLoaderManager();
         Assert.assertNotNull(lm);
         Loaders.init(lm, 21, Bundle.EMPTY, this);
         Assert.assertTrue(mOnLoadFinished.await(5, TimeUnit.SECONDS));
@@ -119,7 +120,7 @@ public class LoadersTest {
 
     @OnCreateLoader(0)
     private Loader<String> onCreateLoader0() {
-        return new Loader<String>(mFragment.getActivity()) {
+        return new Loader<String>(RuntimeEnvironment.application) {
             @Override
             protected void onStartLoading() {
                 deliverResult(LoadersTest.class.getName());
@@ -128,8 +129,7 @@ public class LoadersTest {
     }
 
     @OnLoadFinished(0)
-    private void onLoadFinished0(/*String result*/) {
-        //Assert.assertEquals(LoadersTest.class.getName(), result);
+    private void onLoadFinished0() {
         AsyncQueue.invoke(new Runnable() {
             @Override
             public void run() {
@@ -151,7 +151,7 @@ public class LoadersTest {
     @OnCreateLoader(10)
     private Loader<String> onCreateLoader1(int loaderId) {
         Assert.assertEquals(10, loaderId);
-        return new Loader<String>(mFragment.getActivity()) {
+        return new Loader<String>(RuntimeEnvironment.application) {
             @Override
             protected void onStartLoading() {
                 deliverResult(LoadersTest.class.getName());
@@ -162,7 +162,7 @@ public class LoadersTest {
     @OnCreateLoader(11)
     private Loader<String> onCreateLoader1(Bundle args) {
         Assert.assertEquals(Bundle.EMPTY, args);
-        return new Loader<String>(mFragment.getActivity()) {
+        return new Loader<String>(RuntimeEnvironment.application) {
             @Override
             protected void onStartLoading() {
                 deliverResult(LoadersTest.class.getName());
@@ -174,7 +174,7 @@ public class LoadersTest {
     private Loader<String> onCreateLoader2(int loaderId, Bundle args) {
         Assert.assertEquals(20, loaderId);
         Assert.assertEquals(Bundle.EMPTY, args);
-        return new Loader<String>(mFragment.getActivity()) {
+        return new Loader<String>(RuntimeEnvironment.application) {
             @Override
             protected void onStartLoading() {
                 deliverResult(LoadersTest.class.getName());
@@ -186,7 +186,7 @@ public class LoadersTest {
     private Loader<String> onCreateLoader2(Bundle args, int loaderId) {
         Assert.assertEquals(Bundle.EMPTY, args);
         Assert.assertEquals(21, loaderId);
-        return new Loader<String>(mFragment.getActivity()) {
+        return new Loader<String>(RuntimeEnvironment.application) {
             @Override
             protected void onStartLoading() {
                 deliverResult(LoadersTest.class.getName());

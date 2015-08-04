@@ -31,10 +31,9 @@ android {
 }
 
 dependencies {
-    compile project(':annotations')
+    provided project(':processor')
     compile 'com.android.support:support-v13:22.2.1'
     compile 'io.reactivex:rxandroid:0.25.0'
-    compile 'com.squareup:javapoet:1.2.0'
     provided 'net.danlew:android.joda:2.8.1'
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.0'
