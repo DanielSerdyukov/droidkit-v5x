@@ -54,7 +54,7 @@ sonarqube {
     }
 }
 
-project(':library') {
+project(':droidkit') {
     sonarqube {
         properties {
             properties["sonar.sources"] = android.sourceSets.main.java.srcDirs

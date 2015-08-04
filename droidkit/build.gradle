@@ -31,7 +31,7 @@ android {
 }
 
 dependencies {
-    provided project(':processor')
+    compile project(':processor')
     compile 'com.android.support:support-v13:22.2.1'
     compile 'io.reactivex:rxandroid:0.25.0'
     provided 'net.danlew:android.joda:2.8.1'
