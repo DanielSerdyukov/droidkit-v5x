@@ -12,6 +12,7 @@ import droidkit.processor.app.ActivityScanner;
 import droidkit.processor.app.FragmentScanner;
 import droidkit.processor.content.LoaderCallbacksScanner;
 import droidkit.processor.sqlite.SQLiteObjectScanner;
+import droidkit.processor.view.ViewScanner;
 import rx.functions.Func3;
 
 /**
@@ -23,7 +24,8 @@ class ScannerFactory {
             new SQLiteObjectFunc(),
             new OnCreateLoaderFunc(),
             new ActivityFunc(),
-            new FragmentFunc()
+            new FragmentFunc(),
+            new ViewFunc()
     );
 
     private final ProcessingEnv mProcessingEnv;
@@ -42,6 +44,7 @@ class ScannerFactory {
         throw new IllegalArgumentException("Unexpected annotation " + annotation);
     }
 
+    //region factory functions
     private interface FactoryFunc extends Func3<ProcessingEnv, TypeElement, TypeElement, ElementScanner> {
 
     }
@@ -93,5 +96,18 @@ class ScannerFactory {
         }
 
     }
+
+    private static class ViewFunc implements FactoryFunc {
+
+        @Override
+        public ElementScanner call(ProcessingEnv env, TypeElement annotation, TypeElement element) {
+            if (env.isSubtype(element.asType(), "android.view.View")) {
+                return new ViewScanner(env);
+            }
+            return null;
+        }
+
+    }
+    //endregion
 
 }

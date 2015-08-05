@@ -103,7 +103,6 @@ abstract class LifecycleScanner extends ElementScanner {
         final JavaFile javaFile = JavaFile.builder(mOriginType.getEnclosingElement().toString(), typeSpec)
                 .addFileComment(AUTO_GENERATED_FILE)
                 .build();
-        System.out.println(javaFile);
         try {
             final JavaFileObject sourceFile = getEnv().createSourceFile(
                     javaFile.packageName + "." + typeSpec.name, mOriginType);

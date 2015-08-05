@@ -11,6 +11,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 
 import droidkit.processor.sqlite.SQLiteObjectScanner;
 import rx.Observable;
@@ -53,7 +54,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         for (final TypeElement annotation : annotations) {
             Observable.from(roundEnv.getElementsAnnotatedWith(annotation))
                     .map(new GetEnclosingClass())
-                    .filter(new NotNestedClass())
+                    .filter(new NotNestedClass(processingEnv))
                     .filter(new SingleHit(mSingleHit))
                     .subscribe(new Action1<TypeElement>() {
                         @Override
@@ -81,10 +82,23 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
     private static final class NotNestedClass implements Func1<Element, Boolean> {
+
+        private final ProcessingEnvironment mEnv;
+
+        public NotNestedClass(ProcessingEnvironment processingEnv) {
+            mEnv = processingEnv;
+        }
+
         @Override
         public Boolean call(Element element) {
-            return ElementKind.PACKAGE == element.getEnclosingElement().getKind();
+            if (ElementKind.PACKAGE != element.getEnclosingElement().getKind()) {
+                mEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                        "Annotation not supported for nested class", element);
+                return false;
+            }
+            return true;
         }
+
     }
 
     private static final class SingleHit implements Func1<Element, Boolean> {
