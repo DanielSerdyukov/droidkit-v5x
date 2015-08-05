@@ -54,11 +54,12 @@ public class FragmentScanner extends LifecycleScanner {
                 .addParameter(ClassName.get("android.view", "View"), "view")
                 .addParameter(ClassName.get("android.os", "Bundle"), "savedInstanceState")
                 .addStatement("super.onViewCreated(view, savedInstanceState)")
+                .beginControlFlow("if (view != null)")
                 .addStatement("$T.inject(view, ($T) this)", viewInjector, ClassName.get(originType));
         for (final MethodSpec method : onClick()) {
             builder.addStatement("$N(view)", method);
         }
-        return builder.build();
+        return builder.endControlFlow().build();
     }
 
     private MethodSpec onActivityCreated() {
