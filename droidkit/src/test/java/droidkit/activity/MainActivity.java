@@ -30,6 +30,14 @@ public class MainActivity extends Activity {
 
     boolean mButton2Clicked;
 
+    boolean mCutClicked;
+
+    boolean mCopyClicked;
+
+    boolean mPasteClicked;
+
+    boolean mEditClicked;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +52,11 @@ public class MainActivity extends Activity {
         button2.setId(android.R.id.button2);
         layout.addView(button2);
         setContentView(layout);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -67,22 +80,23 @@ public class MainActivity extends Activity {
 
     @OnActionClick(android.R.id.cut)
     private void onCutActionClick() {
-
+        mCutClicked = true;
     }
 
     @OnActionClick(android.R.id.copy)
     private boolean onCopyActionClick() {
+        mCopyClicked = true;
         return true;
     }
 
     @OnActionClick(android.R.id.paste)
     private void onPasteActionClick(MenuItem item) {
-
+        mPasteClicked = android.R.id.paste == item.getItemId();
     }
 
     @OnActionClick(android.R.id.edit)
     private boolean onEditActionClick(MenuItem item) {
-        return item.getItemId() == android.R.id.edit;
+        return (mEditClicked = android.R.id.edit == item.getItemId());
     }
 
 }

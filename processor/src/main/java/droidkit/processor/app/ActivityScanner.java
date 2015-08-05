@@ -43,6 +43,7 @@ public class ActivityScanner extends LifecycleScanner {
                 setContentView2(originType, viewInjector),
                 setContentView3(originType, viewInjector),
                 onPostCreate(),
+                onOptionsItemSelected(Modifier.PUBLIC),
                 onResume(Modifier.PROTECTED),
                 onPause(Modifier.PROTECTED),
                 onDestroy(Modifier.PROTECTED)
@@ -88,6 +89,9 @@ public class ActivityScanner extends LifecycleScanner {
                 .addStatement("super.onPostCreate(savedInstanceState)");
         for (final MethodSpec method : onClick()) {
             builder.addStatement("$N(null)", method);
+        }
+        for (final MethodSpec method : onActionClick()) {
+            builder.addStatement("$N()", method);
         }
         return builder.build();
     }

@@ -47,21 +47,25 @@ public class ActivityTest {
     @Test
     public void testCutActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mActivity).clickMenuItem(android.R.id.cut));
+        Assert.assertTrue(mActivity.mCutClicked);
     }
 
     @Test
     public void testCopyActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mActivity).clickMenuItem(android.R.id.copy));
+        Assert.assertTrue(mActivity.mCopyClicked);
     }
 
     @Test
     public void testPasteActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mActivity).clickMenuItem(android.R.id.paste));
+        Assert.assertTrue(mActivity.mPasteClicked);
     }
 
     @Test
     public void testEditActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mActivity).clickMenuItem(android.R.id.edit));
+        Assert.assertTrue(mActivity.mEditClicked);
     }
 
 }

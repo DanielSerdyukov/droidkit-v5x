@@ -6,6 +6,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.tree.JCTree;
@@ -41,6 +42,8 @@ abstract class LifecycleScanner extends ElementScanner {
     private final ViewInjector mViewInjector = new ViewInjector();
 
     private final List<MethodSpec> mOnClick = new ArrayList<>();
+
+    private final List<MethodSpec> mOnActionClick = new ArrayList<>();
 
     private final TreeMaker mTreeMaker;
 
@@ -95,6 +98,7 @@ abstract class LifecycleScanner extends ElementScanner {
                 .addFields(fields())
                 .addMethods(methods(mOriginType, injector))
                 .addMethods(mOnClick)
+                .addMethods(mOnActionClick)
                 .build();
         final JavaFile javaFile = JavaFile.builder(mOriginType.getEnclosingElement().toString(), typeSpec)
                 .addFileComment(AUTO_GENERATED_FILE)
@@ -122,6 +126,10 @@ abstract class LifecycleScanner extends ElementScanner {
         return mOnClick;
     }
 
+    protected List<MethodSpec> onActionClick() {
+        return mOnActionClick;
+    }
+
     protected abstract Func1<Integer, CodeBlock> viewFinder();
 
     //region implementation
@@ -145,6 +153,21 @@ abstract class LifecycleScanner extends ElementScanner {
 
     protected List<MethodSpec> methods(TypeElement originType, ClassName viewInjector) {
         return Collections.emptyList();
+    }
+
+    protected MethodSpec onOptionsItemSelected(Modifier... modifiers) {
+        return MethodSpec.methodBuilder("onOptionsItemSelected")
+                .addAnnotation(Override.class)
+                .addModifiers(modifiers)
+                .returns(TypeName.BOOLEAN)
+                .addParameter(ClassName.get("android.view", "MenuItem"), "menuItem")
+                .addStatement("final $T listener = mOnActionClick.get(menuItem.getItemId())",
+                        ClassName.get("android.view", "MenuItem", "OnMenuItemClickListener"))
+                .beginControlFlow("if (listener != null)")
+                .addStatement("return listener.onMenuItemClick(menuItem)")
+                .endControlFlow()
+                .addStatement("return super.onOptionsItemSelected(menuItem)")
+                .build();
     }
 
     protected MethodSpec onResume(Modifier... modifiers) {

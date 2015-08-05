@@ -20,6 +20,11 @@ interface Signature extends Func2<ProcessingEnv, ExecutableElement, CodeBlock> {
             new OnClick1()
     );
 
-    List<Signature> ON_ACTION_CLICK = Arrays.asList();
+    List<Signature> ON_ACTION_CLICK = Arrays.asList(
+            new OnMenuItemClick0(),
+            new OnMenuItemClick1(),
+            new OnMenuItemClick2(),
+            new OnMenuItemClick3()
+    );
 
 }

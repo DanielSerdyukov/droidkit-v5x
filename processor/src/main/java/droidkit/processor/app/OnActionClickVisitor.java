@@ -11,58 +11,56 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
-import droidkit.annotation.OnClick;
+import droidkit.annotation.OnActionClick;
 import droidkit.processor.ProcessingEnv;
 
 /**
  * @author Daniel Serdyukov
  */
-class OnClickVisitor implements MethodVisitor {
+class OnActionClickVisitor implements MethodVisitor {
 
     @Override
     public Annotation getAnnotation(ProcessingEnv processingEnv, ExecutableElement method) {
-        return method.getAnnotation(OnClick.class);
+        return method.getAnnotation(OnActionClick.class);
     }
 
     @Override
     public void visit(LifecycleScanner scanner, ExecutableElement method, Annotation annotation) {
-        final int[] viewIds = ((OnClick) annotation).value();
-        for (final int viewId : viewIds) {
-            scanner.onClick().add(setupOnClick(scanner, method, viewId));
+        final int[] itemIds = ((OnActionClick) annotation).value();
+        for (final int itemId : itemIds) {
+            scanner.onActionClick().add(setupOnActionClick(scanner, method, itemId));
         }
     }
 
-    private MethodSpec setupOnClick(LifecycleScanner scanner, ExecutableElement method, int viewId) {
-        return MethodSpec.methodBuilder("setupOnClick" + viewId)
+    private MethodSpec setupOnActionClick(LifecycleScanner scanner, ExecutableElement method, int itemId) {
+        return MethodSpec.methodBuilder("setupActionOnClick" + itemId)
                 .addModifiers(Modifier.PRIVATE)
-                .addParameter(ClassName.get("android.view", "View"), "rootView")
                 .addStatement("final $1T origin = ($1T) this",
                         ClassName.get((TypeElement) method.getEnclosingElement()))
-                .addCode(scanner.viewFinder().call(viewId))
-                .beginControlFlow("if (view != null)")
                 .addCode(CodeBlock.builder()
-                        .add("mOnClick.put(view, new $T() {\n", ClassName.get("android.view", "View", "OnClickListener"))
+                        .add("mOnActionClick.put($L, new $T() {\n", itemId,
+                                ClassName.get("android.view", "MenuItem", "OnMenuItemClickListener"))
                         .indent()
                         .add("@Override\n")
-                        .beginControlFlow("public void onClick($T clickedView)", ClassName.get("android.view", "View"))
+                        .beginControlFlow("public boolean onMenuItemClick($T clickedItem)",
+                                ClassName.get("android.view", "MenuItem"))
                         .add(originCall(scanner, method))
                         .endControlFlow()
                         .unindent()
                         .add("});\n")
                         .build())
-                .endControlFlow()
                 .build();
     }
 
     private CodeBlock originCall(LifecycleScanner scanner, ExecutableElement method) {
-        for (final Signature signature : Signature.ON_CLICK) {
+        for (final Signature signature : Signature.ON_ACTION_CLICK) {
             final CodeBlock originCall = signature.call(scanner.getEnv(), method);
             if (originCall != null) {
                 return originCall;
             }
         }
         scanner.getEnv().printMessage(Diagnostic.Kind.ERROR, method, "Unexpected method signature");
-        return CodeBlock.builder().build();
+        return CodeBlock.builder().addStatement("return false").build();
     }
 
 }
