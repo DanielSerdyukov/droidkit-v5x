@@ -34,28 +34,33 @@ public class FragmentTest {
     }
 
     @Test
-    public void testButton2Click() throws Exception {
+    public void testButton1Click() throws Exception {
         Assert.assertTrue(ShadowView.clickOn(mFragment.mButton1));
+        Assert.assertTrue(mFragment.mButton1Clicked);
     }
 
     @Test
     public void testCutActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mFragment.getActivity()).clickMenuItem(android.R.id.cut));
+        Assert.assertTrue(mFragment.mCutClicked);
     }
 
     @Test
     public void testCopyActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mFragment.getActivity()).clickMenuItem(android.R.id.copy));
+        Assert.assertTrue(mFragment.mCopyClicked);
     }
 
     @Test
     public void testPasteActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mFragment.getActivity()).clickMenuItem(android.R.id.paste));
+        Assert.assertTrue(mFragment.mPasteClicked);
     }
 
     @Test
     public void testEditActionClick() throws Exception {
         Assert.assertTrue(Shadows.shadowOf(mFragment.getActivity()).clickMenuItem(android.R.id.edit));
+        Assert.assertTrue(mFragment.mEditClicked);
     }
 
 }

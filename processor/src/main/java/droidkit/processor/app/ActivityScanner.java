@@ -50,34 +50,34 @@ public class ActivityScanner extends LifecycleScanner {
         );
     }
 
-    private MethodSpec setContentView1(TypeElement element, ClassName viewInjector) {
+    private MethodSpec setContentView1(TypeElement originType, ClassName viewInjector) {
         return MethodSpec.methodBuilder("setContentView")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(ClassName.get("android.view", "View"), "view")
                 .addStatement("super.setContentView(view)")
-                .addStatement("$T.inject(view, ($T) this)", viewInjector, ClassName.get(element))
+                .addStatement("$T.inject(view, ($T) this)", viewInjector, ClassName.get(originType))
                 .build();
     }
 
-    private MethodSpec setContentView2(TypeElement element, ClassName viewInjector) {
+    private MethodSpec setContentView2(TypeElement originType, ClassName viewInjector) {
         return MethodSpec.methodBuilder("setContentView")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(ClassName.get("android.view", "View"), "view")
                 .addParameter(ClassName.get("android.view", "ViewGroup", "LayoutParams"), "params")
                 .addStatement("super.setContentView(view, params)")
-                .addStatement("$T.inject(view, ($T) this)", viewInjector, ClassName.get(element))
+                .addStatement("$T.inject(view, ($T) this)", viewInjector, ClassName.get(originType))
                 .build();
     }
 
-    private MethodSpec setContentView3(TypeElement element, ClassName viewInjector) {
+    private MethodSpec setContentView3(TypeElement originType, ClassName viewInjector) {
         return MethodSpec.methodBuilder("setContentView")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(TypeName.INT, "layoutResId")
                 .addStatement("super.setContentView(layoutResId)")
-                .addStatement("$T.inject(this, ($T) this)", viewInjector, ClassName.get(element))
+                .addStatement("$T.inject(this, ($T) this)", viewInjector, ClassName.get(originType))
                 .build();
     }
 

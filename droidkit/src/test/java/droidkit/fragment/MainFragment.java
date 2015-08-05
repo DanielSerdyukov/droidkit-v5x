@@ -28,6 +28,16 @@ public class MainFragment extends Fragment {
     @InjectView(android.R.id.button1)
     Button mButton1;
 
+    boolean mButton1Clicked;
+
+    boolean mCutClicked;
+
+    boolean mCopyClicked;
+
+    boolean mPasteClicked;
+
+    boolean mEditClicked;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -56,35 +66,30 @@ public class MainFragment extends Fragment {
         menu.add(0, android.R.id.edit, 3, "Edit");
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        System.out.println("MainFragment.onOptionsItemSelected: " + item);
-        return super.onOptionsItemSelected(item);
-    }
-
     @OnClick(android.R.id.button1)
     private void onButton1Click() {
-
+        mButton1Clicked = true;
     }
 
     @OnActionClick(android.R.id.cut)
     private void onCutActionClick() {
-
+        mCutClicked = true;
     }
 
     @OnActionClick(android.R.id.copy)
     private boolean onCopyActionClick() {
+        mCopyClicked = true;
         return true;
     }
 
     @OnActionClick(android.R.id.paste)
     private void onPasteActionClick(MenuItem item) {
-
+        mPasteClicked = android.R.id.paste == item.getItemId();
     }
 
     @OnActionClick(android.R.id.edit)
     private boolean onEditActionClick(MenuItem item) {
-        return item.getItemId() == android.R.id.edit;
+        return (mEditClicked = android.R.id.edit == item.getItemId());
     }
 
 }

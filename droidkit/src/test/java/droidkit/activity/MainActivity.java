@@ -55,11 +55,6 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, android.R.id.cut, 0, "Cut");
         menu.add(0, android.R.id.copy, 1, "Copy");
