@@ -33,8 +33,15 @@ public class ActivityTest {
     }
 
     @Test
+    public void testButton1Click() throws Exception {
+        Assert.assertTrue(ShadowView.clickOn(mActivity.findViewById(android.R.id.button1)));
+        Assert.assertTrue(mActivity.mButton1Clicked);
+    }
+
+    @Test
     public void testButton2Click() throws Exception {
         Assert.assertTrue(ShadowView.clickOn(mActivity.findViewById(android.R.id.button2)));
+        Assert.assertTrue(mActivity.mButton2Clicked);
     }
 
     @Test

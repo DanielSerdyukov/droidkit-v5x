@@ -9,6 +9,7 @@ import javax.lang.model.element.TypeElement;
 import droidkit.annotation.OnCreateLoader;
 import droidkit.annotation.SQLiteObject;
 import droidkit.processor.app.ActivityScanner;
+import droidkit.processor.app.FragmentScanner;
 import droidkit.processor.content.LoaderCallbacksScanner;
 import droidkit.processor.sqlite.SQLiteObjectScanner;
 import rx.functions.Func3;
@@ -86,7 +87,7 @@ class ScannerFactory {
         @Override
         public ElementScanner call(ProcessingEnv env, TypeElement annotation, TypeElement element) {
             if (env.isSubtype(element.asType(), "android.app.Fragment")) {
-                return new ActivityScanner(env);
+                return new FragmentScanner(env);
             }
             return null;
         }

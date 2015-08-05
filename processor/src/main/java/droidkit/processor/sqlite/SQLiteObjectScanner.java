@@ -64,8 +64,6 @@ public class SQLiteObjectScanner extends ElementScanner {
 
     private final List<ExecutableElement> mMethods = new ArrayList<>();
 
-    private final ProcessingEnv mProcessingEnv;
-
     private TypeElement mOriginType;
 
     private String mPrimaryKey;
@@ -75,8 +73,7 @@ public class SQLiteObjectScanner extends ElementScanner {
     private boolean mActiveRecord;
 
     public SQLiteObjectScanner(ProcessingEnv env) {
-        super();
-        mProcessingEnv = env;
+        super(env);
     }
 
     public static void brewMetaClass(ProcessingEnvironment processingEnv) {
@@ -112,10 +109,10 @@ public class SQLiteObjectScanner extends ElementScanner {
     @Override
     public Void visitVariable(VariableElement field, Void aVoid) {
         for (final FieldVisitor visitor : FieldVisitor.SUPPORTED) {
-            final Annotation annotation = visitor.getAnnotation(mProcessingEnv, field);
+            final Annotation annotation = visitor.getAnnotation(getEnv(), field);
             if (annotation != null) {
-                mProcessingEnv.<JCTree.JCVariableDecl>getTree(field).mods.flags &= ~Flags.PRIVATE;
-                visitor.visit(this, mProcessingEnv, field, annotation);
+                getEnv().<JCTree.JCVariableDecl>getTree(field).mods.flags &= ~Flags.PRIVATE;
+                visitor.visit(this, getEnv(), field, annotation);
             }
         }
         return super.visitVariable(field, aVoid);
@@ -140,8 +137,8 @@ public class SQLiteObjectScanner extends ElementScanner {
                             @Override
                             public void call(ExecutableElement method) {
                                 final String fieldName = mSetterToField.get(method.getSimpleName().toString());
-                                mProcessingEnv.getTree(method).accept(new SetterTranslator(
-                                        mProcessingEnv.getJavacEnv(),
+                                getEnv().getTree(method).accept(new SetterTranslator(
+                                        getEnv().getJavacEnv(),
                                         className,
                                         fieldName,
                                         mFieldToColumn.get(fieldName),
@@ -198,13 +195,13 @@ public class SQLiteObjectScanner extends ElementScanner {
                 .addFileComment(AUTO_GENERATED_FILE)
                 .build();
         try {
-            final JavaFileObject sourceFile = mProcessingEnv.createSourceFile(
+            final JavaFileObject sourceFile = getEnv().createSourceFile(
                     javaFile.packageName + "." + typeSpec.name, mOriginType);
             try (final Writer writer = new BufferedWriter(sourceFile.openWriter())) {
                 javaFile.writeTo(writer);
             }
         } catch (IOException e) {
-            Logger.getGlobal().throwing(SQLiteObjectScanner.class.getName(), "visitEnd", e);
+            Logger.getGlobal().throwing(SQLiteObjectScanner.class.getName(), "brewJava", e);
         }
         META_BLOCK.addStatement("$T.attachTableInfo($T.class, $S, $S)",
                 ClassName.get("droidkit.sqlite", "SQLiteSchema"),

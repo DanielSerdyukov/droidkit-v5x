@@ -19,6 +19,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -42,13 +43,10 @@ public class LoaderCallbacksScanner extends ElementScanner {
 
     private final List<CodeBlock> mOnResetCases = new ArrayList<>();
 
-    private final ProcessingEnv mProcessingEnv;
-
     private TypeElement mOriginType;
 
     public LoaderCallbacksScanner(ProcessingEnv env) {
-        super();
-        mProcessingEnv = env;
+        super(env);
     }
 
     @Override
@@ -64,7 +62,7 @@ public class LoaderCallbacksScanner extends ElementScanner {
         for (final CallbackVisitor visitor : CallbackVisitor.SUPPORTED) {
             final int[] loaderIds = visitor.getLoaderIds(method);
             if (loaderIds.length > 0) {
-                mProcessingEnv.<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
+                getEnv().<JCTree.JCMethodDecl>getTree(method).mods.flags &= ~Flags.PRIVATE;
             }
             for (final int loaderId : loaderIds) {
                 visitor.visit(this, method, loaderId);
@@ -94,19 +92,15 @@ public class LoaderCallbacksScanner extends ElementScanner {
                     .addFileComment(AUTO_GENERATED_FILE)
                     .build();
             try {
-                final JavaFileObject sourceFile = mProcessingEnv.createSourceFile(
+                final JavaFileObject sourceFile = getEnv().createSourceFile(
                         javaFile.packageName + "." + typeSpec.name, mOriginType);
                 try (final Writer writer = new BufferedWriter(sourceFile.openWriter())) {
                     javaFile.writeTo(writer);
                 }
             } catch (IOException e) {
-                mProcessingEnv.printMessage(Diagnostic.Kind.ERROR, mOriginType, e.getMessage());
+                Logger.getGlobal().throwing(LoaderCallbacksScanner.class.getName(), "visitEnd", e);
             }
         }
-    }
-
-    ProcessingEnv getEnv() {
-        return mProcessingEnv;
     }
 
     void addOnCreateLoaderCase(CodeBlock caseBlock) {
@@ -122,7 +116,7 @@ public class LoaderCallbacksScanner extends ElementScanner {
     }
 
     void unexpectedMethodSignature(ExecutableElement method) {
-        mProcessingEnv.printMessage(Diagnostic.Kind.ERROR, method, "Unexpected method signature");
+        getEnv().printMessage(Diagnostic.Kind.ERROR, method, "Unexpected method signature");
     }
 
     //region implementation

@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -13,6 +12,8 @@ import android.widget.TextView;
 import droidkit.annotation.InjectView;
 import droidkit.annotation.OnActionClick;
 import droidkit.annotation.OnClick;
+import droidkit.util.Objects;
+import droidkit.view.Views;
 
 /**
  * @author Daniel Serdyukov
@@ -24,6 +25,10 @@ public class MainActivity extends Activity {
 
     @InjectView(android.R.id.button1)
     Button mButton1;
+
+    boolean mButton1Clicked;
+
+    boolean mButton2Clicked;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,16 +47,6 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public void setContentView(int layoutResID) {
-        super.setContentView(layoutResID);
-    }
-
-    @Override
-    public void setContentView(View view, ViewGroup.LayoutParams params) {
-        super.setContentView(view, params);
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, android.R.id.cut, 0, "Cut");
         menu.add(0, android.R.id.copy, 1, "Copy");
@@ -60,9 +55,14 @@ public class MainActivity extends Activity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    @OnClick(android.R.id.button2)
-    private void onButton2Click() {
+    @OnClick(android.R.id.button1)
+    private void onButton1Click() {
+        mButton1Clicked = true;
+    }
 
+    @OnClick(android.R.id.button2)
+    private void onButton2Click(View view) {
+        mButton2Clicked = Objects.equal(Views.findById(this, android.R.id.button2), view);
     }
 
     @OnActionClick(android.R.id.cut)
