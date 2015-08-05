@@ -1,4 +1,3 @@
-apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
@@ -11,6 +10,7 @@ task androidJar(type: Jar, dependsOn: ['assembleRelease']) {
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
 }
 
 artifacts {
@@ -25,7 +25,7 @@ publishing {
             artifactId 'droidkit'
             version rootProject.version
             artifact androidJar
-            artifact sourcesJar { classifier 'sources' }
+            artifact sourcesJar
             pom.withXml {
                 Node root = asNode()
                 root.appendNode('name', 'DroidKit')

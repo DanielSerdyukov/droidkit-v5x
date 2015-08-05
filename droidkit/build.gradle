@@ -9,7 +9,6 @@ android {
         targetSdkVersion 22
         versionCode rootProject.versionCode
         versionName rootProject.versionName
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -31,10 +30,10 @@ android {
 }
 
 dependencies {
-    compile project(':processor')
     compile 'com.android.support:support-v13:22.2.1'
     compile 'io.reactivex:rxandroid:0.25.0'
     provided 'net.danlew:android.joda:2.8.1'
+    provided "droidkit:droidkit-processor:5.0.1"
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.0'
 }

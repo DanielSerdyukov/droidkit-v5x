@@ -1,1 +1,1 @@
-include ':droidkit', ':processor'
+include ':droidkit'
