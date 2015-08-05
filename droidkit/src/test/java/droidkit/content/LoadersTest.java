@@ -1,5 +1,6 @@
-package droidkit.activity;
+package droidkit.content;
 
+import android.app.Activity;
 import android.app.LoaderManager;
 import android.content.Loader;
 import android.os.Bundle;
@@ -30,7 +31,7 @@ import droidkit.concurrent.AsyncQueue;
 @RunWith(DroidkitTestRunner.class)
 public class LoadersTest {
 
-    private MainActivity mActivity;
+    private Activity mActivity;
 
     private CountDownLatch mOnLoadFinished;
 
@@ -38,7 +39,7 @@ public class LoadersTest {
 
     @Before
     public void setUp() throws Exception {
-        mActivity = Robolectric.setupActivity(MainActivity.class);
+        mActivity = Robolectric.setupActivity(LoaderActivity.class);
         mOnLoadFinished = new CountDownLatch(1);
         mOnResetLoader = new CountDownLatch(1);
     }
@@ -227,6 +228,10 @@ public class LoadersTest {
                 mOnResetLoader.countDown();
             }
         });
+    }
+
+    private static class LoaderActivity extends Activity {
+
     }
 
 }

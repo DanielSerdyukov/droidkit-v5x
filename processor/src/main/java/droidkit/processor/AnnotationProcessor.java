@@ -58,7 +58,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                     .subscribe(new Action1<TypeElement>() {
                         @Override
                         public void call(TypeElement element) {
-                            final ElementScanner scanner = mFactory.getScanner(annotation);
+                            final ElementScanner scanner = mFactory.getScanner(annotation, element);
                             scanner.visitStart();
                             element.accept(scanner, null);
                             scanner.visitEnd();
