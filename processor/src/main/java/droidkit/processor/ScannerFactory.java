@@ -7,7 +7,10 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
+import droidkit.annotation.OnCreateLoader;
 import droidkit.annotation.SQLiteObject;
+import droidkit.processor.content.LoaderCallbacksScanner;
+import droidkit.processor.sqlite.SQLiteObjectScanner;
 import rx.functions.Func2;
 
 /**
@@ -15,8 +18,9 @@ import rx.functions.Func2;
  */
 class ScannerFactory {
 
-    private static final List<FactoryFunc> FUNCTIONS = Arrays.<FactoryFunc>asList(
-            new SQLiteObjectFunc()
+    private static final List<FactoryFunc> FUNCTIONS = Arrays.asList(
+            new SQLiteObjectFunc(),
+            new OnCreateLoaderFunc()
     );
 
     private final ProcessingEnv mProcessingEnv;
@@ -51,7 +55,19 @@ class ScannerFactory {
         @Override
         public ElementScanner call(ProcessingEnv env, TypeElement element) {
             if (env.isSubtype(element.asType(), SQLiteObject.class)) {
-                return new droidkit.processor.sqlite.SQLiteObjectScanner(env);
+                return new SQLiteObjectScanner(env);
+            }
+            return null;
+        }
+
+    }
+
+    private static class OnCreateLoaderFunc implements FactoryFunc {
+
+        @Override
+        public ElementScanner call(ProcessingEnv env, TypeElement element) {
+            if (env.isSubtype(element.asType(), OnCreateLoader.class)) {
+                return new LoaderCallbacksScanner(env);
             }
             return null;
         }
