@@ -200,6 +200,16 @@ public class SQLiteQuery<T> implements SQLiteOp {
     }
 
     /**
+     * @see #one()
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     * equivalent orderBy("_id", false).one()
+     */
+    @Deprecated
+    public T last() {
+        return orderBy(BaseColumns._ID, false).one();
+    }
+
+    /**
      * @deprecated since 5.0.1, will be removed in 5.1.1
      */
     @Deprecated

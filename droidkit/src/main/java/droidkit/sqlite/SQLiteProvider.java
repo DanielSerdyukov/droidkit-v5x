@@ -32,7 +32,7 @@ public class SQLiteProvider extends ContentProvider {
 
     private static final List<Class<?>> HELPERS = new CopyOnWriteArrayList<>();
 
-    private static final String APP_DB = "app.db";
+    private static final String APP_DB = "application.db";
 
     private static final String MIME_DIR = "vnd.android.cursor.dir/";
 

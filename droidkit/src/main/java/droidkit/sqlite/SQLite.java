@@ -89,7 +89,6 @@ public final class SQLite {
         return object;
     }
 
-    // FIXME: 05.08.15 implement delete operation
     @NonNull
     public static <T> T remove(@NonNull T object) {
         final Class<?> type = object.getClass();
@@ -103,7 +102,11 @@ public final class SQLite {
         return object;
     }
 
-    public static void truncate() {
+    public static int clear(@NonNull Class<?> type) {
+        return obtainClient().executeUpdateDelete("DELETE FROM " + SQLiteSchema.resolveTable(type) + ";");
+    }
+
+    public static void clearAll() {
         final SQLiteClient client = obtainClient();
         final Cursor cursor = client.query("SELECT name FROM sqlite_master" +
                 " WHERE type='table'" +
@@ -121,7 +124,7 @@ public final class SQLite {
         client.beginTransaction();
         try {
             for (final String table : tables) {
-                client.execute("DELETE FROM " + table + ";");
+                client.executeUpdateDelete("DELETE FROM " + table + ";");
             }
         } finally {
             client.endTransaction();
@@ -202,12 +205,21 @@ public final class SQLite {
     }
 
     /**
-     * @see #truncate()
+     * @see #clear(Class)
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
+    public int truncate(@NonNull Class<?> type) {
+        return clear(type);
+    }
+
+    /**
+     * @see #clearAll()
      * @deprecated since 5.0.1, will be removed in 5.1.1
      */
     @Deprecated
     public void clearDatabase() {
-        truncate();
+        clearAll();
     }
 
     private static abstract class Holder {
