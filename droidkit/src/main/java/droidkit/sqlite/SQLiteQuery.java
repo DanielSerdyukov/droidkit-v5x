@@ -1,6 +1,5 @@
 package droidkit.sqlite;
 
-import android.app.LoaderManager;
 import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -15,7 +14,6 @@ import java.util.List;
 
 import droidkit.content.StringValue;
 import droidkit.util.Lists;
-import rx.Observable;
 
 /**
  * @author Daniel Serdyukov
@@ -263,11 +261,6 @@ public class SQLiteQuery<T> implements SQLiteOp {
     @NonNull
     public Loader<SQLiteResult<T>> loader() {
         return new SQLiteLoader<>(SQLite.obtainContext(), this);
-    }
-
-    public Observable<List<T>> observable(@NonNull LoaderManager lm, int loaderId) {
-        throw new UnsupportedOperationException("Not supported yet");
-        //return Observable.create(new SQLiteOnSubscribe<>(lm, loader(), loaderId));
     }
 
     @Override
