@@ -29,29 +29,12 @@ public final class SQLite {
         //no instance
     }
 
-    /**
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    public static SQLite with(@NonNull Context context) {
-        return Holder.INSTANCE;
-    }
-
     public static void beginTransaction() {
         obtainClient().beginTransaction();
     }
 
     public static void endTransaction() {
         obtainClient().endTransaction();
-    }
-
-    /**
-     * @see #endTransaction()
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    public static void commitTransaction() {
-        endTransaction();
     }
 
     public static void rollbackTransaction() {
@@ -102,8 +85,8 @@ public final class SQLite {
         return object;
     }
 
-    public static int clear(@NonNull Class<?> type) {
-        return obtainClient().executeUpdateDelete("DELETE FROM " + SQLiteSchema.resolveTable(type) + ";");
+    public static <T> int clear(@NonNull Class<T> type) {
+        return where(type).remove();
     }
 
     public static void clearAll() {
@@ -180,54 +163,6 @@ public final class SQLite {
     private static RuntimeException notSQLiteObject(@NonNull Class<?> type, @NonNull Throwable e) {
         throw new IllegalArgumentException(type + " is not sqlite object, check that class" +
                 " annotated with @SQLiteObject", e);
-    }
-
-    /**
-     * @see #save(Object)
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    @NonNull
-    public SQLite insert(@NonNull Object object) {
-        save(object);
-        return Holder.INSTANCE;
-    }
-
-    /**
-     * @see #remove(Object)
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    @NonNull
-    public SQLite delete(@NonNull Object object) {
-        remove(object);
-        return Holder.INSTANCE;
-    }
-
-    /**
-     * @see #clear(Class)
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    public int truncate(@NonNull Class<?> type) {
-        return clear(type);
-    }
-
-    /**
-     * @see #clearAll()
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    public void clearDatabase() {
-        clearAll();
-    }
-
-    private static abstract class Holder {
-        public static final SQLite INSTANCE = new SQLite();
-
-        private Holder() {
-            //no instance
-        }
     }
 
 }
