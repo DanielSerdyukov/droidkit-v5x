@@ -13,6 +13,7 @@ import java.util.List;
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
 import droidkit.io.IOUtils;
+import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -107,24 +108,23 @@ public final class SQLite {
     }
 
     public static void clearAll() {
-        final SQLiteClient client = obtainClient();
-        final Cursor cursor = client.query("SELECT name FROM sqlite_master" +
-                " WHERE type='table'" +
-                " AND name <> 'android_metadata'");
-        final List<String> tables = new ArrayList<>();
-        try {
-            if (cursor.moveToFirst()) {
-                do {
-                    tables.add(cursor.getString(0));
-                } while (cursor.moveToNext());
+        clearWithCriteria(new Func1<String, Boolean>() {
+            @Override
+            public Boolean call(String table) {
+                return true;
             }
-        } finally {
-            IOUtils.closeQuietly(cursor);
-        }
+        });
+    }
+
+    public static void clearWithCriteria(@NonNull Func1<String, Boolean> criteria) {
+        final SQLiteClient client = obtainClient();
+        final List<String> tables = queryTables(client);
         client.beginTransaction();
         try {
             for (final String table : tables) {
-                client.executeUpdateDelete("DELETE FROM " + table + ";");
+                if (criteria.call(table)) {
+                    client.executeUpdateDelete("DELETE FROM " + table + ";");
+                }
             }
         } finally {
             client.endTransaction();
@@ -180,6 +180,24 @@ public final class SQLite {
     private static RuntimeException notSQLiteObject(@NonNull Class<?> type, @NonNull Throwable e) {
         throw new IllegalArgumentException(type + " is not sqlite object, check that class" +
                 " annotated with @SQLiteObject", e);
+    }
+
+    @NonNull
+    private static List<String> queryTables(@NonNull SQLiteClient client) {
+        final Cursor cursor = client.query("SELECT name FROM sqlite_master" +
+                " WHERE type='table'" +
+                " AND name <> 'android_metadata'");
+        final List<String> tables = new ArrayList<>(cursor.getCount());
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    tables.add(cursor.getString(0));
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            IOUtils.closeQuietly(cursor);
+        }
+        return tables;
     }
 
     /**
