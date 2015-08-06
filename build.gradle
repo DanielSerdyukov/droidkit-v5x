@@ -51,7 +51,6 @@ sonarqube {
         properties['sonar.jdbc.url'] = System.getenv('SONAR_JDBC_URL')
         properties['sonar.jdbc.username'] = System.getenv('SONAR_JDBC_USER')
         properties['sonar.jdbc.password'] = System.getenv('SONAR_JDBC_PASSWORD')
-        properties['sonar.modules'] = 'library,annotations'
     }
 }
 
@@ -64,6 +63,7 @@ project(':droidkit') {
             properties["sonar.java.binaries"] = files(["${project.buildDir}/intermediates/classes/debug"])
             properties["sonar.java.test.binaries"] = files(["${project.buildDir}/intermediates/classes/test/debug"])
             properties["sonar.junit.reportsPath"] = "${project.buildDir}/test-results/debug"
+            properties["sonar.jacoco.reportPath"] = "${project.buildDir}/jacoco/testDebugUnitTest.exec"
         }
     }
 }

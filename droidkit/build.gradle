@@ -38,13 +38,29 @@ dependencies {
     testCompile 'org.robolectric:robolectric:3.0'
 }
 
-gradle.taskGraph.whenReady {
-    connectedDebugAndroidTest << {
-        copy {
-            from("${project.buildDir}/outputs/androidTest-results/connected")
-            into("${project.buildDir}/test-results/debug")
-        }
+apply plugin: 'jacoco'
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+    group = 'Reporting'
+    description = 'Generate Jacoco coverage reports after running tests.'
+    reports {
+        xml.enabled = true
+        html.enabled = true
     }
+
+    // use hidden configuration, for details look into JacocoPlugin.groovy
+    jacocoClasspath = project.configurations['androidJacocoAnt']
+
+    sourceDirectories = fileTree(dir: "${project.projectDir}/src/main/java")
+    classDirectories = fileTree(dir: "${project.buildDir}/intermediates/classes/debug", excludes: [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*',
+            '**/*Test*.*',
+            'android/**/*.*'
+    ])
+    executionData = fileTree(dir: project.buildDir, includes: ['**/*.exec', '**/*.ec'])
 }
 
 if (System.getenv('BINTRAY_USER') || project.hasProperty('bintrayUser')) {
