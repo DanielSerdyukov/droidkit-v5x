@@ -81,6 +81,25 @@ public class SQLiteTest {
         cursor.close();
     }
 
+    @Test
+    public void testRemove() throws Exception {
+        final SimpleBean simpleBean = new SimpleBean();
+        simpleBean.setText("should be removed");
+        SQLite.save(simpleBean);
+
+        Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(SimpleBean.class), null,
+                BaseColumns._ID + " = ?", new String[]{String.valueOf(simpleBean.getId())}, null);
+        Assert.assertTrue(cursor.moveToFirst());
+        Assert.assertEquals(simpleBean.getText(), Cursors.getString(cursor, "text"));
+        cursor.close();
+
+        SQLite.remove(simpleBean);
+        cursor = mProvider.query(SQLiteSchema.resolveUri(SimpleBean.class), null,
+                BaseColumns._ID + " = ?", new String[]{String.valueOf(simpleBean.getId())}, null);
+        Assert.assertFalse(cursor.moveToFirst());
+        cursor.close();
+    }
+
     @After
     public void tearDown() throws Exception {
         mProvider.shutdown();

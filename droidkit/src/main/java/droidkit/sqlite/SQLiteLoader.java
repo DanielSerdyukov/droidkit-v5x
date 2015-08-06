@@ -40,7 +40,7 @@ public class SQLiteLoader<T> extends AsyncTaskLoader<SQLiteResult<T>> {
 
     @Override
     public SQLiteResult<T> loadInBackground() {
-        return mQuery.list();
+        return mQuery.all();
     }
 
     @Override

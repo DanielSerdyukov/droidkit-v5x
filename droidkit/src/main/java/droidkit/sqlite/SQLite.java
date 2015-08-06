@@ -2,18 +2,22 @@ package droidkit.sqlite;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
+import droidkit.io.IOUtils;
 
 /**
  * @author Daniel Serdyukov
  */
-public abstract class SQLite {
+public final class SQLite {
 
     private static volatile Reference<Context> sContextRef;
 
@@ -25,12 +29,29 @@ public abstract class SQLite {
         //no instance
     }
 
+    /**
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
+    public static SQLite with(@NonNull Context context) {
+        return Holder.INSTANCE;
+    }
+
     public static void beginTransaction() {
         obtainClient().beginTransaction();
     }
 
     public static void endTransaction() {
         obtainClient().endTransaction();
+    }
+
+    /**
+     * @see #endTransaction()
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
+    public static void commitTransaction() {
+        endTransaction();
     }
 
     public static void rollbackTransaction() {
@@ -66,6 +87,45 @@ public abstract class SQLite {
             throw notSQLiteObject(type, e);
         }
         return object;
+    }
+
+    // FIXME: 05.08.15 implement delete operation
+    @NonNull
+    public static <T> T remove(@NonNull T object) {
+        final Class<?> type = object.getClass();
+        try {
+            MethodLookup.global()
+                    .find(type.getName() + "$SQLiteHelper", "remove", SQLiteClient.class, type)
+                    .invokeStatic(obtainClient(), object);
+        } catch (DynamicException e) {
+            throw notSQLiteObject(type, e);
+        }
+        return object;
+    }
+
+    public static void truncate() {
+        final SQLiteClient client = obtainClient();
+        final Cursor cursor = client.query("SELECT name FROM sqlite_master" +
+                " WHERE type='table'" +
+                " AND name <> 'android_metadata'");
+        final List<String> tables = new ArrayList<>();
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    tables.add(cursor.getString(0));
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            IOUtils.closeQuietly(cursor);
+        }
+        client.beginTransaction();
+        try {
+            for (final String table : tables) {
+                client.execute("DELETE FROM " + table + ";");
+            }
+        } finally {
+            client.endTransaction();
+        }
     }
 
     public static void notifyChange(@NonNull Class<?> type) {
@@ -117,6 +177,45 @@ public abstract class SQLite {
     private static RuntimeException notSQLiteObject(@NonNull Class<?> type, @NonNull Throwable e) {
         throw new IllegalArgumentException(type + " is not sqlite object, check that class" +
                 " annotated with @SQLiteObject", e);
+    }
+
+    /**
+     * @see #save(Object)
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
+    @NonNull
+    public SQLite insert(@NonNull Object object) {
+        save(object);
+        return Holder.INSTANCE;
+    }
+
+    /**
+     * @see #remove(Object)
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
+    @NonNull
+    public SQLite delete(@NonNull Object object) {
+        remove(object);
+        return Holder.INSTANCE;
+    }
+
+    /**
+     * @see #truncate()
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
+    public void clearDatabase() {
+        truncate();
+    }
+
+    private static abstract class Holder {
+        public static final SQLite INSTANCE = new SQLite();
+
+        private Holder() {
+            //no instance
+        }
     }
 
 }

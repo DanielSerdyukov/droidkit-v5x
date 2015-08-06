@@ -12,9 +12,10 @@ import droidkit.dynamic.DynamicException;
 /**
  * @author Daniel Serdyukov
  */
-public final class Loaders {
+public abstract class Loaders {
 
     private Loaders() {
+        //no instance
     }
 
     @Nullable

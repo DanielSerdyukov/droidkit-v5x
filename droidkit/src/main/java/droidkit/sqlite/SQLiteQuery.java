@@ -193,8 +193,25 @@ public class SQLiteQuery<T> implements SQLiteOp {
         return list.get(0);
     }
 
+    /**
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
+    public T first() {
+        return one();
+    }
+
+    /**
+     * @deprecated since 5.0.1, will be removed in 5.1.1
+     */
+    @Deprecated
     @NonNull
-    public SQLiteResult<T> list() {
+    public SQLiteResult<T> all() {
+        return (SQLiteResult<T>) list();
+    }
+
+    @NonNull
+    public List<T> list() {
         return new SQLiteResult<>(this, cursor(), mType);
     }
 
@@ -249,7 +266,7 @@ public class SQLiteQuery<T> implements SQLiteOp {
     }
 
     public Observable<List<T>> observable(@NonNull LoaderManager lm, int loaderId) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not supported yet");
         //return Observable.create(new SQLiteOnSubscribe<>(lm, loader(), loaderId));
     }
 

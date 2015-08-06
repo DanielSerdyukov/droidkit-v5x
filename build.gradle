@@ -13,7 +13,7 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
-        mavenLocal()
+        maven { url 'https://dl.bintray.com/dvp-troy/maven' }
     }
 }
 
