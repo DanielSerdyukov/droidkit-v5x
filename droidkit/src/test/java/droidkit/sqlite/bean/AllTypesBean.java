@@ -17,6 +17,20 @@ public class AllTypesBean {
 
     public static final String TABLE = "all_types";
 
+    public static final String COLUMNS_DEF = "_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, " +
+            "long INTEGER, " +
+            "int INTEGER, " +
+            "short INTEGER, " +
+            "string TEXT, " +
+            "boolean INTEGER, " +
+            "double REAL, " +
+            "float REAL, " +
+            "big_decimal REAL, " +
+            "big_integer INTEGER, " +
+            "bytes BLOB, " +
+            "role TEXT NOT NULL, " +
+            "date INTEGER";
+
     public static final String[] COLUMNS = new String[]{
             "_id",
             "long",

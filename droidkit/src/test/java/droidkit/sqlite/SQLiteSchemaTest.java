@@ -41,4 +41,9 @@ public class SQLiteSchemaTest {
         Assert.assertEquals(expected, actual);
     }
 
+    @Test
+    public void testColumnsDef() throws Exception {
+        Assert.assertEquals(AllTypesBean.COLUMNS_DEF, SQLiteSchema.columnsOf(AllTypesBean.TABLE));
+    }
+
 }

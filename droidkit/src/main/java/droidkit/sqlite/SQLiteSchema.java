@@ -102,6 +102,11 @@ public abstract class SQLiteSchema {
     }
 
     @NonNull
+    static String columnsOf(String table) {
+        return SCHEMA.get(table);
+    }
+
+    @NonNull
     static String tableOf(@NonNull Uri uri) {
         return Lists.getFirst(uri.getPathSegments());
     }

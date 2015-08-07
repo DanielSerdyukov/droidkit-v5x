@@ -13,9 +13,10 @@ import org.robolectric.annotation.Config;
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.sqlite.bean.ActiveBean;
-import droidkit.sqlite.bean.SimpleBean;
+import droidkit.sqlite.bean.AllTypesBean;
 import droidkit.sqlite.util.SQLiteTestEnv;
 import droidkit.util.Cursors;
+import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -26,39 +27,39 @@ public class SQLiteTest {
 
     private SQLiteProvider mProvider;
 
-    private SimpleBean mSimpleBean;
+    private AllTypesBean mAllTypes;
 
     @Before
     public void setUp() throws Exception {
         mProvider = SQLiteTestEnv.registerProvider();
-        mSimpleBean = new SimpleBean();
-        mSimpleBean.setText("assert");
-        SQLite.save(mSimpleBean);
+        mAllTypes = new AllTypesBean();
+        mAllTypes.setString("assert");
+        SQLite.save(mAllTypes);
     }
 
     @Test
     public void testSave() throws Exception {
-        final Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(SimpleBean.class), null,
-                BaseColumns._ID + " = ?", new String[]{String.valueOf(mSimpleBean.getId())}, null);
+        final Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(AllTypesBean.class), null,
+                BaseColumns._ID + " = ?", new String[]{String.valueOf(mAllTypes.getId())}, null);
         Assert.assertTrue(cursor.moveToFirst());
-        Assert.assertEquals(mSimpleBean.getText(), Cursors.getString(cursor, "text"));
+        Assert.assertEquals(mAllTypes.getString(), Cursors.getString(cursor, "string"));
         cursor.close();
     }
 
     @Test
     public void testUpdate() throws Exception {
-        mSimpleBean.setText("updated");
-        Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(SimpleBean.class), null,
-                BaseColumns._ID + " = ?", new String[]{String.valueOf(mSimpleBean.getId())}, null);
+        mAllTypes.setString("updated");
+        Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(AllTypesBean.class), null,
+                BaseColumns._ID + " = ?", new String[]{String.valueOf(mAllTypes.getId())}, null);
         Assert.assertTrue(cursor.moveToFirst());
-        Assert.assertNotEquals(mSimpleBean.getText(), Cursors.getString(cursor, "text"));
+        Assert.assertNotEquals(mAllTypes.getString(), Cursors.getString(cursor, "text"));
         cursor.close();
 
-        SQLite.update(mSimpleBean);
-        cursor = mProvider.query(SQLiteSchema.resolveUri(SimpleBean.class), null,
-                BaseColumns._ID + " = ?", new String[]{String.valueOf(mSimpleBean.getId())}, null);
+        SQLite.update(mAllTypes);
+        cursor = mProvider.query(SQLiteSchema.resolveUri(AllTypesBean.class), null,
+                BaseColumns._ID + " = ?", new String[]{String.valueOf(mAllTypes.getId())}, null);
         Assert.assertTrue(cursor.moveToFirst());
-        Assert.assertEquals(mSimpleBean.getText(), Cursors.getString(cursor, "text"));
+        Assert.assertEquals(mAllTypes.getString(), Cursors.getString(cursor, "text"));
         cursor.close();
     }
 
@@ -83,21 +84,31 @@ public class SQLiteTest {
 
     @Test
     public void testRemove() throws Exception {
-        final SimpleBean simpleBean = new SimpleBean();
-        simpleBean.setText("should be removed");
+        final AllTypesBean simpleBean = new AllTypesBean();
+        simpleBean.setString("should be removed");
         SQLite.save(simpleBean);
 
-        Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(SimpleBean.class), null,
+        Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(AllTypesBean.class), null,
                 BaseColumns._ID + " = ?", new String[]{String.valueOf(simpleBean.getId())}, null);
         Assert.assertTrue(cursor.moveToFirst());
-        Assert.assertEquals(simpleBean.getText(), Cursors.getString(cursor, "text"));
+        Assert.assertEquals(simpleBean.getString(), Cursors.getString(cursor, "text"));
         cursor.close();
 
         SQLite.remove(simpleBean);
-        cursor = mProvider.query(SQLiteSchema.resolveUri(SimpleBean.class), null,
+        cursor = mProvider.query(SQLiteSchema.resolveUri(AllTypesBean.class), null,
                 BaseColumns._ID + " = ?", new String[]{String.valueOf(simpleBean.getId())}, null);
         Assert.assertFalse(cursor.moveToFirst());
         cursor.close();
+    }
+
+    @Test
+    public void testExecute() throws Exception {
+        Assert.assertEquals("assert", SQLite.execute(new Func1<SQLiteClient, String>() {
+            @Override
+            public String call(SQLiteClient client) {
+                return client.queryForString("SELECT text FROM " + SQLiteSchema.resolveTable(AllTypesBean.class));
+            }
+        }));
     }
 
     @After
