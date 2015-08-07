@@ -13,6 +13,7 @@ import java.util.List;
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
 import droidkit.io.IOUtils;
+import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -122,6 +123,10 @@ public final class SQLite {
 
     public static void notifyChange(@NonNull Class<?> type) {
         obtainResolver().notifyChange(SQLiteSchema.resolveUri(type), null);
+    }
+
+    public static <T> T execute(@NonNull Func1<SQLiteClient, T> func) {
+        return func.call(obtainClient());
     }
 
     static void attach(@NonNull SQLiteClient client, @NonNull Context context) {
