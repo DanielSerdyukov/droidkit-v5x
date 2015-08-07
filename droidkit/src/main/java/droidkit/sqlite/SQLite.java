@@ -86,7 +86,11 @@ public final class SQLite {
     }
 
     public static <T> int clear(@NonNull Class<T> type) {
-        return where(type).remove();
+        return clear(SQLiteSchema.resolveTable(type));
+    }
+
+    public static int clear(@NonNull String table) {
+        return obtainClient().executeUpdateDelete("DELETE FROM " + table + ";");
     }
 
     public static void clearAll() {

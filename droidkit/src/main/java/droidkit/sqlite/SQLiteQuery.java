@@ -40,7 +40,7 @@ public class SQLiteQuery<T> implements SQLiteOp {
         mType = type;
     }
 
-    //region Conditions
+    //region conditions
     @NonNull
     public SQLiteQuery<T> distinct() {
         mDistinct = true;
@@ -191,33 +191,6 @@ public class SQLiteQuery<T> implements SQLiteOp {
         return list.get(0);
     }
 
-    /**
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    public T first() {
-        return one();
-    }
-
-    /**
-     * @see #one()
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     * equivalent orderBy("_id", false).one()
-     */
-    @Deprecated
-    public T last() {
-        return orderBy(BaseColumns._ID, false).one();
-    }
-
-    /**
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    @NonNull
-    public SQLiteResult<T> all() {
-        return (SQLiteResult<T>) list();
-    }
-
     @NonNull
     public List<T> list() {
         return new SQLiteResult<>(this, cursor(), mType);
@@ -269,8 +242,8 @@ public class SQLiteQuery<T> implements SQLiteOp {
     //endregion
 
     @NonNull
-    public Loader<SQLiteResult<T>> loader() {
-        return new SQLiteLoader<>(SQLite.obtainContext(), this);
+    public Loader<List<T>> loader() {
+        return new SQLiteLoader<>(SQLite.obtainContext(), this, mType);
     }
 
     @Override
@@ -296,12 +269,6 @@ public class SQLiteQuery<T> implements SQLiteOp {
         }
         return Double.parseDouble(SQLite.obtainClient().queryForString(sql.toString(),
                 Lists.toArray(mBindArgs, Object.class)));
-    }
-
-    @NonNull
-    @Deprecated
-    Class<T> getType() {
-        return mType;
     }
 
 }

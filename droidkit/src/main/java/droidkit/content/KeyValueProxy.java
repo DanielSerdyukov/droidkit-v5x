@@ -2,18 +2,18 @@ package droidkit.content;
 
 import android.support.annotation.NonNull;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import droidkit.dynamic.ProxyFunc2;
 import rx.functions.Func3;
 
 /**
  * @author Daniel Serdyukov
  */
-class KeyValueProxy implements InvocationHandler {
+class KeyValueProxy implements ProxyFunc2 {
 
     private static final Map<Class<?>, Transform> TRANSFORM = new HashMap<>();
 
@@ -38,7 +38,7 @@ class KeyValueProxy implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(@NonNull Method method, Object[] args) throws Throwable {
         final String key = method.getName();
         final Class<?> returnType = method.getReturnType();
         final Transform transform = TRANSFORM.get(returnType);

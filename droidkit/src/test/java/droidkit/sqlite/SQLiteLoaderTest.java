@@ -41,11 +41,11 @@ public class SQLiteLoaderTest {
 
     @Test
     public void testLoad() throws Exception {
-        final Loader<SQLiteResult<ActiveBean>> loader = SQLite.where(ActiveBean.class).loader();
+        final Loader<List<ActiveBean>> loader = SQLite.where(ActiveBean.class).loader();
         final BlockingQueue<List<ActiveBean>> resultQueue = new ArrayBlockingQueue<>(1);
-        loader.registerListener(0, new Loader.OnLoadCompleteListener<SQLiteResult<ActiveBean>>() {
+        loader.registerListener(0, new Loader.OnLoadCompleteListener<List<ActiveBean>>() {
             @Override
-            public void onLoadComplete(Loader<SQLiteResult<ActiveBean>> loader, SQLiteResult<ActiveBean> data) {
+            public void onLoadComplete(Loader<List<ActiveBean>> loader, List<ActiveBean> data) {
                 resultQueue.add(data);
                 loader.unregisterListener(this);
                 loader.stopLoading();
@@ -60,10 +60,10 @@ public class SQLiteLoaderTest {
     @Test
     public void testObserve() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
-        final Loader<SQLiteResult<ActiveBean>> loader = SQLite.where(ActiveBean.class).loader();
-        loader.registerListener(0, new Loader.OnLoadCompleteListener<SQLiteResult<ActiveBean>>() {
+        final Loader<List<ActiveBean>> loader = SQLite.where(ActiveBean.class).loader();
+        loader.registerListener(0, new Loader.OnLoadCompleteListener<List<ActiveBean>>() {
             @Override
-            public void onLoadComplete(Loader<SQLiteResult<ActiveBean>> loader, SQLiteResult<ActiveBean> data) {
+            public void onLoadComplete(Loader<List<ActiveBean>> loader, List<ActiveBean> data) {
                 AsyncQueue.invoke(new Runnable() {
                     @Override
                     public void run() {

@@ -7,30 +7,23 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 
+import java.util.List;
+
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteLoader<T> extends AsyncTaskLoader<SQLiteResult<T>> {
+public class SQLiteLoader<T> extends AsyncTaskLoader<List<T>> {
 
     private final SQLiteQuery<T> mQuery;
 
     private ContentObserver mObserver;
 
-    private SQLiteResult<T> mResult;
+    private List<T> mResult;
 
-    public SQLiteLoader(@NonNull Context context, @NonNull Class<T> type) {
-        this(context, SQLite.where(type));
-    }
-
-    /**
-     * @see SQLiteQuery#loader()
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     */
-    @Deprecated
-    public SQLiteLoader(@NonNull Context context, @NonNull SQLiteQuery<T> query) {
+    SQLiteLoader(@NonNull Context context, @NonNull SQLiteQuery<T> query, @NonNull Class<T> type) {
         super(context);
         mQuery = query;
-        observeOn(SQLiteSchema.resolveUri(mQuery.getType()));
+        observeOn(SQLiteSchema.resolveUri(type));
     }
 
     @UiThread
@@ -39,12 +32,12 @@ public class SQLiteLoader<T> extends AsyncTaskLoader<SQLiteResult<T>> {
     }
 
     @Override
-    public SQLiteResult<T> loadInBackground() {
-        return mQuery.all();
+    public List<T> loadInBackground() {
+        return mQuery.list();
     }
 
     @Override
-    public void deliverResult(SQLiteResult<T> result) {
+    public void deliverResult(List<T> result) {
         if (isReset()) {
             return;
         }

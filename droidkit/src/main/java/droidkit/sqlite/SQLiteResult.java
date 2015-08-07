@@ -19,10 +19,8 @@ import rx.functions.Action1;
 
 /**
  * @author Daniel Serdyukov
- * @deprecated since 5.0.1, will be removed in 5.1.1
  */
-@Deprecated
-public class SQLiteResult<T> extends AbstractList<T> {
+class SQLiteResult<T> extends AbstractList<T> {
 
     private static final Action1<CursorWrapper> CLOSE_GUARD = new Action1<CursorWrapper>() {
         @Override

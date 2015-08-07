@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import droidkit.util.Dynamic;
+import droidkit.dynamic.ProxyInstance;
 import rx.functions.Action3;
 
 /**
@@ -52,7 +52,7 @@ public final class TypedPrefs extends KeyValueProxy {
     }
 
     public static <T> T from(@NonNull SharedPreferences prefs, @NonNull Class<? extends T> type) {
-        return Dynamic.newProxy(new TypedPrefs(prefs), type);
+        return ProxyInstance.create(type, new TypedPrefs(prefs));
     }
 
     private static void setupIfAbsent(@NonNull SharedPreferences prefs, @NonNull SharedPreferences.Editor editor,

@@ -11,13 +11,5 @@
     protected <methods>;
 }
 
--keep class droidkit.sqlite.SQLiteProvider {
-    static <methods>;
-}
-
--keep class droidkit.sqlite.SQLiteSchema {
-    static <methods>;
-}
-
 -dontwarn javax.**
 -dontwarn com.squareup.**

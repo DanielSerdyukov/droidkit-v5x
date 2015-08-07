@@ -3,6 +3,7 @@ package droidkit.sqlite;
 import android.content.ContentResolver;
 import android.content.pm.ProviderInfo;
 import android.net.Uri;
+import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 
 import java.util.Map;
@@ -110,6 +111,7 @@ public abstract class SQLiteSchema {
         return uri.buildUpon().path(table).build();
     }
 
+    @Keep
     static void attachTableInfo(@NonNull Class<?> type, String table, String columns) {
         TABLES.put(type, table);
         SCHEMA.put(table, columns);
