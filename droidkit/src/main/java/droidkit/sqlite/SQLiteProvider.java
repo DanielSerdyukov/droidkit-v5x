@@ -13,6 +13,7 @@ import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +23,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
-import droidkit.log.Logger;
 import droidkit.util.Sets;
 import rx.functions.Func1;
 
@@ -78,7 +78,7 @@ public class SQLiteProvider extends ContentProvider {
                         .find(helper, "attachInfo", SQLiteClient.class)
                         .invokeStatic(mClient);
             } catch (DynamicException e) {
-                Logger.error(e);
+                Log.e("SQLiteProvider", e.getMessage(), e);
             }
         }
         SQLite.attach(mClient, context);

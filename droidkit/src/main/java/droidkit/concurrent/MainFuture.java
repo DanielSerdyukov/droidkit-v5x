@@ -1,6 +1,7 @@
 package droidkit.concurrent;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.RunnableFuture;
@@ -61,6 +62,7 @@ class MainFuture<V> implements RunnableFuture<V> {
             mTask.call();
             mState = COMPLETING;
         } catch (Exception e) {
+            Log.e("MainFuture", e.getMessage(), e);
             mState = EXCEPTIONAL;
         }
     }

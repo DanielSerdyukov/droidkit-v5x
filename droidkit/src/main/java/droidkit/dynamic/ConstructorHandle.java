@@ -25,7 +25,7 @@ public class ConstructorHandle<T> {
         try {
             return new ConstructorHandle<>(clazz.getDeclaredConstructor(argTypes));
         } catch (NoSuchMethodException e) {
-            throw new DynamicException("No such constructor %s(%s)", clazz.getName(), Arrays.toString(argTypes));
+            throw new DynamicException("No such constructor %s(%s)", clazz.getName(), Arrays.toString(argTypes), e);
         }
     }
 

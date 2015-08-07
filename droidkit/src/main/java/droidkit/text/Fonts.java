@@ -4,6 +4,7 @@ import android.content.res.AssetManager;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.util.LruCache;
 import android.widget.TextView;
 
@@ -30,7 +31,8 @@ public final class Fonts {
     public static List<String> list(@NonNull AssetManager am) {
         try {
             return Arrays.asList(am.list(FONTS_DIR));
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            Log.e("Fonts", e.getMessage(), e);
             return Collections.emptyList();
         }
     }

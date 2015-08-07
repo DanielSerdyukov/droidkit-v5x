@@ -3,6 +3,7 @@ package droidkit.sqlite;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.joda.time.DateTime;
 
@@ -338,7 +339,8 @@ public abstract class SQLiteClient implements Closeable {
             try {
                 Class.forName("org.joda.time.DateTime");
                 return true;
-            } catch (ClassNotFoundException ignored) {
+            } catch (ClassNotFoundException e) {
+                Log.e("DateTimeBinder", e.getMessage(), e);
                 return false;
             }
         }
