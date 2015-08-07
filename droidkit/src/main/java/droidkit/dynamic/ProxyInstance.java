@@ -31,7 +31,7 @@ public class ProxyInstance {
                              @NonNull final MethodLookup lookup) {
         return wrap(iface, object, new ProxyFunc3() {
             @Override
-            public Object invoke(@NonNull Object object, @NonNull Method method, Object[] args) throws Throwable {
+            public Object invoke(@NonNull Object object, @NonNull Method method, Object[] args) throws Exception {
                 return lookup.find(object.getClass(), method.getName(), method.getParameterTypes())
                         .invokeVirtual(object, args);
             }

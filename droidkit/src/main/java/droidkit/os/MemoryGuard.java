@@ -48,8 +48,8 @@ public class MemoryGuard extends PhantomReference<Object> {
     }
 
     @NonNull
-    private static <T1> ReferenceQueue<T1> createReferenceQueue() {
-        final ReferenceQueue<T1> referenceQueue = new ReferenceQueue<>();
+    private static <T> ReferenceQueue<T> createReferenceQueue() {
+        final ReferenceQueue<T> referenceQueue = new ReferenceQueue<>();
         QUEUE.add(referenceQueue);
         return referenceQueue;
     }

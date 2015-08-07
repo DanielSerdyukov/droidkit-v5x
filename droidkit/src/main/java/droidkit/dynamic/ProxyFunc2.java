@@ -9,6 +9,6 @@ import java.lang.reflect.Method;
  */
 public interface ProxyFunc2 {
 
-    Object invoke(@NonNull Method method, Object[] args) throws Throwable;
+    Object invoke(@NonNull Method method, Object[] args) throws Exception;
 
 }

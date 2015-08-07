@@ -21,15 +21,6 @@ public final class MainQueue {
 
     }
 
-    /**
-     * @deprecated since 5.0.1, will be removed in 5.1.1
-     * no instance required more
-     */
-    @Deprecated
-    public static MainQueue get() {
-        return Holder.INSTANCE;
-    }
-
     @NonNull
     public static Handler getHandler() {
         Handler handler = sHandler;
@@ -66,14 +57,6 @@ public final class MainQueue {
         final ScheduledMainFuture<V> future = new ScheduledMainFuture<>(task, delay);
         getHandler().postDelayed(future, delay);
         return future;
-    }
-
-    private static abstract class Holder {
-        public static final MainQueue INSTANCE = new MainQueue();
-
-        private Holder() {
-            //no instance
-        }
     }
 
 }

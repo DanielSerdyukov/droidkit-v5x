@@ -19,6 +19,8 @@ import droidkit.io.IOUtils;
  */
 public final class SQLite {
 
+    private static final String SQLITE_HELPER = "$SQLiteHelper";
+
     private static volatile Reference<Context> sContextRef;
 
     private static volatile Reference<SQLiteClient> sClientRef;
@@ -51,7 +53,7 @@ public final class SQLite {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + "$SQLiteHelper", "insert", SQLiteClient.class, type)
+                    .find(type.getName() + SQLITE_HELPER, "insert", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);
@@ -64,7 +66,7 @@ public final class SQLite {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + "$SQLiteHelper", "update", SQLiteClient.class, type)
+                    .find(type.getName() + SQLITE_HELPER, "update", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);
@@ -77,7 +79,7 @@ public final class SQLite {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + "$SQLiteHelper", "remove", SQLiteClient.class, type)
+                    .find(type.getName() + SQLITE_HELPER, "remove", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);
