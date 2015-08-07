@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.concurrent.AsyncQueue;
-import droidkit.sqlite.bean.ActiveBean;
+import droidkit.sqlite.bean.Active;
 import droidkit.sqlite.util.SQLiteTestEnv;
 import droidkit.util.Lists;
 
@@ -34,25 +34,25 @@ public class SQLiteLoaderTest {
     @Before
     public void setUp() throws Exception {
         mProvider = SQLiteTestEnv.registerProvider();
-        final ActiveBean bean = new ActiveBean();
+        final Active bean = new Active();
         bean.setText("first");
         SQLite.save(bean);
     }
 
     @Test
     public void testLoad() throws Exception {
-        final Loader<List<ActiveBean>> loader = SQLite.where(ActiveBean.class).loader();
-        final BlockingQueue<List<ActiveBean>> resultQueue = new ArrayBlockingQueue<>(1);
-        loader.registerListener(0, new Loader.OnLoadCompleteListener<List<ActiveBean>>() {
+        final Loader<List<Active>> loader = SQLite.where(Active.class).loader();
+        final BlockingQueue<List<Active>> resultQueue = new ArrayBlockingQueue<>(1);
+        loader.registerListener(0, new Loader.OnLoadCompleteListener<List<Active>>() {
             @Override
-            public void onLoadComplete(Loader<List<ActiveBean>> loader, List<ActiveBean> data) {
+            public void onLoadComplete(Loader<List<Active>> loader, List<Active> data) {
                 resultQueue.add(data);
                 loader.unregisterListener(this);
                 loader.stopLoading();
             }
         });
         loader.startLoading();
-        final List<ActiveBean> result = resultQueue.poll(5, TimeUnit.SECONDS);
+        final List<Active> result = resultQueue.poll(5, TimeUnit.SECONDS);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals("first", Lists.getFirst(result).getText());
     }
@@ -60,10 +60,10 @@ public class SQLiteLoaderTest {
     @Test
     public void testObserve() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
-        final Loader<List<ActiveBean>> loader = SQLite.where(ActiveBean.class).loader();
-        loader.registerListener(0, new Loader.OnLoadCompleteListener<List<ActiveBean>>() {
+        final Loader<List<Active>> loader = SQLite.where(Active.class).loader();
+        loader.registerListener(0, new Loader.OnLoadCompleteListener<List<Active>>() {
             @Override
-            public void onLoadComplete(Loader<List<ActiveBean>> loader, List<ActiveBean> data) {
+            public void onLoadComplete(Loader<List<Active>> loader, List<Active> data) {
                 AsyncQueue.invoke(new Runnable() {
                     @Override
                     public void run() {
@@ -73,7 +73,7 @@ public class SQLiteLoaderTest {
             }
         });
         loader.startLoading();
-        SQLite.save(new ActiveBean());
+        SQLite.save(new Active());
         Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
     }
 

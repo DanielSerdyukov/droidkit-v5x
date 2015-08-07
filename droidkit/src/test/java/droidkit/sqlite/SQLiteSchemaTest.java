@@ -10,8 +10,9 @@ import org.robolectric.annotation.Config;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.AllTypesBean;
+import droidkit.sqlite.bean.Standard;
 import droidkit.sqlite.util.SQLiteTestEnv;
+import droidkit.util.Lists;
 
 /**
  * @author Daniel Serdyukov
@@ -27,7 +28,7 @@ public class SQLiteSchemaTest {
 
     @Test
     public void testResolveTable() throws Exception {
-        Assert.assertEquals(AllTypesBean.TABLE, SQLiteSchema.resolveTable(AllTypesBean.class));
+        Assert.assertEquals(Standard.TABLE, SQLiteSchema.resolveTable(Standard.class));
     }
 
     @Test
@@ -35,15 +36,20 @@ public class SQLiteSchemaTest {
         final Uri expected = new Uri.Builder()
                 .scheme("content")
                 .authority(BuildConfig.APPLICATION_ID)
-                .path(AllTypesBean.TABLE)
+                .path(Standard.TABLE)
                 .build();
-        final Uri actual = SQLiteSchema.resolveUri(AllTypesBean.class);
+        final Uri actual = SQLiteSchema.resolveUri(Standard.class);
         Assert.assertEquals(expected, actual);
     }
 
     @Test
-    public void testColumnsDef() throws Exception {
-        Assert.assertEquals(AllTypesBean.COLUMNS_DEF, SQLiteSchema.columnsOf(AllTypesBean.TABLE));
+    public void testCreateQueries() throws Exception {
+        Assert.assertEquals(Standard.COLUMNS_DEF, SQLiteSchema.columnsOf(Standard.TABLE));
+    }
+
+    @Test
+    public void testIndices() throws Exception {
+        Assert.assertArrayEquals(Standard.INDICES, Lists.toArray(SQLiteSchema.indicesOf(Standard.TABLE), String.class));
     }
 
 }

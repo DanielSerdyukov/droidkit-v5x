@@ -186,6 +186,15 @@ public abstract class SQLiteClient implements Closeable {
                 db.compileStatement(query).execute();
             }
         });
+        SQLiteSchema.createIndices(new Action2<String, String>() {
+            @Override
+            public void call(String table, String column) {
+                final String query = "CREATE INDEX IF NOT EXISTS idx_" + table + "_" + column +
+                        " ON " + table + "(" + column + ");";
+                LOG.call(query, null);
+                db.compileStatement(query).execute();
+            }
+        });
     }
 
     protected void onUpgrade(@NonNull final SQLiteDb db, int oldVersion, int newVersion) {
@@ -195,6 +204,11 @@ public abstract class SQLiteClient implements Closeable {
                 final String query = "DROP TABLE IF EXISTS " + table + ";";
                 LOG.call(query, null);
                 db.compileStatement(query).execute();
+            }
+        }, new Func1<String, Boolean>() {
+            @Override
+            public Boolean call(String table) {
+                return true;
             }
         });
         onCreate(db);

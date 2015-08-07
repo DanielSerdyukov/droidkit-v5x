@@ -4,6 +4,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -24,18 +25,37 @@ import droidkit.util.Cursors;
 @RunWith(DroidkitTestRunner.class)
 public class SQLiteProviderTest {
 
+    public static final String TABLE = "p_test";
+
+    public static final Uri URI = new Uri.Builder()
+            .scheme("content")
+            .authority(BuildConfig.APPLICATION_ID)
+            .path(TABLE)
+            .build();
+
     private SQLiteProvider mProvider;
 
     @Before
     public void setUp() throws Exception {
-        mProvider = SQLiteTestEnv.registerProvider();
+        SQLiteTestEnv.registerProvider((mProvider = new SQLiteProvider() {
+            @Override
+            protected SQLiteClient createClient() {
+                return new AndroidSQLiteClient(getContext(), null, 1) {
+                    @Override
+                    protected void onCreate(@NonNull SQLiteDb db) {
+                        db.compileStatement("CREATE TABLE " + TABLE + "(_id INTEGER PRIMARY KEY, value TEXT);")
+                                .execute();
+                    }
+                };
+            }
+        }));
     }
 
     @Test
     public void testQuery() throws Exception {
         final ContentValues values = new ContentValues();
         values.put("value", "TEST");
-        final Uri insertedUri = mProvider.insert(SQLiteTestEnv.URI, values);
+        final Uri insertedUri = mProvider.insert(URI, values);
         final Cursor cursor = mProvider.query(insertedUri, null, null, null, null);
         Assert.assertTrue(cursor.moveToFirst());
         Assert.assertEquals("TEST", Cursors.getString(cursor, "value"));
@@ -44,26 +64,22 @@ public class SQLiteProviderTest {
 
     @Test
     public void testGetType() throws Exception {
-        Assert.assertEquals("vnd.android.cursor.dir/" + SQLiteTestEnv.TABLE, mProvider.getType(SQLiteTestEnv.URI));
-        Assert.assertEquals("vnd.android.cursor.item/" + SQLiteTestEnv.TABLE,
-                mProvider.getType(ContentUris.withAppendedId(SQLiteTestEnv.URI, 1)));
+        Assert.assertEquals("vnd.android.cursor.dir/" + TABLE, mProvider.getType(URI));
+        Assert.assertEquals("vnd.android.cursor.item/" + TABLE, mProvider.getType(ContentUris.withAppendedId(URI, 1)));
     }
 
     @Test
     public void testInsert() throws Exception {
         final ContentValues values = new ContentValues();
         values.put("value", "TEST");
-        Assert.assertEquals(
-                ContentUris.withAppendedId(SQLiteTestEnv.URI, 1),
-                mProvider.insert(SQLiteTestEnv.URI, values)
-        );
+        Assert.assertEquals(ContentUris.withAppendedId(URI, 1), mProvider.insert(URI, values));
     }
 
     @Test
     public void testDelete() throws Exception {
         final ContentValues values = new ContentValues();
         values.put("value", "TEST");
-        final Uri insertedUri = mProvider.insert(SQLiteTestEnv.URI, values);
+        final Uri insertedUri = mProvider.insert(URI, values);
         Assert.assertEquals(1, mProvider.delete(insertedUri, null, null));
         final Cursor cursor = mProvider.query(insertedUri, null, null, null, null);
         Assert.assertFalse(cursor.moveToFirst());
@@ -74,9 +90,9 @@ public class SQLiteProviderTest {
     public void testUpdate() throws Exception {
         final ContentValues values = new ContentValues();
         values.put("value", "TEST");
-        mProvider.insert(SQLiteTestEnv.URI, values);
+        mProvider.insert(URI, values);
         values.put("value", "TEST_2");
-        Uri insertedUri = mProvider.insert(SQLiteTestEnv.URI, values);
+        Uri insertedUri = mProvider.insert(URI, values);
 
         Cursor cursor = mProvider.query(insertedUri, null, null, null, null);
         Assert.assertTrue(cursor.moveToFirst());

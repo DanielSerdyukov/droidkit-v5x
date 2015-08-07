@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -16,6 +17,7 @@ import droidkit.util.Lists;
 import droidkit.util.Maps;
 import rx.functions.Action1;
 import rx.functions.Action2;
+import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
@@ -28,9 +30,11 @@ public abstract class SQLiteSchema {
 
     private static final ConcurrentMap<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<Class<?>, String> TABLES = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class<?>, String> TABLE_RESOLUTION = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<String, String> SCHEMA = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, String> TABLES = new ConcurrentHashMap<>();
+
+    private static final ConcurrentMap<String, List<String>> INDICES = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<Class<?>, Action2<ContentResolver, Uri>> NOTIFICATION_BEHAVIORS;
 
@@ -51,7 +55,7 @@ public abstract class SQLiteSchema {
 
     @NonNull
     public static String resolveTable(@NonNull Class<?> type) {
-        final String table = TABLES.get(type);
+        final String table = TABLE_RESOLUTION.get(type);
         if (table == null) {
             throw new SQLiteException("No such table for %s", type.getName());
         }
@@ -80,6 +84,28 @@ public abstract class SQLiteSchema {
                 .call(SQLite.obtainResolver(), SQLiteSchema.resolveUri(type));
     }
 
+    public static void createTables(@NonNull Action2<String, String> func) {
+        for (final Map.Entry<String, String> table : TABLES.entrySet()) {
+            func.call(table.getKey(), table.getValue());
+        }
+    }
+
+    public static void createIndices(@NonNull Action2<String, String> func) {
+        for (final Map.Entry<String, List<String>> table : INDICES.entrySet()) {
+            for (final String column : table.getValue()) {
+                func.call(table.getKey(), column);
+            }
+        }
+    }
+
+    public static void dropTables(@NonNull Action1<String> func, Func1<String, Boolean> criteria) {
+        for (final String table : TABLE_RESOLUTION.values()) {
+            if (criteria.call(table)) {
+                func.call(table);
+            }
+        }
+    }
+
     static void attachInfo(ProviderInfo info) {
         AUTHORITY.compareAndSet(null, info.authority);
         try {
@@ -89,21 +115,14 @@ public abstract class SQLiteSchema {
         }
     }
 
-    static void createTables(@NonNull Action2<String, String> create) {
-        for (final Map.Entry<String, String> entry : SCHEMA.entrySet()) {
-            create.call(entry.getKey(), entry.getValue());
-        }
-    }
-
-    static void dropTables(@NonNull Action1<String> drop) {
-        for (final String table : SCHEMA.keySet()) {
-            drop.call(table);
-        }
+    @NonNull
+    static String columnsOf(String table) {
+        return TABLES.get(table);
     }
 
     @NonNull
-    static String columnsOf(String table) {
-        return SCHEMA.get(table);
+    static List<String> indicesOf(String table) {
+        return INDICES.get(table);
     }
 
     @NonNull
@@ -117,9 +136,14 @@ public abstract class SQLiteSchema {
     }
 
     @Keep
-    static void attachTableInfo(@NonNull Class<?> type, String table, String columns) {
-        TABLES.put(type, table);
-        SCHEMA.put(table, columns);
+    static void attachTableInfo(@NonNull Class<?> type, @NonNull String table, @NonNull String columns) {
+        TABLE_RESOLUTION.putIfAbsent(type, table);
+        TABLES.putIfAbsent(table, columns);
+    }
+
+    @Keep
+    static void attachIndicesInfo(@NonNull String table, @NonNull List<String> indices) {
+        INDICES.putIfAbsent(table, indices);
     }
 
 }

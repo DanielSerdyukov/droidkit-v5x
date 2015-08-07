@@ -15,6 +15,7 @@ public class AndroidSQLiteClient extends SQLiteClient {
 
     public AndroidSQLiteClient(@NonNull Context context, @Nullable String name, int version) {
         mHelper = new SQLiteHelper(context, name, version);
+        mHelper.getWritableDatabase(); // ensure database creation
     }
 
     @Override

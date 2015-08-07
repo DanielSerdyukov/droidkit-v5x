@@ -12,10 +12,10 @@ import droidkit.annotation.SQLitePk;
 /**
  * @author Daniel Serdyukov
  */
-@SQLiteObject("all_types")
-public class AllTypesBean {
+@SQLiteObject(value = "standard", uniqueOn = {"string", "boolean"})
+public class Standard {
 
-    public static final String TABLE = "all_types";
+    public static final String TABLE = "standard";
 
     public static final String COLUMNS_DEF = "_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, " +
             "long INTEGER, " +
@@ -29,7 +29,8 @@ public class AllTypesBean {
             "big_integer INTEGER, " +
             "bytes BLOB, " +
             "role TEXT NOT NULL, " +
-            "date INTEGER";
+            "date INTEGER, " +
+            "UNIQUE(string, boolean)";
 
     public static final String[] COLUMNS = new String[]{
             "_id",
@@ -46,6 +47,8 @@ public class AllTypesBean {
             "role",
             "date"
     };
+
+    public static final String[] INDICES = new String[]{"role", "date"};
 
     @SQLitePk
     private long mId;
@@ -80,10 +83,10 @@ public class AllTypesBean {
     @SQLiteColumn("bytes")
     private byte[] mByteArray;
 
-    @SQLiteColumn
-    private Role mRole;
+    @SQLiteColumn(index = true)
+    private Role mRole = Role.ADMIN;
 
-    @SQLiteColumn("date")
+    @SQLiteColumn(value = "date", index = true)
     private DateTime mDateTime;
 
     public long getId() {

@@ -14,7 +14,7 @@ import java.util.List;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.ActiveBean;
+import droidkit.sqlite.bean.Active;
 import droidkit.sqlite.util.SQLiteTestEnv;
 import droidkit.util.Cursors;
 
@@ -32,7 +32,7 @@ public class SQLiteResultTest {
         mProvider = SQLiteTestEnv.registerProvider();
         SQLite.beginTransaction();
         for (int i = 0; i < 10; ++i) {
-            final ActiveBean bean = new ActiveBean();
+            final Active bean = new Active();
             bean.setText("Bean #" + (i + 1));
             SQLite.save(bean);
         }
@@ -41,13 +41,13 @@ public class SQLiteResultTest {
 
     @Test
     public void testGet() throws Exception {
-        checkBeans(SQLite.where(ActiveBean.class).list());
+        checkBeans(SQLite.where(Active.class).list());
     }
 
     @Test
     public void testAdd() throws Exception {
-        final List<ActiveBean> beans = SQLite.where(ActiveBean.class).list();
-        final ActiveBean newBean = new ActiveBean();
+        final List<Active> beans = SQLite.where(Active.class).list();
+        final Active newBean = new Active();
         newBean.setText("Added Bean");
         beans.add(newBean);
         checkBeans(beans);
@@ -55,7 +55,7 @@ public class SQLiteResultTest {
 
     @Test
     public void testRemove() throws Exception {
-        final List<ActiveBean> beans = SQLite.where(ActiveBean.class).list();
+        final List<Active> beans = SQLite.where(Active.class).list();
         beans.remove(5);
         checkBeans(beans);
     }
@@ -65,8 +65,8 @@ public class SQLiteResultTest {
         mProvider.shutdown();
     }
 
-    private void checkBeans(@NonNull List<ActiveBean> beans) {
-        final Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(ActiveBean.class), null, null, null, null);
+    private void checkBeans(@NonNull List<Active> beans) {
+        final Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(Active.class), null, null, null, null);
         Assert.assertEquals(cursor.getCount(), beans.size());
         Assert.assertTrue(cursor.moveToFirst());
         do {
