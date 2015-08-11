@@ -50,6 +50,21 @@ public final class SQLite {
     }
 
     @NonNull
+    public static <T> List<T> rawQuery(@NonNull final Class<T> type, @NonNull final String sql,
+                                       final Object... bindArgs) {
+        final SQLiteRawQuery query = new SQLiteRawQuery() {
+            @NonNull
+            @Override
+            public Cursor cursor() {
+                final Cursor cursor = obtainClient().query(sql, bindArgs);
+                cursor.setNotificationUri(obtainResolver(), SQLiteSchema.resolveUri(type));
+                return cursor;
+            }
+        };
+        return new SQLiteResult<>(query, query.cursor(), type);
+    }
+
+    @NonNull
     public static <T> T save(@NonNull T object) {
         final Class<?> type = object.getClass();
         try {
@@ -165,15 +180,16 @@ public final class SQLite {
     }
 
     @NonNull
+    static RuntimeException notSQLiteObject(@NonNull Class<?> type, @NonNull Throwable e) {
+        throw new IllegalArgumentException(type + " is not sqlite object, check that class" +
+                " annotated with @SQLiteObject", e);
+    }
+
+    @NonNull
     private static RuntimeException notAttachedYet() {
         throw new IllegalStateException("SQLite not attached yet, check that SQLiteProvider" +
                 " registered in AndroidManifest.xml");
     }
 
-    @NonNull
-    private static RuntimeException notSQLiteObject(@NonNull Class<?> type, @NonNull Throwable e) {
-        throw new IllegalArgumentException(type + " is not sqlite object, check that class" +
-                " annotated with @SQLiteObject", e);
-    }
 
 }

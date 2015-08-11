@@ -6,16 +6,16 @@ import android.net.Uri;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import droidkit.dynamic.DynamicException;
+import droidkit.dynamic.MethodLookup;
 import droidkit.log.Logger;
 import droidkit.util.Lists;
 import droidkit.util.Maps;
-import rx.functions.Action1;
 import rx.functions.Action2;
 import rx.functions.Func1;
 
@@ -30,11 +30,9 @@ public abstract class SQLiteSchema {
 
     private static final ConcurrentMap<Class<?>, Uri> URIS = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<Class<?>, String> TABLE_RESOLUTION = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class<?>, String> RESOLUTIONS = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<String, String> TABLES = new ConcurrentHashMap<>();
-
-    private static final ConcurrentMap<String, List<String>> INDICES = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, Class<?>> HELPERS = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<Class<?>, Action2<ContentResolver, Uri>> NOTIFICATION_BEHAVIORS;
 
@@ -55,7 +53,7 @@ public abstract class SQLiteSchema {
 
     @NonNull
     public static String resolveTable(@NonNull Class<?> type) {
-        final String table = TABLE_RESOLUTION.get(type);
+        final String table = RESOLUTIONS.get(type);
         if (table == null) {
             throw new SQLiteException("No such table for %s", type.getName());
         }
@@ -84,24 +82,32 @@ public abstract class SQLiteSchema {
                 .call(SQLite.obtainResolver(), SQLiteSchema.resolveUri(type));
     }
 
-    public static void createTables(@NonNull Action2<String, String> func) {
-        for (final Map.Entry<String, String> table : TABLES.entrySet()) {
-            func.call(table.getKey(), table.getValue());
-        }
-    }
-
-    public static void createIndices(@NonNull Action2<String, String> func) {
-        for (final Map.Entry<String, List<String>> table : INDICES.entrySet()) {
-            for (final String column : table.getValue()) {
-                func.call(table.getKey(), column);
+    public static void createTables(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
+        final MethodLookup methodLookup = MethodLookup.local();
+        for (final Map.Entry<String, Class<?>> entry : HELPERS.entrySet()) {
+            try {
+                if (criteria.call(entry.getKey())) {
+                    methodLookup.find(entry.getValue(), "createTable", SQLiteDb.class).invokeStatic(db);
+                    methodLookup.find(entry.getValue(), "createIndices", SQLiteDb.class).invokeStatic(db);
+                    methodLookup.find(entry.getValue(), "createRelationTables", SQLiteDb.class).invokeStatic(db);
+                    methodLookup.find(entry.getValue(), "createTriggers", SQLiteDb.class).invokeStatic(db);
+                }
+            } catch (DynamicException e) {
+                throw SQLite.notSQLiteObject(entry.getValue(), e);
             }
         }
     }
 
-    public static void dropTables(@NonNull Action1<String> func, Func1<String, Boolean> criteria) {
-        for (final String table : TABLE_RESOLUTION.values()) {
-            if (criteria.call(table)) {
-                func.call(table);
+    public static void dropTables(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
+        final MethodLookup methodLookup = MethodLookup.local();
+        for (final Map.Entry<String, Class<?>> entry : HELPERS.entrySet()) {
+            try {
+                if (criteria.call(entry.getKey())) {
+                    methodLookup.find(entry.getValue(), "dropTable", SQLiteDb.class).invokeStatic(db);
+                    methodLookup.find(entry.getValue(), "dropRelationTables", SQLiteDb.class).invokeStatic(db);
+                }
+            } catch (DynamicException e) {
+                throw SQLite.notSQLiteObject(entry.getValue(), e);
             }
         }
     }
@@ -116,16 +122,6 @@ public abstract class SQLiteSchema {
     }
 
     @NonNull
-    static String columnsOf(String table) {
-        return TABLES.get(table);
-    }
-
-    @NonNull
-    static List<String> indicesOf(String table) {
-        return INDICES.get(table);
-    }
-
-    @NonNull
     static String tableOf(@NonNull Uri uri) {
         return Lists.getFirst(uri.getPathSegments());
     }
@@ -136,14 +132,9 @@ public abstract class SQLiteSchema {
     }
 
     @Keep
-    static void attachTableInfo(@NonNull Class<?> type, @NonNull String table, @NonNull String columns) {
-        TABLE_RESOLUTION.putIfAbsent(type, table);
-        TABLES.putIfAbsent(table, columns);
-    }
-
-    @Keep
-    static void attachIndicesInfo(@NonNull String table, @NonNull List<String> indices) {
-        INDICES.putIfAbsent(table, indices);
+    static void attachTableInfo(@NonNull Class<?> type, @NonNull String table, @NonNull Class<?> helper) {
+        RESOLUTIONS.putIfAbsent(type, table);
+        HELPERS.putIfAbsent(table, helper);
     }
 
 }

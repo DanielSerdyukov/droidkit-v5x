@@ -13,38 +13,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import droidkit.io.IOUtils;
 import droidkit.util.Arrays2;
 import droidkit.util.Objects;
-import rx.functions.Action1;
-import rx.functions.Action2;
 import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
  */
 public abstract class SQLiteClient implements Closeable {
-
-    private static final String TAG = "SQLiteClient";
-
-    private static final AtomicBoolean DEBUG = new AtomicBoolean();
-
-    private static final String BINDING = " << ";
-
-    private static final Action2<String, Object[]> LOG = new Action2<String, Object[]>() {
-        @Override
-        public void call(String sql, Object[] args) {
-            if (DEBUG.get()) {
-                if (args == null) {
-                    Log.d(TAG, sql);
-                } else {
-                    Log.d(TAG, sql + BINDING + Arrays.toString(args));
-                }
-            }
-        }
-    };
 
     private static final boolean JODA_TIME_SUPPORT;
 
@@ -64,10 +42,6 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     private final ConcurrentMap<String, SQLiteStmt> mStatements = new ConcurrentHashMap<>();
-
-    public static void setLogEnabled(boolean enabled) {
-        DEBUG.compareAndSet(DEBUG.get(), enabled);
-    }
 
     public final void beginTransaction() {
         final SQLiteDb db = getWritableDatabase();
@@ -105,7 +79,6 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     public final void execute(@NonNull String sql, @Nullable Object... bindArgs) {
-        LOG.call(sql, bindArgs);
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
@@ -120,7 +93,6 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     public final long executeInsert(@NonNull String sql, @Nullable Object... bindArgs) {
-        LOG.call(sql, bindArgs);
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
@@ -138,7 +110,6 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     public final int executeUpdateDelete(@NonNull String sql, @Nullable Object... bindArgs) {
-        LOG.call(sql, bindArgs);
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
@@ -157,7 +128,6 @@ public abstract class SQLiteClient implements Closeable {
 
     @NonNull
     public final String queryForString(@NonNull String sql, @Nullable Object... bindArgs) {
-        LOG.call(sql, bindArgs);
         final SQLiteDb db = getReadableDatabase();
         final SQLiteStmt stmt = db.compileStatement(sql);
         clearAndBindValues(stmt, bindArgs);
@@ -178,36 +148,18 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     protected void onCreate(@NonNull final SQLiteDb db) {
-        SQLiteSchema.createTables(new Action2<String, String>() {
+        SQLiteSchema.createTables(db, new Func1<String, Boolean>() {
             @Override
-            public void call(@NonNull String table, @NonNull String columns) {
-                final String query = "CREATE TABLE IF NOT EXISTS " + table + "(" + columns + ");";
-                LOG.call(query, null);
-                db.compileStatement(query).execute();
-            }
-        });
-        SQLiteSchema.createIndices(new Action2<String, String>() {
-            @Override
-            public void call(String table, String column) {
-                final String query = "CREATE INDEX IF NOT EXISTS idx_" + table + "_" + column +
-                        " ON " + table + "(" + column + ");";
-                LOG.call(query, null);
-                db.compileStatement(query).execute();
+            public Boolean call(String s) {
+                return true;
             }
         });
     }
 
     protected void onUpgrade(@NonNull final SQLiteDb db, int oldVersion, int newVersion) {
-        SQLiteSchema.dropTables(new Action1<String>() {
+        SQLiteSchema.dropTables(db, new Func1<String, Boolean>() {
             @Override
-            public void call(@NonNull String table) {
-                final String query = "DROP TABLE IF EXISTS " + table + ";";
-                LOG.call(query, null);
-                db.compileStatement(query).execute();
-            }
-        }, new Func1<String, Boolean>() {
-            @Override
-            public Boolean call(String table) {
+            public Boolean call(String s) {
                 return true;
             }
         });
@@ -223,7 +175,6 @@ public abstract class SQLiteClient implements Closeable {
     @NonNull
     @SuppressWarnings("ConstantConditions")
     Cursor query(@NonNull String sql, @Nullable String[] bindArgs) {
-        LOG.call(sql, bindArgs);
         return getReadableDatabase().query(sql, bindArgs);
     }
 

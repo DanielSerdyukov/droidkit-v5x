@@ -10,12 +10,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
+import java.util.List;
+
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.sqlite.bean.Active;
 import droidkit.sqlite.bean.Standard;
 import droidkit.sqlite.util.SQLiteTestEnv;
 import droidkit.util.Cursors;
+import droidkit.util.Lists;
 import rx.functions.Func1;
 
 /**
@@ -35,6 +38,13 @@ public class SQLiteTest {
         mStandard = new Standard();
         mStandard.setString("assert");
         SQLite.save(mStandard);
+    }
+
+    @Test
+    public void testRawQuery() throws Exception {
+        final List<Standard> list = SQLite.rawQuery(Standard.class, "SELECT * FROM " + Standard.TABLE + ";");
+        Assert.assertFalse(list.isEmpty());
+        Assert.assertEquals("assert", Lists.getFirst(list).getString());
     }
 
     @Test

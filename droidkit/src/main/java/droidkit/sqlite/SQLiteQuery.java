@@ -18,7 +18,7 @@ import droidkit.util.Lists;
 /**
  * @author Daniel Serdyukov
  */
-public class SQLiteQuery<T> implements SQLiteOp {
+public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
 
     private final Class<T> mType;
 
@@ -26,11 +26,11 @@ public class SQLiteQuery<T> implements SQLiteOp {
 
     private final List<Object> mBindArgs = new ArrayList<>();
 
+    private final List<String> mGroupBy = new ArrayList<>();
+
     private final List<String> mOrderBy = new ArrayList<>();
 
     private boolean mDistinct;
-
-    private String mGroupBy;
 
     private String mHaving;
 
@@ -138,7 +138,7 @@ public class SQLiteQuery<T> implements SQLiteOp {
 
     @NonNull
     public SQLiteQuery<T> groupBy(@NonNull String... columns) {
-        mGroupBy = TextUtils.join(COMMA, columns);
+        Collections.addAll(mGroupBy, columns);
         return this;
     }
 
@@ -197,12 +197,13 @@ public class SQLiteQuery<T> implements SQLiteOp {
     }
 
     @NonNull
+    @Override
     public Cursor cursor() {
         final Cursor cursor = SQLite.obtainClient().query(SQLiteQueryBuilder.buildQueryString(
                 mDistinct,
                 SQLiteSchema.resolveTable(mType),
                 null, mWhere.toString(),
-                mGroupBy,
+                TextUtils.join(COMMA, mGroupBy),
                 mHaving,
                 TextUtils.join(COMMA, mOrderBy),
                 mLimit

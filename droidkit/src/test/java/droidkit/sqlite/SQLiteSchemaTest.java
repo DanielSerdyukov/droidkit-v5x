@@ -12,7 +12,6 @@ import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.sqlite.bean.Standard;
 import droidkit.sqlite.util.SQLiteTestEnv;
-import droidkit.util.Lists;
 
 /**
  * @author Daniel Serdyukov
@@ -40,16 +39,6 @@ public class SQLiteSchemaTest {
                 .build();
         final Uri actual = SQLiteSchema.resolveUri(Standard.class);
         Assert.assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testCreateQueries() throws Exception {
-        Assert.assertEquals(Standard.COLUMNS_DEF, SQLiteSchema.columnsOf(Standard.TABLE));
-    }
-
-    @Test
-    public void testIndices() throws Exception {
-        Assert.assertArrayEquals(Standard.INDICES, Lists.toArray(SQLiteSchema.indicesOf(Standard.TABLE), String.class));
     }
 
 }

@@ -14,7 +14,8 @@ Gradle
 --------
 
     dependencies {
-        compile 'droidkit:droidkit:5.0.1'
+        compile 'droidkit:droidkit:5.1.1'
+        provided 'droidkit:droidkit-processor:5.1.1'
     }
 
 License

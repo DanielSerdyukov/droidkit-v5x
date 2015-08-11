@@ -29,7 +29,7 @@ class SQLiteResult<T> extends AbstractList<T> {
         }
     };
 
-    private final SQLiteQuery<T> mQuery;
+    private final SQLiteRawQuery mQuery;
 
     private final Class<T> mType;
 
@@ -37,7 +37,7 @@ class SQLiteResult<T> extends AbstractList<T> {
 
     private CursorWrapper mWrapper;
 
-    SQLiteResult(@NonNull SQLiteQuery<T> query, @NonNull Cursor initialCursor, @NonNull Class<T> type) {
+    SQLiteResult(@NonNull SQLiteRawQuery query, @NonNull Cursor initialCursor, @NonNull Class<T> type) {
         mQuery = query;
         mType = type;
         mWrapper = new CursorWrapper(initialCursor);
