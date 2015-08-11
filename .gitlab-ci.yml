@@ -8,6 +8,7 @@ development:
     - build-tools-latest
   only:
     - master
+    - 5.0-stable
 
 bintray:
   script:
