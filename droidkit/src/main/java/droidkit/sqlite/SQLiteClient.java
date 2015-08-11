@@ -3,6 +3,7 @@ package droidkit.sqlite;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.joda.time.DateTime;
 
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import droidkit.io.IOUtils;
 import droidkit.util.Arrays2;
@@ -24,6 +26,25 @@ import rx.functions.Func1;
  * @author Daniel Serdyukov
  */
 public abstract class SQLiteClient implements Closeable {
+
+    private static final String TAG = "SQLiteClient";
+
+    private static final AtomicBoolean DEBUG = new AtomicBoolean();
+
+    private static final String BINDING = " << ";
+
+    private static final Action2<String, Object[]> LOG = new Action2<String, Object[]>() {
+        @Override
+        public void call(String sql, Object[] args) {
+            if (DEBUG.get()) {
+                if (args == null) {
+                    Log.d(TAG, sql);
+                } else {
+                    Log.d(TAG, sql + BINDING + Arrays.toString(args));
+                }
+            }
+        }
+    };
 
     private static final boolean JODA_TIME_SUPPORT;
 
@@ -43,6 +64,10 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     private final ConcurrentMap<String, SQLiteStmt> mStatements = new ConcurrentHashMap<>();
+
+    public static void setLogEnabled(boolean enabled) {
+        DEBUG.compareAndSet(DEBUG.get(), enabled);
+    }
 
     public final void beginTransaction() {
         final SQLiteDb db = getWritableDatabase();
@@ -80,6 +105,7 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     public final void execute(@NonNull String sql, @Nullable Object... bindArgs) {
+        LOG.call(sql, bindArgs);
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
@@ -94,6 +120,7 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     public final long executeInsert(@NonNull String sql, @Nullable Object... bindArgs) {
+        LOG.call(sql, bindArgs);
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
@@ -111,6 +138,7 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     public final int executeUpdateDelete(@NonNull String sql, @Nullable Object... bindArgs) {
+        LOG.call(sql, bindArgs);
         final SQLiteDb db = getWritableDatabase();
         if (db.inTransaction()) {
             final SQLiteStmt stmt = compileStatement(db, sql);
@@ -129,6 +157,7 @@ public abstract class SQLiteClient implements Closeable {
 
     @NonNull
     public final String queryForString(@NonNull String sql, @Nullable Object... bindArgs) {
+        LOG.call(sql, bindArgs);
         final SQLiteDb db = getReadableDatabase();
         final SQLiteStmt stmt = db.compileStatement(sql);
         clearAndBindValues(stmt, bindArgs);
@@ -152,7 +181,9 @@ public abstract class SQLiteClient implements Closeable {
         SQLiteSchema.createTables(new Action2<String, String>() {
             @Override
             public void call(@NonNull String table, @NonNull String columns) {
-                db.compileStatement("CREATE TABLE IF NOT EXISTS " + table + "(" + columns + ");").execute();
+                final String query = "CREATE TABLE IF NOT EXISTS " + table + "(" + columns + ");";
+                LOG.call(query, null);
+                db.compileStatement(query).execute();
             }
         });
     }
@@ -161,7 +192,9 @@ public abstract class SQLiteClient implements Closeable {
         SQLiteSchema.dropTables(new Action1<String>() {
             @Override
             public void call(@NonNull String table) {
-                db.compileStatement("CREATE TABLE IF NOT EXISTS " + table + ";").execute();
+                final String query = "DROP TABLE IF EXISTS " + table + ";";
+                LOG.call(query, null);
+                db.compileStatement(query).execute();
             }
         });
         onCreate(db);
@@ -176,6 +209,7 @@ public abstract class SQLiteClient implements Closeable {
     @NonNull
     @SuppressWarnings("ConstantConditions")
     Cursor query(@NonNull String sql, @Nullable String[] bindArgs) {
+        LOG.call(sql, bindArgs);
         return getReadableDatabase().query(sql, bindArgs);
     }
 
@@ -338,7 +372,8 @@ public abstract class SQLiteClient implements Closeable {
             try {
                 Class.forName("org.joda.time.DateTime");
                 return true;
-            } catch (ClassNotFoundException ignored) {
+            } catch (ClassNotFoundException e) {
+                Log.e("DateTimeBinder", e.getMessage(), e);
                 return false;
             }
         }
