@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -105,6 +106,22 @@ public class SQLiteQuery<T> implements SQLiteOp {
     @NonNull
     public SQLiteQuery<T> notNull(@NonNull String column) {
         return appendWhere(column, NOT_NULL);
+    }
+
+    @NonNull
+    public SQLiteQuery<T> inSelect(@NonNull String column, @NonNull String select, @NonNull Object... bindArgs) {
+        mWhere.append(column).append(" IN(").append(select).append(")");
+        Collections.addAll(mBindArgs, bindArgs);
+        return this;
+    }
+
+    @NonNull
+    public SQLiteQuery<T> inSelect(@NonNull String column, @NonNull Collection<?> values) {
+        mWhere.append(column).append(" IN(")
+                .append(TextUtils.join(COMMA, Collections.nCopies(values.size(), "?")))
+                .append(")");
+        Collections.addAll(mBindArgs, values);
+        return this;
     }
 
     @NonNull

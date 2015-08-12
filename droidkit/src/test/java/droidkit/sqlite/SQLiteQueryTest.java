@@ -5,6 +5,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
+
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.sqlite.bean.AllTypesBean;
@@ -83,6 +85,16 @@ public class SQLiteQueryTest {
     public void testNotNull() throws Exception {
         Assert.assertEquals(" WHERE _id NOT NULL", new SQLiteQuery<>(AllTypesBean.class)
                 .notNull("_id")
+                .toString());
+    }
+
+    @Test
+    public void testInSelect() throws Exception {
+        Assert.assertEquals(" WHERE _id IN(SELECT id FROM bar)", new SQLiteQuery<>(AllTypesBean.class)
+                .inSelect("_id", "SELECT id FROM bar")
+                .toString());
+        Assert.assertEquals(" WHERE _id IN(?, ?)", new SQLiteQuery<>(AllTypesBean.class)
+                .inSelect("_id", Arrays.asList("one", "two"))
                 .toString());
     }
 
