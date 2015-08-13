@@ -11,6 +11,8 @@ import java.io.Closeable;
  */
 public interface SQLiteDb extends Closeable {
 
+    void setForeignKeyConstraintsEnabled(boolean enable);
+
     @NonNull
     Cursor query(@NonNull String sql, @Nullable String... bindArgs);
 

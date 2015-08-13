@@ -43,11 +43,13 @@ public abstract class SQLiteClient implements Closeable {
 
     private final ConcurrentMap<String, SQLiteStmt> mStatements = new ConcurrentHashMap<>();
 
-    public final void beginTransaction() {
+    public final boolean beginTransaction() {
         final SQLiteDb db = getWritableDatabase();
         if (!db.inTransaction()) {
             db.beginTransactionNonExclusive();
+            return true;
         }
+        return false;
     }
 
     public final void endTransaction() {
@@ -144,7 +146,7 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     protected void onConfigure(@NonNull SQLiteDb db) {
-
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     protected void onCreate(@NonNull final SQLiteDb db) {

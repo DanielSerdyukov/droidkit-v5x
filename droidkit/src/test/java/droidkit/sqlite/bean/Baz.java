@@ -1,11 +1,8 @@
 package droidkit.sqlite.bean;
 
-import java.util.List;
-
 import droidkit.annotation.SQLiteColumn;
 import droidkit.annotation.SQLiteObject;
 import droidkit.annotation.SQLitePk;
-import droidkit.annotation.SQLiteRelation;
 
 /**
  * @author Daniel Serdyukov
@@ -19,7 +16,16 @@ public class Baz {
     @SQLiteColumn
     String mText;
 
-    @SQLiteRelation
-    List<Foo> mFoos;
+    public long getId() {
+        return mId;
+    }
+
+    public String getText() {
+        return mText;
+    }
+
+    public void setText(String text) {
+        mText = text;
+    }
 
 }

@@ -7,6 +7,7 @@ import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,7 +33,7 @@ public abstract class SQLiteSchema {
 
     private static final ConcurrentMap<Class<?>, String> RESOLUTIONS = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<String, Class<?>> HELPERS = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class<?>, Class<?>> HELPERS = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<Class<?>, Action2<ContentResolver, Uri>> NOTIFICATION_BEHAVIORS;
 
@@ -84,9 +85,10 @@ public abstract class SQLiteSchema {
 
     public static void createTables(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
         final MethodLookup methodLookup = MethodLookup.local();
-        for (final Map.Entry<String, Class<?>> entry : HELPERS.entrySet()) {
+        for (final Map.Entry<Class<?>, Class<?>> entry : HELPERS.entrySet()) {
+            final String table = RESOLUTIONS.get(entry.getKey());
             try {
-                if (criteria.call(entry.getKey())) {
+                if (criteria.call(table)) {
                     methodLookup.find(entry.getValue(), "createTable", SQLiteDb.class).invokeStatic(db);
                     methodLookup.find(entry.getValue(), "createIndices", SQLiteDb.class).invokeStatic(db);
                     methodLookup.find(entry.getValue(), "createRelationTables", SQLiteDb.class).invokeStatic(db);
@@ -100,9 +102,10 @@ public abstract class SQLiteSchema {
 
     public static void dropTables(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
         final MethodLookup methodLookup = MethodLookup.local();
-        for (final Map.Entry<String, Class<?>> entry : HELPERS.entrySet()) {
+        for (final Map.Entry<Class<?>, Class<?>> entry : HELPERS.entrySet()) {
+            final String table = RESOLUTIONS.get(entry.getKey());
             try {
-                if (criteria.call(entry.getKey())) {
+                if (criteria.call(table)) {
                     methodLookup.find(entry.getValue(), "dropTable", SQLiteDb.class).invokeStatic(db);
                     methodLookup.find(entry.getValue(), "dropRelationTables", SQLiteDb.class).invokeStatic(db);
                 }
@@ -134,7 +137,16 @@ public abstract class SQLiteSchema {
     @Keep
     static void attachTableInfo(@NonNull Class<?> type, @NonNull String table, @NonNull Class<?> helper) {
         RESOLUTIONS.putIfAbsent(type, table);
-        HELPERS.putIfAbsent(table, helper);
+        HELPERS.putIfAbsent(type, helper);
+    }
+
+    @NonNull
+    static Class<?> helperOf(@NonNull Class<?> type) {
+        final Class<?> helper = HELPERS.get(type);
+        if (helper == null) {
+            throw new NoSuchElementException("No such helper for " + type);
+        }
+        return helper;
     }
 
 }

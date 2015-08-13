@@ -13,14 +13,13 @@ import java.util.List;
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
 import droidkit.io.IOUtils;
+import rx.functions.Action0;
 import rx.functions.Func1;
 
 /**
  * @author Daniel Serdyukov
  */
 public final class SQLite {
-
-    private static final String SQLITE_HELPER = "$SQLiteHelper";
 
     private static volatile Reference<Context> sContextRef;
 
@@ -30,6 +29,18 @@ public final class SQLite {
 
     private SQLite() {
         //no instance
+    }
+
+    public static void transaction(@NonNull Action0 action) {
+        final SQLiteClient client = obtainClient();
+        final boolean inTransaction = client.beginTransaction();
+        try {
+            action.call();
+        } finally {
+            if (inTransaction) {
+                client.endTransaction();
+            }
+        }
     }
 
     public static void beginTransaction() {
@@ -64,12 +75,16 @@ public final class SQLite {
         return new SQLiteResult<>(query, query.cursor(), type);
     }
 
+    public static <T> T execute(@NonNull Func1<SQLiteClient, T> func) {
+        return func.call(obtainClient());
+    }
+
     @NonNull
     public static <T> T save(@NonNull T object) {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + SQLITE_HELPER, "insert", SQLiteClient.class, type)
+                    .find(SQLiteSchema.helperOf(type), "save", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);
@@ -77,12 +92,23 @@ public final class SQLite {
         return object;
     }
 
+    public static void saveAll(@NonNull final Iterable<?> objects) {
+        transaction(new Action0() {
+            @Override
+            public void call() {
+                for (final Object object : objects) {
+                    save(object);
+                }
+            }
+        });
+    }
+
     @NonNull
     public static <T> T update(@NonNull T object) {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + SQLITE_HELPER, "update", SQLiteClient.class, type)
+                    .find(SQLiteSchema.helperOf(type), "update", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);
@@ -95,7 +121,7 @@ public final class SQLite {
         final Class<?> type = object.getClass();
         try {
             MethodLookup.global()
-                    .find(type.getName() + SQLITE_HELPER, "remove", SQLiteClient.class, type)
+                    .find(SQLiteSchema.helperOf(type), "remove", SQLiteClient.class, type)
                     .invokeStatic(obtainClient(), object);
         } catch (DynamicException e) {
             throw notSQLiteObject(type, e);
@@ -103,15 +129,11 @@ public final class SQLite {
         return object;
     }
 
-    public static <T> int clear(@NonNull Class<T> type) {
-        return clear(SQLiteSchema.resolveTable(type));
+    public static <T> int removeAll(@NonNull Class<T> type) {
+        return SQLite.where(type).clear();
     }
 
-    public static int clear(@NonNull String table) {
-        return obtainClient().executeUpdateDelete("DELETE FROM " + table + ";");
-    }
-
-    public static void clearAll() {
+    public static void clearDatabase() {
         final SQLiteClient client = obtainClient();
         final Cursor cursor = client.query("SELECT name FROM sqlite_master" +
                 " WHERE type='table'" +
@@ -138,10 +160,6 @@ public final class SQLite {
 
     public static void notifyChange(@NonNull Class<?> type) {
         obtainResolver().notifyChange(SQLiteSchema.resolveUri(type), null);
-    }
-
-    public static <T> T execute(@NonNull Func1<SQLiteClient, T> func) {
-        return func.call(obtainClient());
     }
 
     static void attach(@NonNull SQLiteClient client, @NonNull Context context) {
@@ -190,6 +208,5 @@ public final class SQLite {
         throw new IllegalStateException("SQLite not attached yet, check that SQLiteProvider" +
                 " registered in AndroidManifest.xml");
     }
-
 
 }

@@ -12,7 +12,7 @@ import droidkit.annotation.SQLitePk;
 /**
  * @author Daniel Serdyukov
  */
-@SQLiteObject(value = "standard", uniqueOn = {"string", "boolean"})
+@SQLiteObject(value = "standard", uniqueOn = {"string", "boolean"}, activeRecord = false)
 public class Standard {
 
     public static final String TABLE = "standard";

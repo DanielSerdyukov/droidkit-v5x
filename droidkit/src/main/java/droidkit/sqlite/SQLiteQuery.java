@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -108,6 +109,27 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
     }
 
     @NonNull
+    public SQLiteQuery<T> inSelect(@NonNull String column, @NonNull String select, @NonNull Object... bindArgs) {
+        mWhere.append(column).append(" IN(").append(select).append(")");
+        Collections.addAll(mBindArgs, bindArgs);
+        return this;
+    }
+
+    @NonNull
+    public SQLiteQuery<T> inSelect(@NonNull String column, @NonNull Collection<?> values) {
+        mWhere.append(column).append(" IN(")
+                .append(TextUtils.join(COMMA, Collections.nCopies(values.size(), "?")))
+                .append(")");
+        Collections.addAll(mBindArgs, values);
+        return this;
+    }
+
+    @Nullable
+    public T withId(long id) {
+        return equalTo(BaseColumns._ID, id).one();
+    }
+
+    @NonNull
     public SQLiteQuery<T> appendWhere(@NonNull String where, @NonNull Object... bindArgs) {
         return appendWhere(where, StringValue.EMPTY, bindArgs);
     }
@@ -175,11 +197,6 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
         mLimit = offset + COMMA + limit;
         return this;
     }
-
-    @Nullable
-    public T withId(long id) {
-        return equalTo(BaseColumns._ID, id).one();
-    }
     //endregion
 
     @Nullable
@@ -212,7 +229,7 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
         return cursor;
     }
 
-    public int remove() {
+    public int clear() {
         final StringBuilder sql = new StringBuilder("DELETE FROM ").append(SQLiteSchema.resolveTable(mType));
         if (!TextUtils.isEmpty(mWhere)) {
             sql.append(WHERE).append(mWhere);

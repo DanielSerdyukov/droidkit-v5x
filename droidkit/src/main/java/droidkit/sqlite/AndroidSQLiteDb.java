@@ -18,6 +18,11 @@ class AndroidSQLiteDb implements SQLiteDb {
         mDb = db;
     }
 
+    @Override
+    public void setForeignKeyConstraintsEnabled(boolean enable) {
+        mDb.setForeignKeyConstraintsEnabled(enable);
+    }
+
     @NonNull
     @Override
     public Cursor query(@NonNull String sql, @Nullable String... bindArgs) {

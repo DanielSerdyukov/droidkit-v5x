@@ -14,7 +14,7 @@ import java.util.List;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.Active;
+import droidkit.sqlite.bean.Foo;
 import droidkit.sqlite.bean.Standard;
 import droidkit.sqlite.util.SQLiteTestEnv;
 import droidkit.util.Cursors;
@@ -74,18 +74,18 @@ public class SQLiteTest {
     }
 
     @Test
-    public void testActiveUpdate() throws Exception {
-        final Active bean = new Active();
+    public void testFooUpdate() throws Exception {
+        final Foo bean = new Foo();
         bean.setText("assert");
         SQLite.save(bean);
-        Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(Active.class), null,
+        Cursor cursor = mProvider.query(SQLiteSchema.resolveUri(Foo.class), null,
                 BaseColumns._ID + " = ?", new String[]{String.valueOf(bean.getId())}, null);
         Assert.assertTrue(cursor.moveToFirst());
         Assert.assertEquals(bean.getText(), Cursors.getString(cursor, "text"));
         cursor.close();
 
         bean.setText("updated");
-        cursor = mProvider.query(SQLiteSchema.resolveUri(Active.class), null,
+        cursor = mProvider.query(SQLiteSchema.resolveUri(Foo.class), null,
                 BaseColumns._ID + " = ?", new String[]{String.valueOf(bean.getId())}, null);
         Assert.assertTrue(cursor.moveToFirst());
         Assert.assertEquals(bean.getText(), Cursors.getString(cursor, "text"));

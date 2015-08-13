@@ -77,7 +77,7 @@ class SQLiteResult<T> extends AbstractList<T> {
             if (oldCursor.moveToPosition(location)) {
                 final T entry = mObjects.remove(location);
                 final long rowId = Cursors.getLong(oldCursor, BaseColumns._ID);
-                SQLite.where(mType).equalTo(BaseColumns._ID, rowId).remove();
+                SQLite.where(mType).equalTo(BaseColumns._ID, rowId).clear();
                 mWrapper = new CursorWrapper(mQuery.cursor());
                 return entry;
             }

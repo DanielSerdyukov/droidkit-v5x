@@ -47,7 +47,7 @@ publishing {
                 license.appendNode('distribution', 'repo')
 
                 def dependencies = root.appendNode('dependencies')
-                ['compile', 'provided'].each { scope ->
+                ['compile'].each { scope ->
                     project.configurations[scope].allDependencies.findAll {
                         !it.hasProperty('dependencyProject') && !it.group?.startsWith('com.android.support')
                     }.each {
@@ -68,6 +68,7 @@ bintray {
     key = System.getenv('BINTRAY_KEY')
     configurations = ['archives']
     publications = ['mavenAndroid']
+    publish = true
     pkg {
         repo = 'droidkit'
         name = 'droidkit'
