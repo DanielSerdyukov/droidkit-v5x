@@ -150,12 +150,16 @@ public abstract class SQLiteClient implements Closeable {
     }
 
     protected void onCreate(@NonNull final SQLiteDb db) {
-        SQLiteSchema.createTables(db, new Func1<String, Boolean>() {
+        final Func1<String, Boolean> criteria = new Func1<String, Boolean>() {
             @Override
             public Boolean call(String s) {
                 return true;
             }
-        });
+        };
+        SQLiteSchema.createTables(db, criteria);
+        SQLiteSchema.createRelationTables(db, criteria);
+        SQLiteSchema.createIndices(db, criteria);
+        SQLiteSchema.createTriggers(db, criteria);
     }
 
     protected void onUpgrade(@NonNull final SQLiteDb db, int oldVersion, int newVersion) {

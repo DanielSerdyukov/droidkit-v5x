@@ -199,13 +199,13 @@ public final class SQLite {
 
     @NonNull
     static RuntimeException notSQLiteObject(@NonNull Class<?> type, @NonNull Throwable e) {
-        throw new IllegalArgumentException(type + " is not sqlite object, check that class" +
+        throw new SQLiteException(type + " is not sqlite object, check that class" +
                 " annotated with @SQLiteObject", e);
     }
 
     @NonNull
     private static RuntimeException notAttachedYet() {
-        throw new IllegalStateException("SQLite not attached yet, check that SQLiteProvider" +
+        throw new SQLiteException("SQLite not attached yet, check that SQLiteProvider" +
                 " registered in AndroidManifest.xml");
     }
 

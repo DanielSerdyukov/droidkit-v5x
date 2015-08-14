@@ -90,8 +90,47 @@ public abstract class SQLiteSchema {
             try {
                 if (criteria.call(table)) {
                     methodLookup.find(entry.getValue(), "createTable", SQLiteDb.class).invokeStatic(db);
-                    methodLookup.find(entry.getValue(), "createIndices", SQLiteDb.class).invokeStatic(db);
+                }
+            } catch (DynamicException e) {
+                throw SQLite.notSQLiteObject(entry.getValue(), e);
+            }
+        }
+    }
+
+    public static void createRelationTables(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
+        final MethodLookup methodLookup = MethodLookup.local();
+        for (final Map.Entry<Class<?>, Class<?>> entry : HELPERS.entrySet()) {
+            final String table = RESOLUTIONS.get(entry.getKey());
+            try {
+                if (criteria.call(table)) {
                     methodLookup.find(entry.getValue(), "createRelationTables", SQLiteDb.class).invokeStatic(db);
+                }
+            } catch (DynamicException e) {
+                throw SQLite.notSQLiteObject(entry.getValue(), e);
+            }
+        }
+    }
+
+    public static void createIndices(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
+        final MethodLookup methodLookup = MethodLookup.local();
+        for (final Map.Entry<Class<?>, Class<?>> entry : HELPERS.entrySet()) {
+            final String table = RESOLUTIONS.get(entry.getKey());
+            try {
+                if (criteria.call(table)) {
+                    methodLookup.find(entry.getValue(), "createIndices", SQLiteDb.class).invokeStatic(db);
+                }
+            } catch (DynamicException e) {
+                throw SQLite.notSQLiteObject(entry.getValue(), e);
+            }
+        }
+    }
+
+    public static void createTriggers(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
+        final MethodLookup methodLookup = MethodLookup.local();
+        for (final Map.Entry<Class<?>, Class<?>> entry : HELPERS.entrySet()) {
+            final String table = RESOLUTIONS.get(entry.getKey());
+            try {
+                if (criteria.call(table)) {
                     methodLookup.find(entry.getValue(), "createTriggers", SQLiteDb.class).invokeStatic(db);
                 }
             } catch (DynamicException e) {

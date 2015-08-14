@@ -8,8 +8,8 @@ import droidkit.annotation.SQLitePk;
 /**
  * @author Daniel Serdyukov
  */
-@SQLiteObject("baz")
-public class Baz {
+@SQLiteObject("qux")
+public class Qux {
 
     @SQLitePk
     long mId;
@@ -17,8 +17,8 @@ public class Baz {
     @SQLiteColumn
     String mText;
 
-    @SQLiteFk(value = Bar.class, strict = false)
-    long mBarId;
+    @SQLiteFk(Foo.class)
+    long mFooId;
 
     public long getId() {
         return mId;
@@ -32,12 +32,12 @@ public class Baz {
         mText = text;
     }
 
-    public long getBarId() {
-        return mBarId;
+    public long getFooId() {
+        return mFooId;
     }
 
-    public void setBarId(long barId) {
-        mBarId = barId;
+    public void setFooId(long fooId) {
+        mFooId = fooId;
     }
 
 }

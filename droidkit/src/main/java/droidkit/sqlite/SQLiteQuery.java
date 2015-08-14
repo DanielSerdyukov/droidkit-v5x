@@ -254,6 +254,11 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
     }
 
     @NonNull
+    public Number count() {
+        return count(BaseColumns._ID);
+    }
+
+    @NonNull
     public Number count(@NonNull String column) {
         return applyFunc("COUNT", column);
     }
