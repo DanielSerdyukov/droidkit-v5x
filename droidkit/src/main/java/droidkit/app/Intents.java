@@ -3,6 +3,7 @@ package droidkit.app;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.provider.ContactsContract;
@@ -26,12 +27,17 @@ public final class Intents {
     private Intents() {
     }
 
+    public static boolean hasResolution(@NonNull Context context, @NonNull Intent intent) {
+        final PackageManager pm = context.getPackageManager();
+        return pm.resolveActivity(intent, 0) != null || pm.resolveService(intent, 0) != null;
+    }
+
     public static void startActivity(@NonNull Context context, @NonNull Intent intent,
                                      @Nullable CharSequence title) {
         if (context.getPackageManager().resolveActivity(intent, 0) != null) {
-            context.startActivity(Intent.createChooser(intent, title));
-        } else {
             context.startActivity(intent);
+        } else {
+            context.startActivity(Intent.createChooser(intent, title));
         }
     }
 
