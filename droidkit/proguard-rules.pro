@@ -1,6 +1,4 @@
--dontpreverify
-
--keepattributes Signature,Exceptions,InnerClasses,*Annotation*
+-keepattributes Signature,Exceptions,InnerClasses,EnclosingMethod,*Annotation*
 
 -keep public interface droidkit.** { *; }
 
