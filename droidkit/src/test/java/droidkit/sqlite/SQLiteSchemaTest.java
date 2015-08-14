@@ -38,17 +38,29 @@ public class SQLiteSchemaTest {
         SCHEMA.put("idx_standard_date", "CREATE INDEX idx_standard_date ON standard(date)");
         SCHEMA.put("foo", "CREATE TABLE foo(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, text TEXT)");
         SCHEMA.put("bar", "CREATE TABLE bar(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, text TEXT)");
-        SCHEMA.put("baz", "CREATE TABLE baz(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, text TEXT)");
+        SCHEMA.put("baz", "CREATE TABLE baz(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, text TEXT," +
+                " bar_id INTEGER)");
+        SCHEMA.put("delete_baz_after_bar", "CREATE TRIGGER delete_baz_after_bar" +
+                " AFTER DELETE ON bar" +
+                " FOR EACH ROW" +
+                " BEGIN" +
+                " DELETE FROM baz WHERE bar_id = OLD._id;" +
+                " END");
+        SCHEMA.put("update_baz_after_bar", "CREATE TRIGGER update_baz_after_bar" +
+                " AFTER UPDATE ON bar" +
+                " FOR EACH ROW" +
+                " BEGIN" +
+                " UPDATE baz SET bar_id = NEW._id WHERE bar_id = OLD._id;" +
+                " END");
+        SCHEMA.put("idx_baz_bar_id", "CREATE INDEX idx_baz_bar_id ON baz(bar_id)");
         SCHEMA.put("foo_bar", "CREATE TABLE foo_bar(foo_id INTEGER REFERENCES foo(_id)" +
                 " ON DELETE CASCADE ON UPDATE CASCADE, bar_id INTEGER REFERENCES bar(_id)" +
                 " ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE (foo_id, bar_id) ON CONFLICT IGNORE)");
         SCHEMA.put("bar_baz", "CREATE TABLE bar_baz(bar_id INTEGER REFERENCES bar(_id)" +
                 " ON DELETE CASCADE ON UPDATE CASCADE, baz_id INTEGER REFERENCES baz(_id)" +
                 " ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE (bar_id, baz_id) ON CONFLICT IGNORE)");
-        SCHEMA.put("baz_foo", "CREATE TABLE baz_foo(baz_id INTEGER REFERENCES baz(_id)" +
-                " ON DELETE CASCADE ON UPDATE CASCADE, foo_id INTEGER REFERENCES foo(_id)" +
-                " ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE (baz_id, foo_id) ON CONFLICT IGNORE)");
-        SCHEMA.put("active_beans", "CREATE TABLE active_beans(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, text TEXT)");
+        SCHEMA.put("qux", "CREATE TABLE qux(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, text TEXT," +
+                " foo_id INTEGER REFERENCES foo(_id) ON DELETE CASCADE ON UPDATE CASCADE)");
     }
 
     @Before
@@ -77,8 +89,9 @@ public class SQLiteSchemaTest {
         SQLite.execute(new Func1<SQLiteClient, Void>() {
             @Override
             public Void call(SQLiteClient client) {
-                final Cursor cursor = client.query("SELECT * FROM sqlite_master;");
+                final Cursor cursor = client.query("SELECT name, sql FROM sqlite_master WHERE sql NOT NULL;");
                 Assert.assertTrue(cursor.moveToFirst());
+                Assert.assertEquals(SCHEMA.size(), cursor.getCount());
                 do {
                     Assert.assertEquals(SCHEMA.get(cursor.getString(cursor.getColumnIndex("name"))),
                             cursor.getString(cursor.getColumnIndex("sql")));
