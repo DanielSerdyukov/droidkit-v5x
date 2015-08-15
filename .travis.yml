@@ -9,6 +9,9 @@ android:
     - android-22
     - extra-android-m2repository
     - extra-android-support
+branches:
+  only:
+    - master
 script:
   - gradle -version
-  - gradle clean assembleDebug
+  - gradle jacocoTestReport coveralls
