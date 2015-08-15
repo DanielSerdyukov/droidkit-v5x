@@ -11,4 +11,4 @@ android:
     - extra-android-support
 script:
   - gradle -version
-  - gradle clean assembleDebug
+  - gradle jacocoTestReport coveralls
