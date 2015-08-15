@@ -1,9 +1,12 @@
 package droidkit.app;
 
 import android.app.SearchManager;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
@@ -16,34 +19,46 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 
-import droidkit.log.Logger;
+import droidkit.util.Lists;
 
 /**
  * @author Daniel Serdyukov
  */
-public final class Intents {
+public abstract class Intents {
 
     private Intents() {
+    }
+
+    public static boolean hasResolution(@NonNull Context context, @NonNull Intent intent) {
+        final PackageManager pm = context.getPackageManager();
+        return pm.resolveActivity(intent, 0) != null || pm.resolveService(intent, 0) != null;
     }
 
     public static void startActivity(@NonNull Context context, @NonNull Intent intent,
                                      @Nullable CharSequence title) {
         if (context.getPackageManager().resolveActivity(intent, 0) != null) {
-            context.startActivity(Intent.createChooser(intent, title));
-        } else {
             context.startActivity(intent);
+        } else {
+            context.startActivity(Intent.createChooser(intent, title));
         }
     }
 
-    public static void startService(@NonNull Context context, @NonNull Intent intent) {
+    public static void startService(@NonNull Context context, @NonNull Class<? extends Service> clazz) {
+        startService(context, clazz, Bundle.EMPTY);
+    }
+
+    public static void startService(@NonNull Context context, @NonNull Class<? extends Service> clazz,
+                                    @NonNull Bundle extras) {
+        final Intent intent = new Intent(context, clazz);
+        intent.putExtras(extras);
         if (context.getPackageManager().resolveService(intent, 0) != null) {
             context.startService(intent);
         } else {
-            Logger.error("No matching service was found.");
+            throw new IllegalArgumentException("Check that service registered in AndroidManifest.xml");
         }
     }
 
-    public static final class Common {
+    public static abstract class Common {
 
         private Common() {
         }
@@ -101,7 +116,7 @@ public final class Intents {
 
     }
 
-    public static final class Pick {
+    public static abstract class Pick {
 
         private Pick() {
         }
@@ -134,7 +149,7 @@ public final class Intents {
 
     }
 
-    public static final class Camera {
+    public static abstract class Camera {
 
         private Camera() {
         }
@@ -159,52 +174,74 @@ public final class Intents {
 
     }
 
-    public static final class Maps {
+    public static abstract class Maps {
 
-        private static final String MAPS_URL = "https://maps.google.com/maps";
+        static final Uri MAPS_URI = Uri.parse("https://maps.google.com/maps");
 
         private Maps() {
         }
 
         @NonNull
         public static Intent openMaps() {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(MAPS_URL));
+            return new Intent(Intent.ACTION_VIEW, MAPS_URI);
         }
 
         @NonNull
         public static Intent openMaps(double lat, double lng) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(Locale.US, MAPS_URL +
-                    "?q=%f,%f", lat, lng)));
+            return new Intent(Intent.ACTION_VIEW, MAPS_URI.buildUpon()
+                    .appendQueryParameter("q", formatLatLng(lat, lng))
+                    .build());
         }
 
         @NonNull
         public static Intent route(double lat, double lng) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(Locale.US, MAPS_URL +
-                    "?daddr=%f,%f", lat, lng)));
+            return new Intent(Intent.ACTION_VIEW, MAPS_URI.buildUpon()
+                    .appendQueryParameter("daddr", formatLatLng(lat, lng))
+                    .build());
         }
 
         @NonNull
         public static Intent route(double fromLat, double fromLng, double toLat, double toLng) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(Locale.US, MAPS_URL +
-                    "?saddr=%f,%f&daddr=%f,%f", fromLat, fromLng, toLat, toLng)));
+            return new Intent(Intent.ACTION_VIEW, MAPS_URI.buildUpon()
+                    .appendQueryParameter("saddr", formatLatLng(fromLat, fromLng))
+                    .appendQueryParameter("daddr", formatLatLng(toLat, toLng))
+                    .build());
         }
 
         @NonNull
         public static Intent search(@NonNull String query) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(MAPS_URL + "?q=" + query));
+            return new Intent(Intent.ACTION_VIEW, MAPS_URI.buildUpon()
+                    .appendQueryParameter("q", query)
+                    .build());
+        }
+
+        static String formatLatLng(double lat, double lng) {
+            return String.format(Locale.US, "%.5f,%.5f", lat, lng);
         }
 
     }
 
-    public static final class PlayStore {
+    public static abstract class PlayStore {
 
-        public static final String APPS = "apps";
+        static final String MARKET = "market";
 
-        public static final String MOVIES = "movies";
+        static final String DETAILS = "details";
 
-        public static final String MUSIC = "music";
+        static final String APPS = "apps";
 
-        public static final String BOOKS = "books";
+        static final String MOVIES = "movies";
+
+        static final String MUSIC = "music";
+
+        static final String BOOKS = "books";
+
+        static final String SEARCH = "search";
+
+        static final String ID = "id";
+
+        static final String Q = "q";
+
+        static final String C = "c";
 
         private PlayStore() {
         }
@@ -216,17 +253,29 @@ public final class Intents {
 
         @NonNull
         public static Intent details(@NonNull String packageName) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+            return new Intent(Intent.ACTION_VIEW, new Uri.Builder()
+                    .scheme(MARKET)
+                    .authority(DETAILS)
+                    .appendQueryParameter(ID, packageName)
+                    .build());
         }
 
         @NonNull
         public static Intent publisher(@NonNull String publisher) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pub:" + publisher));
+            return new Intent(Intent.ACTION_VIEW, new Uri.Builder()
+                    .scheme(MARKET)
+                    .authority(SEARCH)
+                    .appendQueryParameter(Q, "pub:" + publisher)
+                    .build());
         }
 
         @NonNull
         public static Intent search(@NonNull String query) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=" + query));
+            return new Intent(Intent.ACTION_VIEW, new Uri.Builder()
+                    .scheme(MARKET)
+                    .authority(SEARCH)
+                    .appendQueryParameter(Q, query)
+                    .build());
         }
 
         @NonNull
@@ -251,12 +300,17 @@ public final class Intents {
 
         @NonNull
         private static Intent search(@NonNull String query, @NonNull String category) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=" + query + "&c=" + category));
+            return new Intent(Intent.ACTION_VIEW, new Uri.Builder()
+                    .scheme(MARKET)
+                    .authority(SEARCH)
+                    .appendQueryParameter(Q, query)
+                    .appendQueryParameter(C, category)
+                    .build());
         }
 
     }
 
-    public static final class Share {
+    public static abstract class Share {
 
         private Share() {
         }
@@ -286,7 +340,7 @@ public final class Intents {
             final Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
             intent.setType(mime);
             if (!TextUtils.isEmpty(text)) {
-                intent.putExtra(Intent.EXTRA_TEXT, text);
+                intent.putCharSequenceArrayListExtra(Intent.EXTRA_TEXT, Lists.<CharSequence>arrayListOf(text));
             }
             if (attachments.length > 0) {
                 intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM,

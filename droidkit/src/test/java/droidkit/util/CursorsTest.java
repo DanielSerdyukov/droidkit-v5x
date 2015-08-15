@@ -20,7 +20,6 @@ import droidkit.DroidkitTestRunner;
 /**
  * @author Daniel Serdyukov
  */
-@Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
 public class CursorsTest {
 
