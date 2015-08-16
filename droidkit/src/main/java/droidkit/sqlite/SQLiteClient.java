@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import droidkit.io.IOUtils;
-import droidkit.util.Arrays2;
+import droidkit.util.ArraysUtils;
 import droidkit.util.Objects;
 import rx.functions.Func1;
 
@@ -72,7 +72,7 @@ public abstract class SQLiteClient implements Closeable {
     @NonNull
     @SuppressWarnings("ConstantConditions")
     public final Cursor query(@NonNull String sql, @Nullable Object... bindArgs) {
-        return query(sql, Arrays2.transform(bindArgs, new Func1<Object, String>() {
+        return query(sql, ArraysUtils.transform(bindArgs, new Func1<Object, String>() {
             @Override
             public String call(Object arg) {
                 return arg == null ? null : arg.toString();

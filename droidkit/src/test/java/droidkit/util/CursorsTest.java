@@ -1,20 +1,18 @@
 package droidkit.util;
 
-import android.database.MatrixCursor;
+import android.database.Cursor;
 
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.annotation.Config;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 
 /**
@@ -23,104 +21,101 @@ import droidkit.DroidkitTestRunner;
 @RunWith(DroidkitTestRunner.class)
 public class CursorsTest {
 
-    public static final String[] COLUMNS = new String[]{
-            "long",
-            "int",
-            "short",
-            "string",
-            "boolean",
-            "double",
-            "float",
-            "big_dec",
-            "big_int",
-            "bytes",
-            "enum",
-            "date"
-    };
+    private final SecureRandom mRandom = new SecureRandom();
 
-    private final MatrixCursor mCursor = new MatrixCursor(COLUMNS);
-
-    private Object[] mValues;
+    private Cursor mCursor;
 
     @Before
     public void setUp() throws Exception {
-        final SecureRandom random = new SecureRandom();
-        mValues = new Object[]{
-                random.nextLong(),
-                random.nextInt(),
-                (short) random.nextInt(Short.MAX_VALUE / 2),
-                "test",
-                true,
-                random.nextDouble(),
-                random.nextFloat(),
-                BigDecimal.valueOf(random.nextDouble()),
-                BigInteger.valueOf(random.nextLong()),
-                new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9},
-                Role.ADMIN,
-                DateTime.now().getMillis()
-        };
-        mCursor.addRow(mValues);
-        mCursor.moveToFirst();
+        mCursor = Mockito.mock(Cursor.class);
     }
 
     @Test
     public void testGetString() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("string")], Cursors.getString(mCursor, "string"));
+        Mockito.when(mCursor.getColumnIndex("text")).thenReturn(1);
+        Mockito.when(mCursor.getString(1)).thenReturn("expected");
+        Assert.assertEquals("expected", Cursors.getString(mCursor, "text"));
     }
 
     @Test
     public void testGetLong() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("long")], Cursors.getLong(mCursor, "long"));
+        final long expected = mRandom.nextLong();
+        Mockito.when(mCursor.getColumnIndex("timestamp")).thenReturn(1);
+        Mockito.when(mCursor.getLong(1)).thenReturn(expected);
+        Assert.assertEquals(expected, Cursors.getLong(mCursor, "timestamp"));
     }
 
     @Test
     public void testGetInt() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("int")], Cursors.getInt(mCursor, "int"));
+        final int expected = mRandom.nextInt();
+        Mockito.when(mCursor.getColumnIndex("count")).thenReturn(1);
+        Mockito.when(mCursor.getInt(1)).thenReturn(expected);
+        Assert.assertEquals(expected, Cursors.getInt(mCursor, "count"));
     }
 
     @Test
     public void testGetShort() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("short")], Cursors.getShort(mCursor, "short"));
+        final short expected = (short) mRandom.nextInt();
+        Mockito.when(mCursor.getColumnIndex("age")).thenReturn(1);
+        Mockito.when(mCursor.getShort(1)).thenReturn(expected);
+        Assert.assertEquals(expected, Cursors.getShort(mCursor, "age"));
     }
 
     @Test
     public void testGetDouble() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("double")], Cursors.getDouble(mCursor, "double"));
+        final double expected = mRandom.nextDouble();
+        Mockito.when(mCursor.getColumnIndex("lat")).thenReturn(1);
+        Mockito.when(mCursor.getDouble(1)).thenReturn(expected);
+        Assert.assertEquals(expected, Cursors.getDouble(mCursor, "lat"), 0.0d);
     }
 
     @Test
     public void testGetFloat() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("float")], Cursors.getFloat(mCursor, "float"));
+        final float expected = mRandom.nextFloat();
+        Mockito.when(mCursor.getColumnIndex("radius")).thenReturn(1);
+        Mockito.when(mCursor.getFloat(1)).thenReturn(expected);
+        Assert.assertEquals(expected, Cursors.getFloat(mCursor, "radius"), 0.0d);
     }
 
     @Test
     public void testGetBlob() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("bytes")], Cursors.getBlob(mCursor, "bytes"));
+        final byte[] expected = new byte[10];
+        mRandom.nextBytes(expected);
+        Mockito.when(mCursor.getColumnIndex("avatar")).thenReturn(1);
+        Mockito.when(mCursor.getBlob(1)).thenReturn(expected);
+        Assert.assertArrayEquals(expected, Cursors.getBlob(mCursor, "avatar"));
     }
 
     @Test
     public void testGetBoolean() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("boolean")], Cursors.getBoolean(mCursor, "boolean"));
+        final boolean expected = mRandom.nextBoolean();
+        Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
+        Mockito.when(mCursor.getLong(1)).thenReturn(expected ? 1L : 0L);
+        Assert.assertEquals(expected, Cursors.getBoolean(mCursor, "enabled"));
     }
 
     @Test
     public void testGetEnum() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("enum")], Cursors.getEnum(mCursor, "enum", Role.class));
+        final Role expected = Role.USER;
+        Mockito.when(mCursor.getColumnIndex("role")).thenReturn(1);
+        Mockito.when(mCursor.getString(1)).thenReturn("USER");
+        Assert.assertEquals(expected, Cursors.getEnum(mCursor, "role", Role.class));
     }
 
     @Test
-    public void testGetBigInt() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("big_int")], Cursors.getBigInteger(mCursor, "big_int"));
+    public void testGetBigInteger() throws Exception {
+        final BigInteger expected = BigInteger.TEN;
+        Mockito.when(mCursor.getColumnIndex("big_int")).thenReturn(1);
+        Mockito.when(mCursor.getLong(1)).thenReturn(expected.longValue());
+        Assert.assertEquals(expected, Cursors.getBigInteger(mCursor, "big_int"));
     }
 
     @Test
-    public void testGetBigDec() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("big_dec")], Cursors.getBigDecimal(mCursor, "big_dec"));
-    }
-
-    @Test
-    public void testGetDateTime() throws Exception {
-        Assert.assertEquals(mValues[mCursor.getColumnIndex("date")], Cursors.getDateTime(mCursor, "date").getMillis());
+    public void testGetBigDecimal() throws Exception {
+        final BigDecimal expected = BigDecimal.TEN;
+        Mockito.when(mCursor.getColumnIndex("big_dec")).thenReturn(1);
+        Mockito.when(mCursor.getDouble(1)).thenReturn(expected.doubleValue());
+        Assert.assertEquals(expected.doubleValue(), Cursors.getBigDecimal(mCursor, "big_dec").doubleValue(), 0.0d);
     }
 
     @After
@@ -128,6 +123,6 @@ public class CursorsTest {
         mCursor.close();
     }
 
-    public enum Role {USER, ADMIN}
+    public enum Role {USER}
 
 }

@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 
-import droidkit.util.Lists;
-
 /**
  * @author Daniel Serdyukov
  */
@@ -340,7 +338,9 @@ public abstract class Intents {
             final Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
             intent.setType(mime);
             if (!TextUtils.isEmpty(text)) {
-                intent.putCharSequenceArrayListExtra(Intent.EXTRA_TEXT, Lists.<CharSequence>arrayListOf(text));
+                final ArrayList<CharSequence> extras = new ArrayList<>(1);
+                extras.add(text);
+                intent.putCharSequenceArrayListExtra(Intent.EXTRA_TEXT, extras);
             }
             if (attachments.length > 0) {
                 intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM,

@@ -1,12 +1,11 @@
 package droidkit.util;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author Daniel Serdyukov
@@ -14,218 +13,222 @@ import java.util.Comparator;
  */
 public abstract class Objects {
 
-    private static final ObjectsVersion IMPL;
-
-    static {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            IMPL = new ObjectsKitKat();
-        } else {
-            IMPL = new ObjectsCompat();
-        }
-    }
+    private static final List<ArrayEquals> DEEP_EQUALS = Arrays.asList(
+            new ObjectArrayEquals(),
+            new BooleanArrayEquals(),
+            new ByteArrayEquals(),
+            new CharArrayEquals(),
+            new DoubleArrayEquals(),
+            new FloatArrayEquals(),
+            new IntArrayEquals(),
+            new LongArrayEquals(),
+            new ShortArrayEquals()
+    );
 
     private Objects() {
     }
 
     public static <T> int compare(@Nullable T a, @Nullable T b, @NonNull Comparator<? super T> c) {
-        return IMPL.compare(a, b, c);
+        if (a == b) {
+            return 0;
+        }
+        return c.compare(a, b);
     }
 
-    public static boolean deepEquals(Object a, Object b) {
-        return IMPL.deepEquals(a, b);
+    public static boolean deepEquals(@Nullable Object a, @Nullable Object b) {
+        if (a == null || b == null) {
+            return a == b;
+        }
+        for (final ArrayEquals func : DEEP_EQUALS) {
+            if (func.isAcceptable(a, b)) {
+                return func.deepEquals(a, b);
+            }
+        }
+        return a.equals(b);
     }
 
     public static boolean equal(@Nullable Object a, @Nullable Object b) {
-        return IMPL.equal(a, b);
+        return (a == null) ? (b == null) : a.equals(b);
     }
 
     public static int hash(Object... values) {
-        return IMPL.hash(values);
+        return Arrays.hashCode(values);
     }
 
     @NonNull
-    public static <T> T requireNonNull(@Nullable T object) {
-        return IMPL.requireNonNull(object);
+    public static <T> T notNull(@Nullable T o, @NonNull T nullValue) {
+        if (o == null) {
+            return nullValue;
+        }
+        return o;
     }
 
     @NonNull
-    public static <T> T requireNonNull(@Nullable T object, @NonNull String throwMessage) {
-        return IMPL.requireNonNull(object, throwMessage);
+    public static <T> T requireNonNull(@Nullable T o) {
+        if (o == null) {
+            throw new NullPointerException();
+        }
+        return o;
     }
 
     @NonNull
-    public static <T> T nullToDefault(@Nullable T object, @NonNull T nullDefault) {
-        if (object == null) {
-            return nullDefault;
+    public static <T> T requireNonNull(@Nullable T o, @NonNull String message) {
+        if (o == null) {
+            throw new NullPointerException(message);
         }
-        return object;
+        return o;
     }
 
     @NonNull
-    public static String toString(@Nullable Object object) {
-        return IMPL.toString(object);
+    public static String toString(@Nullable Object o) {
+        if (o == null) {
+            return "null";
+        }
+        return o.toString();
     }
 
     @NonNull
-    public static String toString(@Nullable Object object, @NonNull String nullString) {
-        return IMPL.toString(object, nullString);
+    public static String toString(@Nullable Object o, @NonNull String nullString) {
+        if (o == null) {
+            return nullString;
+        }
+        return o.toString();
     }
 
-    private interface ObjectsVersion {
+    //region equals functions
+    private interface ArrayEquals {
 
-        <T> int compare(@Nullable T a, @Nullable T b, @NonNull Comparator<? super T> c);
+        boolean isAcceptable(@Nullable Object a, @Nullable Object b);
 
-        boolean deepEquals(Object a, Object b);
-
-        boolean equal(@Nullable Object a, @Nullable Object b);
-
-        int hash(Object... values);
-
-        @NonNull
-        <T> T requireNonNull(@Nullable T o);
-
-        @NonNull
-        <T> T requireNonNull(@Nullable T o, @NonNull String message);
-
-        @NonNull
-        String toString(@Nullable Object o);
-
-        @NonNull
-        String toString(@Nullable Object o, @NonNull String nullString);
+        boolean deepEquals(@NonNull Object a, @NonNull Object b);
 
     }
 
-    private static class ObjectsCompat implements ObjectsVersion {
+    private static class ObjectArrayEquals implements ArrayEquals {
 
         @Override
-        public <T> int compare(@Nullable T a, @Nullable T b, @NonNull Comparator<? super T> c) {
-            if (a == b) {
-                return 0;
-            }
-            return c.compare(a, b);
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof Object[] && b instanceof Object[];
         }
 
         @Override
-        public boolean deepEquals(@Nullable Object a, @Nullable Object b) {
-            if (a == null || b == null) {
-                return a == b;
-            } else if (a instanceof Object[] && b instanceof Object[]) {
-                return Arrays.deepEquals((Object[]) a, (Object[]) b);
-            } else if (a instanceof boolean[] && b instanceof boolean[]) {
-                return Arrays.equals((boolean[]) a, (boolean[]) b);
-            } else if (a instanceof byte[] && b instanceof byte[]) {
-                return Arrays.equals((byte[]) a, (byte[]) b);
-            } else if (a instanceof char[] && b instanceof char[]) {
-                return Arrays.equals((char[]) a, (char[]) b);
-            } else if (a instanceof double[] && b instanceof double[]) {
-                return Arrays.equals((double[]) a, (double[]) b);
-            } else if (a instanceof float[] && b instanceof float[]) {
-                return Arrays.equals((float[]) a, (float[]) b);
-            } else if (a instanceof int[] && b instanceof int[]) {
-                return Arrays.equals((int[]) a, (int[]) b);
-            } else if (a instanceof long[] && b instanceof long[]) {
-                return Arrays.equals((long[]) a, (long[]) b);
-            } else if (a instanceof short[] && b instanceof short[]) {
-                return Arrays.equals((short[]) a, (short[]) b);
-            }
-            return a.equals(b);
-        }
-
-        @Override
-        public boolean equal(@Nullable Object a, @Nullable Object b) {
-            return (a == null) ? (b == null) : a.equals(b);
-        }
-
-        @Override
-        public int hash(Object... values) {
-            return Arrays.hashCode(values);
-        }
-
-        @NonNull
-        @Override
-        public <T> T requireNonNull(@Nullable T o) {
-            if (o == null) {
-                throw new NullPointerException();
-            }
-            return o;
-        }
-
-        @NonNull
-        @Override
-        public <T> T requireNonNull(@Nullable T o, @NonNull String message) {
-            if (o == null) {
-                throw new NullPointerException(message);
-            }
-            return o;
-        }
-
-        @NonNull
-        @Override
-        public String toString(@Nullable Object o) {
-            if (o == null) {
-                return "null";
-            }
-            return o.toString();
-        }
-
-        @NonNull
-        @Override
-        public String toString(@Nullable Object o, @NonNull String nullString) {
-            if (o == null) {
-                return nullString;
-            }
-            return o.toString();
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.deepEquals((Object[]) a, (Object[]) b);
         }
 
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private static class ObjectsKitKat implements ObjectsVersion {
+    private static class BooleanArrayEquals implements ArrayEquals {
 
         @Override
-        public <T> int compare(@Nullable T a, @Nullable T b, @NonNull Comparator<? super T> c) {
-            return java.util.Objects.compare(a, b, c);
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof boolean[] && b instanceof boolean[];
         }
 
         @Override
-        public boolean deepEquals(Object a, Object b) {
-            return java.util.Objects.deepEquals(a, b);
-        }
-
-        @Override
-        public boolean equal(@Nullable Object a, @Nullable Object b) {
-            return java.util.Objects.equals(a, b);
-        }
-
-        @Override
-        public int hash(Object... values) {
-            return java.util.Objects.hash(values);
-        }
-
-        @NonNull
-        @Override
-        public <T> T requireNonNull(@Nullable T o) {
-            return java.util.Objects.requireNonNull(o);
-        }
-
-        @NonNull
-        @Override
-        public <T> T requireNonNull(@Nullable T o, @NonNull String message) {
-            return java.util.Objects.requireNonNull(o, message);
-        }
-
-        @NonNull
-        @Override
-        public String toString(@Nullable Object o) {
-            return java.util.Objects.toString(o);
-        }
-
-        @NonNull
-        @Override
-        public String toString(@Nullable Object o, @NonNull String nullString) {
-            return java.util.Objects.toString(o, nullString);
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((boolean[]) a, (boolean[]) b);
         }
 
     }
+
+    private static class ByteArrayEquals implements ArrayEquals {
+
+        @Override
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof byte[] && b instanceof byte[];
+        }
+
+        @Override
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((byte[]) a, (byte[]) b);
+        }
+
+    }
+
+    private static class CharArrayEquals implements ArrayEquals {
+
+        @Override
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof char[] && b instanceof char[];
+        }
+
+        @Override
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((char[]) a, (char[]) b);
+        }
+
+    }
+
+    private static class DoubleArrayEquals implements ArrayEquals {
+
+        @Override
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof double[] && b instanceof double[];
+        }
+
+        @Override
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((double[]) a, (double[]) b);
+        }
+
+    }
+
+    private static class FloatArrayEquals implements ArrayEquals {
+
+        @Override
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof float[] && b instanceof float[];
+        }
+
+        @Override
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((float[]) a, (float[]) b);
+        }
+
+    }
+
+    private static class IntArrayEquals implements ArrayEquals {
+
+        @Override
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof int[] && b instanceof int[];
+        }
+
+        @Override
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((int[]) a, (int[]) b);
+        }
+
+    }
+
+    private static class LongArrayEquals implements ArrayEquals {
+
+        @Override
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof long[] && b instanceof long[];
+        }
+
+        @Override
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((long[]) a, (long[]) b);
+        }
+
+    }
+
+    private static class ShortArrayEquals implements ArrayEquals {
+
+        @Override
+        public boolean isAcceptable(@Nullable Object a, @Nullable Object b) {
+            return a instanceof short[] && b instanceof short[];
+        }
+
+        @Override
+        public boolean deepEquals(@NonNull Object a, @NonNull Object b) {
+            return Arrays.equals((short[]) a, (short[]) b);
+        }
+
+    }
+    //endregion
 
 }

@@ -23,4 +23,12 @@ public abstract class Maps {
         return value;
     }
 
+    @NonNull
+    public static <K, V> V putIfAbsent(@NonNull Map<K, V> map, @Nullable K key, @Nullable V value) {
+        if (map.containsKey(key)) {
+            return map.get(key);
+        }
+        return map.put(key, value);
+    }
+
 }

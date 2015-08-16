@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -60,13 +59,6 @@ public abstract class Lists {
     @SuppressWarnings("unchecked")
     public static <T> T[] toArray(@NonNull List<T> list, @NonNull Class<T> type) {
         return list.toArray((T[]) Array.newInstance(type, list.size()));
-    }
-
-    @NonNull
-    public static <T> ArrayList<T> arrayListOf(@NonNull T... objects) {
-        final ArrayList<T> list = new ArrayList<>(objects.length);
-        Collections.addAll(list, objects);
-        return list;
     }
 
     private static <T> void checkNotEmpty(@NonNull List<T> list) {
