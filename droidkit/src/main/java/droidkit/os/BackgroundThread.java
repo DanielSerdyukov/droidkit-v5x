@@ -14,7 +14,7 @@ public final class BackgroundThread extends HandlerThread {
     private static volatile Handler sHandler;
 
     private BackgroundThread() {
-        super("android.bg", Process.THREAD_PRIORITY_BACKGROUND);
+        super("droidkit.bg", Process.THREAD_PRIORITY_BACKGROUND);
     }
 
     private static void ensureThreadLocked() {

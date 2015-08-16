@@ -63,6 +63,9 @@ public final class Fonts {
         @NonNull
         Typeface getTypeface(@NonNull Context context, @NonNull String fontName);
 
+        @NonNull
+        Typeface createTypeface(@NonNull Context context, @NonNull String fontName);
+
     }
 
     public static class AssetsFontFactory implements FontFactory {
@@ -93,10 +96,16 @@ public final class Fonts {
             }
             Typeface tf = mFontsCache.get(fontName);
             if (tf == null) {
-                tf = Typeface.createFromAsset(context.getAssets(), mFontsDir + File.separator + fontName);
+                tf = createTypeface(context, fontName);
                 mFontsCache.put(fontName, tf);
             }
             return tf;
+        }
+
+        @NonNull
+        @Override
+        public Typeface createTypeface(@NonNull Context context, @NonNull String fontName) {
+            return Typeface.createFromAsset(context.getAssets(), mFontsDir + File.separator + fontName);
         }
 
     }

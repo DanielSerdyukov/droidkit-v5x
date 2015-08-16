@@ -90,6 +90,7 @@ public class CursorsTest {
     public void testGetBoolean() throws Exception {
         final boolean expected = mRandom.nextBoolean();
         Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
+        Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_INTEGER);
         Mockito.when(mCursor.getLong(1)).thenReturn(expected ? 1L : 0L);
         Assert.assertEquals(expected, Cursors.getBoolean(mCursor, "enabled"));
     }

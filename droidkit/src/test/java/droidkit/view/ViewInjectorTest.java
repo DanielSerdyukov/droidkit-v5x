@@ -4,15 +4,12 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.annotation.Config;
 
-import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 
 /**
  * @author Daniel Serdyukov
  */
-@Config(constants = BuildConfig.class)
 @RunWith(DroidkitTestRunner.class)
 public class ViewInjectorTest {
 

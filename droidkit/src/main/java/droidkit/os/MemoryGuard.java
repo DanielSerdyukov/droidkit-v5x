@@ -55,22 +55,27 @@ public class MemoryGuard extends PhantomReference<Object> {
     }
 
     private static final class Watcher implements Runnable {
+
+        private static void gc() throws InterruptedException {
+            final ReferenceQueue<?> referenceQueue = QUEUE.take();
+            final Reference<?> reference = referenceQueue.remove();
+            if (reference != null) {
+                final Action1<Object> finalizer = REFERENCES.remove(reference);
+                if (finalizer != null) {
+                    finalizer.call(((MemoryGuard) reference).mObject);
+                }
+                reference.clear();
+            } else {
+                QUEUE.put(referenceQueue);
+            }
+        }
+
         @Override
         public void run() {
             Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    final ReferenceQueue<?> referenceQueue = QUEUE.take();
-                    final Reference<?> reference = referenceQueue.remove();
-                    if (reference != null) {
-                        final Action1<Object> finalizer = REFERENCES.remove(reference);
-                        if (finalizer != null) {
-                            finalizer.call(((MemoryGuard) reference).mObject);
-                        }
-                        reference.clear();
-                    } else {
-                        QUEUE.put(referenceQueue);
-                    }
+                    gc();
                 } catch (InterruptedException e) {
                     Log.e("GcWatcher", e.getMessage(), e);
                     Thread.interrupted();
@@ -80,6 +85,7 @@ public class MemoryGuard extends PhantomReference<Object> {
                 }
             }
         }
+
     }
 
 }
