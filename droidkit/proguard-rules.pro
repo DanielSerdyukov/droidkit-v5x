@@ -9,5 +9,9 @@
     protected <methods>;
 }
 
+-keepclassmembers public class droidkit.sqlite.** {
+    @android.support.annotation.Keep <methods>;
+}
+
 -dontwarn javax.**
 -dontwarn com.squareup.**
