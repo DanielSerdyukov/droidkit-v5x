@@ -23,7 +23,7 @@ ext {
     versionCode = calculateVersionCode()
     versionName = version
     compileSdkVersion = 22
-    buildToolsVersion = "23.0.0 rc3"
+    buildToolsVersion = "23.0.0"
 }
 
 int calculateVersionCode() {
