@@ -227,6 +227,7 @@ public final class SQLite {
             for (final String table : tables) {
                 subscriber.onNext(table);
             }
+            subscriber.onCompleted();
         }
 
     }
