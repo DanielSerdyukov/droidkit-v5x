@@ -13,7 +13,10 @@ import java.util.List;
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
 import droidkit.io.IOUtils;
+import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action0;
+import rx.functions.Action1;
 import rx.functions.Func1;
 
 /**
@@ -134,28 +137,23 @@ public final class SQLite {
     }
 
     public static void clearDatabase() {
-        final SQLiteClient client = obtainClient();
-        final Cursor cursor = client.query("SELECT name FROM sqlite_master" +
-                " WHERE type='table'" +
-                " AND name <> 'android_metadata'");
-        final List<String> tables = new ArrayList<>();
-        try {
-            if (cursor.moveToFirst()) {
-                do {
-                    tables.add(cursor.getString(0));
-                } while (cursor.moveToNext());
+        clearDatabaseWithCriteria(new Func1<String, Boolean>() {
+            @Override
+            public Boolean call(String table) {
+                return true;
             }
-        } finally {
-            IOUtils.closeQuietly(cursor);
-        }
-        client.beginTransaction();
-        try {
-            for (final String table : tables) {
-                client.executeUpdateDelete("DELETE FROM " + table + ";");
-            }
-        } finally {
-            client.endTransaction();
-        }
+        });
+    }
+
+    public static void clearDatabaseWithCriteria(@NonNull Func1<String, Boolean> criteria) {
+        Observable.create(new CollectTables())
+                .filter(criteria)
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String table) {
+                        obtainClient().executeUpdateDelete("DELETE FROM " + table + ";");
+                    }
+                });
     }
 
     public static void notifyChange(@NonNull Class<?> type) {
@@ -207,6 +205,30 @@ public final class SQLite {
     private static RuntimeException notAttachedYet() {
         throw new SQLiteException("SQLite not attached yet, check that SQLiteProvider" +
                 " registered in AndroidManifest.xml");
+    }
+
+    private static class CollectTables implements Observable.OnSubscribe<String> {
+
+        @Override
+        public void call(Subscriber<? super String> subscriber) {
+            final Cursor cursor = obtainClient().query("SELECT name FROM sqlite_master" +
+                    " WHERE type='table'" +
+                    " AND name <> 'android_metadata'");
+            final List<String> tables = new ArrayList<>();
+            try {
+                if (cursor.moveToFirst()) {
+                    do {
+                        tables.add(cursor.getString(0));
+                    } while (cursor.moveToNext());
+                }
+            } finally {
+                IOUtils.closeQuietly(cursor);
+            }
+            for (final String table : tables) {
+                subscriber.onNext(table);
+            }
+        }
+
     }
 
 }
