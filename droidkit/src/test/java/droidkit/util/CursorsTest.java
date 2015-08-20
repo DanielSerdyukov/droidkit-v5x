@@ -88,11 +88,30 @@ public class CursorsTest {
 
     @Test
     public void testGetBoolean() throws Exception {
-        final boolean expected = mRandom.nextBoolean();
+        final long expectedLong = mRandom.nextLong();
         Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
         Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_INTEGER);
-        Mockito.when(mCursor.getLong(1)).thenReturn(expected ? 1L : 0L);
-        Assert.assertEquals(expected, Cursors.getBoolean(mCursor, "enabled"));
+        Mockito.when(mCursor.getLong(1)).thenReturn(expectedLong);
+        Assert.assertEquals(expectedLong > 0, Cursors.getBoolean(mCursor, "enabled"));
+
+        final double expectedDouble = mRandom.nextDouble();
+        Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
+        Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_FLOAT);
+        Mockito.when(mCursor.getDouble(1)).thenReturn(expectedDouble);
+        Assert.assertEquals(expectedDouble > 0, Cursors.getBoolean(mCursor, "enabled"));
+
+        final String expectedString = String.valueOf(expectedDouble);
+        Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
+        Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_STRING);
+        Mockito.when(mCursor.getString(1)).thenReturn(expectedString);
+        Assert.assertTrue(Cursors.getBoolean(mCursor, "enabled"));
+
+        final byte[] expectedBlob = new byte[10];
+        mRandom.nextBytes(expectedBlob);
+        Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
+        Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_BLOB);
+        Mockito.when(mCursor.getBlob(1)).thenReturn(expectedBlob);
+        Assert.assertTrue(Cursors.getBoolean(mCursor, "enabled"));
     }
 
     @Test
@@ -101,6 +120,8 @@ public class CursorsTest {
         Mockito.when(mCursor.getColumnIndex("role")).thenReturn(1);
         Mockito.when(mCursor.getString(1)).thenReturn("USER");
         Assert.assertEquals(expected, Cursors.getEnum(mCursor, "role", Role.class));
+        Mockito.when(mCursor.getString(1)).thenReturn(null);
+        Assert.assertNull(Cursors.getEnum(mCursor, "role", Role.class));
     }
 
     @Test
