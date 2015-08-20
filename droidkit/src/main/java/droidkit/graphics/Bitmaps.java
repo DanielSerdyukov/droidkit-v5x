@@ -14,13 +14,13 @@ import android.graphics.Shader;
 import android.media.ExifInterface;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import droidkit.io.IOUtils;
-import droidkit.log.Logger;
 
 /**
  * @author Daniel Serdyukov
@@ -30,6 +30,8 @@ public final class Bitmaps {
     private static final int BITMAP_HEAD = 1024;
 
     private static final double LN_2 = Math.log(2);
+
+    private static final String TAG = "Bitmaps";
 
     private Bitmaps() {
     }
@@ -123,7 +125,7 @@ public final class Bitmaps {
                 localIn.reset();
                 return BitmapFactory.decodeStream(localIn, outPadding, ops);
             } catch (IOException e) {
-                Logger.error(e);
+                Log.e(TAG, e.getMessage(), e);
             } finally {
                 IOUtils.closeQuietly(localIn);
             }
@@ -183,7 +185,7 @@ public final class Bitmaps {
                     ExifInterface.ORIENTATION_NORMAL
             );
         } catch (IOException e) {
-            Logger.error(e);
+            Log.e(TAG, e.getMessage(), e);
         }
         return ExifInterface.ORIENTATION_UNDEFINED;
     }

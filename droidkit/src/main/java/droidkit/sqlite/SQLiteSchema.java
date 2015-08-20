@@ -5,6 +5,7 @@ import android.content.pm.ProviderInfo;
 import android.net.Uri;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -14,7 +15,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
-import droidkit.log.Logger;
 import droidkit.util.Lists;
 import droidkit.util.Maps;
 import rx.functions.Action2;
@@ -159,7 +159,7 @@ public abstract class SQLiteSchema {
         try {
             Class.forName("droidkit.sqlite.SQLiteMetaData");
         } catch (ClassNotFoundException e) {
-            Logger.error(e.getMessage());
+            Log.e("SQLiteSchema", e.getMessage(), e);
         }
     }
 

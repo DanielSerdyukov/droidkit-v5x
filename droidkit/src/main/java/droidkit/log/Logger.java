@@ -1,105 +1,111 @@
 package droidkit.log;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.util.Log;
-
-import java.io.BufferedWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import droidkit.io.IOUtils;
 
 /**
  * @author Daniel Serdyukov
  */
-public final class Logger {
+public class Logger {
 
-    private Logger() {
+    public static final Logger NONE = new Logger();
+
+    public static final Logger LOGCAT = new LogCatLogger();
+
+    protected Logger() {
+
     }
 
+    public static void debug(@NonNull Class<?> clazz, @NonNull Object format, Object... args) {
+        LogManager.get().getLogger(clazz).log(Log.DEBUG, format, args);
+    }
+
+    public static void info(@NonNull Class<?> clazz, @NonNull Object format, Object... args) {
+        LogManager.get().getLogger(clazz).log(Log.INFO, format, args);
+    }
+
+    public static void warn(@NonNull Class<?> clazz, @NonNull Object format, Object... args) {
+        LogManager.get().getLogger(clazz).log(Log.WARN, format, args);
+    }
+
+    public static void error(@NonNull Class<?> clazz, @NonNull Object format, Object... args) {
+        LogManager.get().getLogger(clazz).log(Log.ERROR, format, args);
+    }
+
+    public static void error(@NonNull Class<?> clazz, @NonNull Throwable e) {
+        LogManager.get().getLogger(clazz).throwing(e);
+    }
+
+    //region deprecated
+
+    /**
+     * @see #debug(Class, Object, Object...)
+     * TODO: remove in one of the next releases
+     * @deprecated since 5.2.1
+     */
+    @Deprecated
     public static void debug(@NonNull Object format, Object... args) {
-        Log.d(makeTag(getCaller()), formatMessage(format, args));
+        debug(Logger.class, format, args);
     }
 
+    /**
+     * @see #info(Class, Object, Object...)
+     * TODO: remove in one of the next releases
+     * @deprecated since 5.2.1
+     */
+    @Deprecated
     public static void info(@NonNull Object format, Object... args) {
-        Log.i(makeTag(getCaller()), formatMessage(format, args));
+        info(Logger.class, format, args);
     }
 
+    /**
+     * @see #warn(Class, Object, Object...)
+     * TODO: remove in one of the next releases
+     * @deprecated since 5.2.1
+     */
+    @Deprecated
     public static void warn(@NonNull Object format, Object... args) {
-        Log.w(makeTag(getCaller()), formatMessage(format, args));
+        warn(Logger.class, format, args);
     }
 
+    /**
+     * @see #error(Class, Object, Object...)
+     * TODO: remove in one of the next releases
+     * @deprecated since 5.2.1
+     */
+    @Deprecated
     public static void error(@NonNull Object format, Object... args) {
-        Log.e(makeTag(getCaller()), formatMessage(format, args));
+        error(Logger.class, format, args);
     }
 
+    /**
+     * @see #error(Class, Throwable)
+     * TODO: remove in one of the next releases
+     * @deprecated since 5.2.1
+     */
+    @Deprecated
     public static void error(@NonNull Throwable e) {
-        Log.d(makeTag(getCaller()), formatMessage(e));
+        error(Logger.class, e);
     }
 
+    /**
+     * @see #debug(Class, Object, Object...)
+     * TODO: remove in one of the next releases
+     * @deprecated since 5.2.1
+     * do not use this method
+     */
+    @Deprecated
     public static void wtf(@NonNull Object format, Object... args) {
-        Log.wtf(makeTag(getCaller()), formatMessage(format, args));
+        debug(Logger.class, format, args);
+    }
+    //endregion
+
+    protected void log(int priority, @NonNull Object format, Object... args) {
+        // do nothing
     }
 
-    @NonNull
-    private static StackTraceElement getCaller() {
-        return new Throwable().fillInStackTrace().getStackTrace()[2];
-    }
-
-    @NonNull
-    private static String formatMessage(@Nullable Object format, Object... args) {
-        if (format instanceof String && args.length > 0) {
-            return String.format((String) format, args);
-        }
-        return String.valueOf(format);
-    }
-
-    @NonNull
-    private static String formatMessage(@Nullable Throwable e) {
-        if (e != null) {
-            final StringWriter trace = new StringWriter();
-            final PrintWriter traceWriter = new PrintWriter(new BufferedWriter(trace, 1024), true);
-            try {
-                e.printStackTrace(traceWriter);
-            } finally {
-                IOUtils.closeQuietly(traceWriter);
-            }
-            return trace.toString();
-        }
-        return "null";
-    }
-
-    @NonNull
-    private static String makeTag(@NonNull StackTraceElement caller) {
-        return makeCallerName(caller) + "[" + Thread.currentThread().getName() + "]";
-    }
-
-    @NonNull
-    private static String makeCallerName(@NonNull StackTraceElement caller) {
-        final String className = caller.getClassName();
-        final int lastDot = className.lastIndexOf(".");
-        final StringBuilder buf = new StringBuilder(256)
-                .append(className.substring(lastDot + 1))
-                .append(".").append(caller.getMethodName());
-        if (caller.isNativeMethod()) {
-            buf.append("(Native Method)");
-        } else {
-            final String fileName = caller.getFileName();
-            final int lineNumber = caller.getLineNumber();
-            if (!TextUtils.isEmpty(fileName)) {
-                buf.append("(").append(fileName);
-                if (lineNumber >= 0) {
-                    buf.append(':');
-                    buf.append(lineNumber);
-                }
-                buf.append(")");
-            } else {
-                buf.append("(Unknown Source)");
-            }
-        }
-        return buf.toString();
+    protected void throwing(@NonNull Throwable e) {
+        // do nothing
     }
 
 }
