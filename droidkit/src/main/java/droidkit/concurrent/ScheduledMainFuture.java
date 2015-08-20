@@ -32,7 +32,7 @@ class ScheduledMainFuture<V> extends MainFuture<V> implements ScheduledFuture<V>
             return 0;
         }
         final long diff = getDelay(NANOSECONDS) - another.getDelay(NANOSECONDS);
-        return (diff < 0) ? -1 : (diff > 0) ? 1 : 0;
+        return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
     }
 
 }

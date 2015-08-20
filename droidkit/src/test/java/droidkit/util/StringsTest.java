@@ -17,7 +17,8 @@ public class StringsTest {
 
     @Test
     public void testRequireNotNull() throws Exception {
-        Assert.assertEquals("NOT NULL", Strings.requireNotNull(null, "NOT NULL"));
+        Assert.assertEquals("ABC", Strings.requireNotNull(null, "ABC"));
+        Assert.assertEquals("ABC", Strings.requireNotNull("ABC", "NULL"));
     }
 
     @Test
