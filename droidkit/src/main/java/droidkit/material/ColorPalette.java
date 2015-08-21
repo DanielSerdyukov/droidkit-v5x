@@ -8,7 +8,7 @@ import java.security.SecureRandom;
 /**
  * @author Daniel Serdyukov
  */
-public class ColorPalette {
+public abstract class ColorPalette {
 
     public static final ColorPalette MATERIAL = new MaterialColorPalette();
 
@@ -32,8 +32,6 @@ public class ColorPalette {
     }
 
     @NonNull
-    public ColorSpec getColorSpec(@ColorInt int mainColor) {
-        throw new UnsupportedOperationException("No supported color conversion");
-    }
+    public abstract ColorSpec getColorSpec(@ColorInt int mainColor);
 
 }

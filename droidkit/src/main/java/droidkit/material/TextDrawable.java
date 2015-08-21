@@ -77,13 +77,18 @@ public class TextDrawable extends ShapeDrawable {
     }
 
     @NonNull
+    public static TextDrawable circle(@NonNull String text) {
+        return builder().color(text).text(text, 1).buildCircle();
+    }
+
+    @NonNull
     public static TextDrawable rect(@NonNull String text) {
         return builder().color(text).text(text, 1).buildRect();
     }
 
     @NonNull
-    public static TextDrawable circle(@NonNull String text) {
-        return builder().color(text).text(text, 1).buildCircle();
+    public static TextDrawable roundRect(@NonNull String text, float cornerRadius) {
+        return builder().color(text).text(text, 1).buildRect(cornerRadius);
     }
 
     @Override
