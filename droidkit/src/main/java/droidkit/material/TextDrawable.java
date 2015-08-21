@@ -186,7 +186,7 @@ public class TextDrawable extends ShapeDrawable {
         @NonNull
         public Builder color(@ColorInt int color) {
             mColor = color;
-            return fontColor(ColorPalette.MATERIAL.getColorSpec(color).primary());
+            return fontColor(ColorPalette.MATERIAL.getColorSpec(color).primaryText());
         }
 
         @NonNull

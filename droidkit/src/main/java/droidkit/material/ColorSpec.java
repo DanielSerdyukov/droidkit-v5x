@@ -8,7 +8,7 @@ import android.support.annotation.ColorInt;
  */
 public final class ColorSpec {
 
-    public static final ColorSpec MATERIAL_DARK = new ColorSpec(Color.BLACK, 0.12f, 0.26f, 0.54f, 0.87f);
+    public static final ColorSpec MATERIAL_DARK = new ColorSpec(Color.BLACK, 0.12f, 0.38f, 0.54f, 0.87f);
 
     public static final ColorSpec MATERIAL_LIGHT = new ColorSpec(Color.WHITE, 0.12f, 0.30f, 0.70f, 1.00f);
 
@@ -32,8 +32,13 @@ public final class ColorSpec {
     }
 
     @ColorInt
-    public int divider() {
-        return Colors.alpha(mColor, mDividerAlpha);
+    public int primaryText() {
+        return Colors.alpha(mColor, mPrimaryAlpha);
+    }
+
+    @ColorInt
+    public int secondaryText() {
+        return Colors.alpha(mColor, mSecondaryAlpha);
     }
 
     @ColorInt
@@ -42,13 +47,8 @@ public final class ColorSpec {
     }
 
     @ColorInt
-    public int secondary() {
-        return Colors.alpha(mColor, mSecondaryAlpha);
-    }
-
-    @ColorInt
-    public int primary() {
-        return Colors.alpha(mColor, mPrimaryAlpha);
+    public int divider() {
+        return Colors.alpha(mColor, mDividerAlpha);
     }
 
 }
