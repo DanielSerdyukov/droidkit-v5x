@@ -39,11 +39,11 @@ public final class TouchArea {
                 public void run() {
                     parent.removeCallbacks(this);
                     final Rect hitRect = new Rect();
+                    view.getHitRect(hitRect);
                     hitRect.left -= TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, start, metrics);
                     hitRect.top -= TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, top, metrics);
                     hitRect.right += TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, end, metrics);
                     hitRect.bottom += TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, bottom, metrics);
-                    view.getHitRect(hitRect);
                     parent.setTouchDelegate(new TouchDelegate(hitRect, view));
                 }
             });
