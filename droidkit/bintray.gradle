@@ -14,7 +14,7 @@ task sourcesJar(type: Jar) {
 }
 
 artifacts {
-    archives file("build/libs/library-${version}.jar")
+    archives file("build/libs/droidkit-${version}.jar")
     archives sourcesJar
 }
 
