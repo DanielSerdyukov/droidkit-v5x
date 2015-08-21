@@ -11,22 +11,95 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        jcenter()
-    }
+repositories {
+    jcenter()
 }
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.kt3k.coveralls'
 
 version = file('VERSION').text.trim()
 
-ext {
-    versionCode = calculateVersionCode()
-    versionName = version
-    compileSdkVersion = 22
-    buildToolsVersion = "23.0.0"
+android {
+    compileSdkVersion 22
+    buildToolsVersion "23.0.0"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 22
+        versionCode generateVersionCode()
+        versionName rootProject.version
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    packagingOptions {
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/LICENSE.txt'
+    }
 }
 
-int calculateVersionCode() {
+dependencies {
+    compile 'com.android.support:support-v13:23.0.0'
+    compile 'io.reactivex:rxjava:1.0.14'
+    provided 'net.danlew:android.joda:2.8.1'
+    provided 'droidkit:droidkit-processor:5.1.2'
+    testCompile 'junit:junit:4.12'
+    testCompile('org.robolectric:robolectric:3.0') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+    }
+    testCompile 'org.mockito:mockito-core:2.0.31-beta'
+    compile 'org.jetbrains:annotations:13.0'
+}
+
+apply plugin: 'jacoco'
+apply plugin: 'com.github.kt3k.coveralls'
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+    group = 'Reporting'
+    description = 'Generate Jacoco coverage reports after running tests.'
+    reports {
+        xml {
+            enabled = true
+            destination = "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        }
+    }
+
+    // use hidden configuration, for details look into JacocoPlugin.groovy
+    jacocoClasspath = project.configurations['androidJacocoAnt']
+
+    sourceDirectories = fileTree(dir: "${project.projectDir}/src/main/java")
+    classDirectories = fileTree(dir: "${project.buildDir}/intermediates/classes/debug", excludes: [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*',
+            '**/*Test*.*',
+            'android/**/*.*'
+    ])
+    executionData = fileTree(dir: project.buildDir, includes: ['**/*.exec', '**/*.ec'])
+}
+
+if (System.getenv('BINTRAY_USER') || project.hasProperty('bintrayUser')) {
+    apply from: 'bintray.gradle'
+}
+
+if (System.getenv('CI_BUILD_REF')) {
+    apply from: 'sonar.gradle'
+}
+
+int generateVersionCode() {
     def versionCode = 1
     (version =~ /(\d+)/).collect {
         Integer.parseInt(it[0])
@@ -34,35 +107,4 @@ int calculateVersionCode() {
         versionCode += (num * (100000 / Math.pow(100, index)))
     }
     return versionCode as int
-}
-
-apply plugin: 'org.sonarqube'
-
-sonarqube {
-    properties {
-        properties['sonar.projectName'] = 'DroidKit'
-        def buildRef = System.getenv('CI_BUILD_REF')
-        if (buildRef != null && buildRef.length() > 8) {
-            properties['sonar.projectVersion'] = project.version + '-' + buildRef.substring(0, 8)
-        }
-        properties['sonar.host.url'] = System.getenv('SONAR_HOST')
-        properties['sonar.login'] = System.getenv('SONAR_LOGIN')
-        properties['sonar.password'] = System.getenv('SONAR_PASSWORD')
-        properties['sonar.jdbc.url'] = System.getenv('SONAR_JDBC_URL')
-        properties['sonar.jdbc.username'] = System.getenv('SONAR_JDBC_USER')
-        properties['sonar.jdbc.password'] = System.getenv('SONAR_JDBC_PASSWORD')
-    }
-}
-
-project(':droidkit') {
-    sonarqube {
-        properties {
-            properties["sonar.sources"] = android.sourceSets.main.java.srcDirs
-            properties["sonar.tests"] = android.sourceSets.test.java.srcDirs
-            properties["sonar.java.binaries"] = files(["${project.buildDir}/intermediates/classes/debug"])
-            properties["sonar.java.test.binaries"] = files(["${project.buildDir}/intermediates/classes/test/debug"])
-            properties["sonar.junit.reportsPath"] = "${project.buildDir}/test-results/debug"
-            properties["sonar.jacoco.reportPath"] = "${project.buildDir}/jacoco/testDebugUnitTest.exec"
-        }
-    }
 }

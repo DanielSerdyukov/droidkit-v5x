@@ -1,0 +1,23 @@
+apply plugin: 'org.sonarqube'
+
+sonarqube {
+    properties {
+        properties['sonar.projectName'] = 'DroidKit'
+        def buildRef = System.getenv('CI_BUILD_REF')
+        if (buildRef != null && buildRef.length() > 8) {
+            properties['sonar.projectVersion'] = project.version + '-' + buildRef.substring(0, 8)
+        }
+        properties["sonar.sources"] = android.sourceSets.main.java.srcDirs
+        properties["sonar.tests"] = android.sourceSets.test.java.srcDirs
+        properties["sonar.java.binaries"] = files(["${project.buildDir}/intermediates/classes/debug"])
+        properties["sonar.java.test.binaries"] = files(["${project.buildDir}/intermediates/classes/test/debug"])
+        properties["sonar.junit.reportsPath"] = "${project.buildDir}/test-results/debug"
+        properties["sonar.jacoco.reportPath"] = "${project.buildDir}/jacoco/testDebugUnitTest.exec"
+        properties['sonar.host.url'] = System.getenv('SONAR_HOST')
+        properties['sonar.login'] = System.getenv('SONAR_LOGIN')
+        properties['sonar.password'] = System.getenv('SONAR_PASSWORD')
+        properties['sonar.jdbc.url'] = System.getenv('SONAR_JDBC_URL')
+        properties['sonar.jdbc.username'] = System.getenv('SONAR_JDBC_USER')
+        properties['sonar.jdbc.password'] = System.getenv('SONAR_JDBC_PASSWORD')
+    }
+}
