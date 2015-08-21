@@ -120,7 +120,7 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
         mWhere.append(column).append(" IN(")
                 .append(TextUtils.join(COMMA, Collections.nCopies(values.size(), "?")))
                 .append(")");
-        Collections.addAll(mBindArgs, values);
+        mBindArgs.addAll(values);
         return this;
     }
 
