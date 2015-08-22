@@ -36,6 +36,7 @@ public final class MainQueue {
     }
 
     @NonNull
+    @SuppressWarnings("squid:S1452")
     public static Future<?> invoke(@NonNull Runnable task) {
         return invoke(Executors.callable(task));
     }
@@ -48,6 +49,7 @@ public final class MainQueue {
     }
 
     @NonNull
+    @SuppressWarnings("squid:S1452")
     public static ScheduledFuture<?> invoke(@NonNull Runnable task, long delay) {
         return invoke(Executors.callable(task), delay);
     }

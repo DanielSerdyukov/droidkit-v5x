@@ -19,6 +19,7 @@ public class FieldHandle {
     }
 
     @NonNull
+    @SuppressWarnings("squid:S1166")
     static FieldHandle find(@NonNull Class<?> clazz, @NonNull String name)
             throws DynamicException {
         Class<?> localClass = clazz;

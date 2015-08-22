@@ -31,6 +31,7 @@ public class AsyncQueue extends ScheduledThreadPoolExecutor {
     }
 
     @NonNull
+    @SuppressWarnings("squid:S1452")
     public static Future<?> invoke(@NonNull Runnable task) {
         return Holder.INSTANCE.submit(task);
     }
@@ -41,6 +42,7 @@ public class AsyncQueue extends ScheduledThreadPoolExecutor {
     }
 
     @NonNull
+    @SuppressWarnings("squid:S1452")
     public static ScheduledFuture<?> invoke(@NonNull Runnable task, long delay) {
         return Holder.INSTANCE.schedule(task, delay, TimeUnit.MILLISECONDS);
     }

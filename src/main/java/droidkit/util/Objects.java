@@ -47,6 +47,7 @@ public abstract class Objects {
         return a.equals(b);
     }
 
+    @SuppressWarnings("squid:S1221")
     public static boolean equal(@Nullable Object a, @Nullable Object b) {
         return (a == null) ? (b == null) : a.equals(b);
     }

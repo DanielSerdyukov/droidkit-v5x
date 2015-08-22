@@ -14,6 +14,7 @@ public final class IOUtils {
     private IOUtils() {
     }
 
+    @SuppressWarnings("squid:S1166")
     public static void closeQuietly(@NonNull Closeable... closeable) {
         for (final Closeable c : closeable) {
             try {

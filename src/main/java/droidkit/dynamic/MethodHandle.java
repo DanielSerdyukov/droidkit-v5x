@@ -20,6 +20,7 @@ public class MethodHandle {
     }
 
     @NonNull
+    @SuppressWarnings("squid:S1166")
     static MethodHandle find(@NonNull Class<?> clazz, @NonNull String name, @NonNull Class<?>... argTypes)
             throws DynamicException {
         Class<?> localClass = clazz;
