@@ -52,11 +52,9 @@ public class AsyncQueue extends ScheduledThreadPoolExecutor {
         return Holder.INSTANCE.schedule(task, delay, TimeUnit.MILLISECONDS);
     }
 
+    @SuppressWarnings("squid:S1118")
     private static final class Holder {
         public static final AsyncQueue INSTANCE = new AsyncQueue(CORE_SIZE);
-
-        private Holder() {
-        }
     }
 
 }

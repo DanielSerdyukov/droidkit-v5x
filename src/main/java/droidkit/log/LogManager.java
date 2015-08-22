@@ -43,7 +43,7 @@ public class LogManager {
         return Objects.notNull(mGlobalLoggerRef.get(), Logger.LOGCAT);
     }
 
-
+    @SuppressWarnings("squid:S1118")
     private abstract static class Holder {
         public static final LogManager INSTANCE = new LogManager();
     }
