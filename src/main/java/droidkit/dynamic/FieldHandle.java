@@ -49,7 +49,7 @@ public class FieldHandle {
     public <T> T getStatic(@NonNull T nullDefault) throws DynamicException {
         try {
             forceAccessible();
-            return Objects.notNull((T) mField.get(null), nullDefault);
+            return Objects.nullValue((T) mField.get(null), nullDefault);
         } catch (IllegalAccessException e) {
             throw new DynamicException(e);
         }
@@ -71,7 +71,7 @@ public class FieldHandle {
     public <T> T getVirtual(@NonNull Object receiver, @NonNull T nullDefault) throws DynamicException {
         try {
             forceAccessible();
-            return Objects.notNull((T) mField.get(receiver), nullDefault);
+            return Objects.nullValue((T) mField.get(receiver), nullDefault);
         } catch (IllegalAccessException e) {
             throw new DynamicException(e);
         }

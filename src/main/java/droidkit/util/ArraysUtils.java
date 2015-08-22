@@ -3,7 +3,6 @@ package droidkit.util;
 import android.support.annotation.NonNull;
 
 import java.lang.reflect.Array;
-import java.util.NoSuchElementException;
 
 import rx.functions.Func1;
 
@@ -23,12 +22,6 @@ public abstract class ArraysUtils {
             transformed[i] = func1.call(array[i]);
         }
         return transformed;
-    }
-
-    private static <T> void checkNotEmpty(@NonNull T[] array) {
-        if (array.length == 0) {
-            throw new NoSuchElementException("array is empty");
-        }
     }
 
 }

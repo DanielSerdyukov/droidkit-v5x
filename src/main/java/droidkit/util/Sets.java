@@ -31,7 +31,7 @@ public abstract class Sets {
         if (set.isEmpty()) {
             return emptyValue;
         }
-        return set.iterator().next();
+        return Objects.nullValue(set.iterator().next(), emptyValue);
     }
 
     @NonNull
@@ -45,7 +45,7 @@ public abstract class Sets {
         if (set.isEmpty()) {
             return emptyValue;
         }
-        return Iterables.getLast(set.iterator());
+        return Objects.nullValue(Iterables.getLast(set.iterator()), emptyValue);
     }
 
     @NonNull

@@ -44,7 +44,7 @@ public abstract class Iterables {
                 return Lists.getFirst((List<T>) iterable, emptyValue);
             }
         }
-        return Objects.notNull(iterable.iterator().next(), emptyValue);
+        return Objects.nullValue(iterable.iterator().next(), emptyValue);
     }
 
     @NonNull
@@ -65,7 +65,7 @@ public abstract class Iterables {
                 return Lists.getLast((List<T>) iterable, emptyValue);
             }
         }
-        return Objects.notNull(getLast(iterable.iterator()), emptyValue);
+        return Objects.nullValue(getLast(iterable.iterator()), emptyValue);
     }
 
     @NonNull

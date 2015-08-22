@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -54,7 +55,7 @@ public final class Cursors {
             case Cursor.FIELD_TYPE_INTEGER:
                 return cursor.getLong(columnIndex) > 0;
             case Cursor.FIELD_TYPE_FLOAT:
-                return cursor.getDouble(columnIndex) > 0;
+                return cursor.getDouble(columnIndex) > 0.0;
             case Cursor.FIELD_TYPE_STRING:
                 return cursor.getString(columnIndex) != null;
             case Cursor.FIELD_TYPE_BLOB:
@@ -74,17 +75,17 @@ public final class Cursors {
         return null;
     }
 
-    @Nullable
+    @NotNull
     public static BigInteger getBigInteger(@NonNull Cursor cursor, @NonNull String columnName) {
         return BigInteger.valueOf(getLong(cursor, columnName));
     }
 
-    @Nullable
+    @NotNull
     public static BigDecimal getBigDecimal(@NonNull Cursor cursor, @NonNull String columnName) {
         return BigDecimal.valueOf(getDouble(cursor, columnName));
     }
 
-    @Nullable
+    @NotNull
     public static DateTime getDateTime(@NonNull Cursor cursor, @NonNull String columnName) {
         return new DateTime(getLong(cursor, columnName));
     }

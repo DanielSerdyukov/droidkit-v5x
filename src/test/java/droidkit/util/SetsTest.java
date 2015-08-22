@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import droidkit.content.StringValue;
 import rx.functions.Func1;
 
 /**
@@ -17,10 +18,18 @@ public class SetsTest {
 
     private Set<String> mSet;
 
+    private Set<String> mNullFirst;
+
+    private Set<String> mNullLast;
+
     @Before
     public void setUp() throws Exception {
         mSet = new LinkedHashSet<>();
+        mNullFirst = new LinkedHashSet<>();
+        mNullLast = new LinkedHashSet<>();
         Collections.addAll(mSet, "first", "second", "last");
+        Collections.addAll(mNullFirst, null, "second", "last");
+        Collections.addAll(mNullLast, "first", "second", null);
     }
 
     @Test
@@ -30,7 +39,8 @@ public class SetsTest {
 
     @Test
     public void testGetFirstNotNull() throws Exception {
-        Assert.assertEquals("first_nn", Sets.getFirst(Collections.emptySet(), "first_nn"));
+        Assert.assertEquals(StringValue.EMPTY, Sets.getFirst(Collections.emptySet(), StringValue.EMPTY));
+        Assert.assertEquals(StringValue.EMPTY, Sets.getFirst(mNullFirst, StringValue.EMPTY));
     }
 
     @Test
@@ -40,7 +50,8 @@ public class SetsTest {
 
     @Test
     public void testGetLastNotNull() throws Exception {
-        Assert.assertEquals("last_nn", Sets.getLast(Collections.emptySet(), "last_nn"));
+        Assert.assertEquals(StringValue.EMPTY, Sets.getLast(Collections.emptySet(), StringValue.EMPTY));
+        Assert.assertEquals(StringValue.EMPTY, Sets.getLast(mNullLast, StringValue.EMPTY));
     }
 
     @Test

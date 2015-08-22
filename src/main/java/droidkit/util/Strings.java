@@ -8,10 +8,8 @@ import droidkit.content.StringValue;
 /**
  * @author Daniel Serdyukov
  */
-public abstract class Strings {
-
-    private Strings() {
-    }
+@SuppressWarnings("squid:S1118")
+public final class Strings {
 
     @NonNull
     public static String nullToEmpty(@Nullable String string) {

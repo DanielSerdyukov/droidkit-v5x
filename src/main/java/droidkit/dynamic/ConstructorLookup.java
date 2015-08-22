@@ -9,12 +9,10 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author Daniel Serdyukov
  */
+@SuppressWarnings("squid:S1118")
 public final class ConstructorLookup {
 
     private final ConcurrentMap<String, ConstructorHandle<?>> mCache = new ConcurrentHashMap<>();
-
-    private ConstructorLookup() {
-    }
 
     public static ConstructorLookup local() {
         return new ConstructorLookup();
@@ -54,12 +52,9 @@ public final class ConstructorLookup {
         return constructorHandle;
     }
 
+    @SuppressWarnings("squid:S1118")
     private abstract static class Holder {
         public static final ConstructorLookup INSTANCE = new ConstructorLookup();
-
-        private Holder() {
-            //no instance
-        }
     }
 
 }

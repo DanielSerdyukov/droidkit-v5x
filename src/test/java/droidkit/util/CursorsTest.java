@@ -88,30 +88,49 @@ public class CursorsTest {
 
     @Test
     public void testGetBoolean() throws Exception {
-        final long expectedLong = mRandom.nextLong();
+        Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
+        Mockito.when(mCursor.getType(1)).thenReturn(-1);
+        Assert.assertFalse(Cursors.getBoolean(mCursor, "enabled"));
+    }
+
+    @Test
+    public void testGetBooleanForInteger() throws Exception {
         Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
         Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_INTEGER);
-        Mockito.when(mCursor.getLong(1)).thenReturn(expectedLong);
-        Assert.assertEquals(expectedLong > 0, Cursors.getBoolean(mCursor, "enabled"));
+        Mockito.when(mCursor.getLong(1)).thenReturn(1L);
+        Assert.assertTrue(Cursors.getBoolean(mCursor, "enabled"));
+        Mockito.when(mCursor.getLong(1)).thenReturn(0L);
+        Assert.assertFalse(Cursors.getBoolean(mCursor, "enabled"));
+    }
 
-        final double expectedDouble = mRandom.nextDouble();
+    @Test
+    public void testGetBooleanForReal() throws Exception {
         Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
         Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_FLOAT);
-        Mockito.when(mCursor.getDouble(1)).thenReturn(expectedDouble);
-        Assert.assertEquals(expectedDouble > 0, Cursors.getBoolean(mCursor, "enabled"));
+        Mockito.when(mCursor.getDouble(1)).thenReturn(9.99);
+        Assert.assertTrue(Cursors.getBoolean(mCursor, "enabled"));
+        Mockito.when(mCursor.getDouble(1)).thenReturn(0.0);
+        Assert.assertFalse(Cursors.getBoolean(mCursor, "enabled"));
+    }
 
-        final String expectedString = String.valueOf(expectedDouble);
+    @Test
+    public void testGetBooleanForText() throws Exception {
         Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
         Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_STRING);
-        Mockito.when(mCursor.getString(1)).thenReturn(expectedString);
+        Mockito.when(mCursor.getString(1)).thenReturn("text");
         Assert.assertTrue(Cursors.getBoolean(mCursor, "enabled"));
+        Mockito.when(mCursor.getString(1)).thenReturn(null);
+        Assert.assertFalse(Cursors.getBoolean(mCursor, "enabled"));
+    }
 
-        final byte[] expectedBlob = new byte[10];
-        mRandom.nextBytes(expectedBlob);
+    @Test
+    public void testGetBooleanForBlob() throws Exception {
         Mockito.when(mCursor.getColumnIndex("enabled")).thenReturn(1);
         Mockito.when(mCursor.getType(1)).thenReturn(Cursor.FIELD_TYPE_BLOB);
-        Mockito.when(mCursor.getBlob(1)).thenReturn(expectedBlob);
+        Mockito.when(mCursor.getBlob(1)).thenReturn(new byte[]{1, 2, 3});
         Assert.assertTrue(Cursors.getBoolean(mCursor, "enabled"));
+        Mockito.when(mCursor.getBlob(1)).thenReturn(null);
+        Assert.assertFalse(Cursors.getBoolean(mCursor, "enabled"));
     }
 
     @Test

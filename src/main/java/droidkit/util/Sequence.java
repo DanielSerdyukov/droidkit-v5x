@@ -25,13 +25,9 @@ public final class Sequence {
         return (int) nextLong();
     }
 
+    @SuppressWarnings("squid:S1118")
     private abstract static class Holder {
-
         public static final Sequence INSTANCE = new Sequence(9000);
-
-        private Holder() {
-        }
-
     }
 
 }

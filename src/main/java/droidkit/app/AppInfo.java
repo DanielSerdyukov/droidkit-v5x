@@ -19,7 +19,7 @@ public final class AppInfo {
     @NonNull
     public static Bundle getMetaData(@NonNull Context context) {
         try {
-            return Objects.notNull(context.getPackageManager()
+            return Objects.nullValue(context.getPackageManager()
                     .getApplicationInfo(context.getPackageName(),
                             PackageManager.GET_META_DATA).metaData, Bundle.EMPTY);
         } catch (PackageManager.NameNotFoundException e) {
