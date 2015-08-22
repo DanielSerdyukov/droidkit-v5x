@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 
+import droidkit.content.StringValue;
+
 /**
  * @author Daniel Serdyukov
  */
@@ -25,13 +27,14 @@ public class ObjectsTest {
     public void testCompare() throws Exception {
         final String expected = "expected";
         final String actual = "actual";
-        Assert.assertEquals(expected.compareTo(actual),
-                Objects.compare(expected, actual, new Comparator<String>() {
-                    @Override
-                    public int compare(String lhs, String rhs) {
-                        return lhs.compareTo(rhs);
-                    }
-                }));
+        final Comparator<String> comparator = new Comparator<String>() {
+            @Override
+            public int compare(String lhs, String rhs) {
+                return lhs.compareTo(rhs);
+            }
+        };
+        Assert.assertEquals(expected.compareTo(actual), Objects.compare(expected, actual, comparator));
+        Assert.assertEquals(0, Objects.compare("a", "a", comparator));
     }
 
     @Test
@@ -121,6 +124,7 @@ public class ObjectsTest {
     public void testEqual() throws Exception {
         Assert.assertTrue(Objects.equal(1L, 1L));
         Assert.assertFalse(Objects.equal(1L, 2L));
+        Assert.assertTrue(Objects.equal(null, null));
     }
 
     @Test
@@ -147,11 +151,13 @@ public class ObjectsTest {
     @Test
     public void testToString() throws Exception {
         Assert.assertEquals("null", Objects.toString(null));
+        Assert.assertEquals("expected", Objects.toString("expected"));
     }
 
     @Test
     public void testToStringWithNullValue() throws Exception {
-        Assert.assertEquals("expected", Objects.toString("expected"));
+        Assert.assertEquals("expected", Objects.toString("expected", StringValue.EMPTY));
+        Assert.assertEquals(StringValue.EMPTY, Objects.toString(null, StringValue.EMPTY));
     }
 
 }

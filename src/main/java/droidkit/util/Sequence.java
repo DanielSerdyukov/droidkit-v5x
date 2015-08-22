@@ -26,7 +26,7 @@ public final class Sequence {
     }
 
     @SuppressWarnings("squid:S1118")
-    private abstract static class Holder {
+    private static final class Holder {
         public static final Sequence INSTANCE = new Sequence(9000);
     }
 

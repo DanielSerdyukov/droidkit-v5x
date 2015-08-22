@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * @author Daniel Serdyukov
  */
-public abstract class Maps {
+public final class Maps {
 
     private Maps() {
         //no instance

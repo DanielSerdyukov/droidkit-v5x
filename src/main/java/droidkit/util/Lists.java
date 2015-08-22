@@ -13,8 +13,11 @@ import rx.functions.Func1;
 /**
  * @author Daniel Serdyukov
  */
-@SuppressWarnings("squid:S1118")
 public final class Lists {
+
+    private Lists() {
+        //no instance
+    }
 
     @NonNull
     public static <T> T getFirst(@NonNull List<T> list) {
@@ -59,7 +62,7 @@ public final class Lists {
         return list.toArray((T[]) Array.newInstance(type, list.size()));
     }
 
-    private static <T> void checkNotEmpty(@NonNull List<T> list) {
+    static <T> void checkNotEmpty(@NonNull List<T> list) {
         if (list.isEmpty()) {
             throw new NoSuchElementException("list is empty");
         }

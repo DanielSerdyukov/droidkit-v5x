@@ -23,7 +23,7 @@ public abstract class Iterables {
         if (iterable instanceof Collection) {
             return ((Collection) iterable).isEmpty();
         }
-        return iterable.iterator().hasNext();
+        return !iterable.iterator().hasNext();
     }
 
     @NonNull
@@ -44,7 +44,11 @@ public abstract class Iterables {
                 return Lists.getFirst((List<T>) iterable, emptyValue);
             }
         }
-        return Objects.notNull(iterable.iterator().next(), emptyValue);
+        final Iterator<T> iterator = iterable.iterator();
+        if (!iterator.hasNext()) {
+            return emptyValue;
+        }
+        return iterator.next();
     }
 
     @NonNull
@@ -65,7 +69,11 @@ public abstract class Iterables {
                 return Lists.getLast((List<T>) iterable, emptyValue);
             }
         }
-        return Objects.notNull(getLast(iterable.iterator()), emptyValue);
+        final Iterator<T> iterator = iterable.iterator();
+        if (!iterator.hasNext()) {
+            return emptyValue;
+        }
+        return getLast(iterator);
     }
 
     @NonNull

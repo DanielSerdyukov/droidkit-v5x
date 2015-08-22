@@ -16,8 +16,11 @@ import rx.functions.Func1;
 /**
  * @author Daniel Serdyukov
  */
-@SuppressWarnings("squid:S1118")
 public final class Sets {
+
+    private Sets() {
+        //no instance
+    }
 
     @NonNull
     public static <T> T getFirst(@NonNull Set<T> set) {

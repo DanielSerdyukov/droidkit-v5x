@@ -9,8 +9,11 @@ import java.io.IOException;
 /**
  * @author Daniel Serdyukov
  */
-@SuppressWarnings("squid:S1118")
 public final class IOUtils {
+
+    private IOUtils() {
+        //no instance
+    }
 
     @SuppressWarnings({"squid:S1166", "squid:S00108"})
     public static void closeQuietly(@NonNull Closeable... closeable) {

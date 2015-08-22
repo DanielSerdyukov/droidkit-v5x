@@ -6,7 +6,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
+import droidkit.content.StringValue;
 import rx.functions.Func1;
 
 /**
@@ -22,8 +24,9 @@ public class ListsTest {
     }
 
     @Test
-    public void testGetFirstNotNull() throws Exception {
-        Assert.assertEquals("first_nn", Lists.getFirst(Collections.emptyList(), "first_nn"));
+    public void testGetFirstWithEmptyValue() throws Exception {
+        Assert.assertEquals("first", Lists.getFirst(mList, StringValue.EMPTY));
+        Assert.assertEquals(StringValue.EMPTY, Lists.getFirst(Collections.emptyList(), StringValue.EMPTY));
     }
 
     @Test
@@ -32,8 +35,9 @@ public class ListsTest {
     }
 
     @Test
-    public void testGetLastNotNull() throws Exception {
-        Assert.assertEquals("last_nn", Lists.getLast(Collections.emptyList(), "last_nn"));
+    public void testGetLastWithEmptyValue() throws Exception {
+        Assert.assertEquals("last", Lists.getLast(mList, StringValue.EMPTY));
+        Assert.assertEquals(StringValue.EMPTY, Lists.getLast(Collections.emptyList(), StringValue.EMPTY));
     }
 
     @Test
@@ -51,6 +55,11 @@ public class ListsTest {
                 return "t_" + s;
             }
         }), String.class));
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testCheckNotEmpty() throws Exception {
+        Lists.checkNotEmpty(Collections.emptyList());
     }
 
 }

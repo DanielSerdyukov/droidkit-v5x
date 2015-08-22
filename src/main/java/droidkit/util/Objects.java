@@ -11,7 +11,7 @@ import java.util.List;
  * @author Daniel Serdyukov
  *         java.util.Objects compatibility class
  */
-public abstract class Objects {
+public final class Objects {
 
     private static final List<ArrayEquals> DEEP_EQUALS = Arrays.asList(
             new ObjectArrayEquals(),
@@ -26,6 +26,7 @@ public abstract class Objects {
     );
 
     private Objects() {
+        //no instance
     }
 
     public static <T> int compare(@Nullable T a, @Nullable T b, @NonNull Comparator<? super T> c) {

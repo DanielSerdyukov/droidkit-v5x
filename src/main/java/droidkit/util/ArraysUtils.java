@@ -9,9 +9,10 @@ import rx.functions.Func1;
 /**
  * @author Daniel Serdyukov
  */
-public abstract class ArraysUtils {
+public final class ArraysUtils {
 
     private ArraysUtils() {
+        //no instance
     }
 
     @NonNull
