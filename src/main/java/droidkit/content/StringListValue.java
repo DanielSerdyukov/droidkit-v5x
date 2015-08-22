@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class StringListValue extends TypedValue {
 
-    public static List<String> EMPTY = Collections.emptyList();
+    public static final List<String> EMPTY = Collections.emptyList();
 
     StringListValue(@NonNull KeyValueDelegate delegate, @NonNull String key) {
         super(delegate, key);
