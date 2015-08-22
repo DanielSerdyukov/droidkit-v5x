@@ -23,6 +23,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
+import droidkit.util.Objects;
 import droidkit.util.Sets;
 import rx.functions.Func1;
 
@@ -42,6 +43,8 @@ public class SQLiteProvider extends ContentProvider {
     private static final int URI_MATCH_ALL = 1;
 
     private static final int URI_MATCH_ID = 2;
+
+    private static final String CONTEXT_IS_NULL = "Context is null";
 
     private SQLiteClient mClient;
 
@@ -98,7 +101,8 @@ public class SQLiteProvider extends ContentProvider {
             cursor = mClient.getReadableDatabase().query(SQLiteQueryBuilder.buildQueryString(false, table, columns,
                     where, null, null, orderBy, null), bindArgs);
         }
-        cursor.setNotificationUri(getContext().getContentResolver(), notificationUri);
+        cursor.setNotificationUri(Objects.requireNonNull(getContext(), CONTEXT_IS_NULL)
+                .getContentResolver(), notificationUri);
         return cursor;
     }
 
@@ -111,9 +115,13 @@ public class SQLiteProvider extends ContentProvider {
     }
 
     @Override
-    public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
+    @SuppressWarnings("squid:S1226")
+    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         final String table = SQLiteSchema.tableOf(uri);
         Uri notificationUri = uri;
+        if (values == null) {
+            values = new ContentValues();
+        }
         if (URI_MATCH_ID == matchUri(uri)) {
             values.put(BaseColumns._ID, uri.getLastPathSegment());
             notificationUri = SQLiteSchema.baseUri(uri, table);
@@ -129,12 +137,14 @@ public class SQLiteProvider extends ContentProvider {
                             }
                         }), Object.class));
         if (shouldNotifyChange(notificationUri)) {
-            getContext().getContentResolver().notifyChange(notificationUri, null, shouldSyncToNetwork(notificationUri));
+            Objects.requireNonNull(getContext(), CONTEXT_IS_NULL).getContentResolver()
+                    .notifyChange(notificationUri, null, shouldSyncToNetwork(notificationUri));
         }
         return ContentUris.withAppendedId(notificationUri, rowId);
     }
 
     @Override
+    @SuppressWarnings("squid:S1226")
     public int delete(@NonNull Uri uri, @Nullable String where, @Nullable String[] bindArgs) {
         final String table = SQLiteSchema.tableOf(uri);
         if (URI_MATCH_ID == matchUri(uri)) {
@@ -154,18 +164,22 @@ public class SQLiteProvider extends ContentProvider {
             affectedRows = mClient.executeUpdateDelete(sql.toString(), (Object[]) bindArgs);
         }
         if (affectedRows > 0 && shouldNotifyChange(uri)) {
-            getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork(uri));
+            Objects.requireNonNull(getContext(), CONTEXT_IS_NULL).getContentResolver()
+                    .notifyChange(uri, null, shouldSyncToNetwork(uri));
         }
         return affectedRows;
     }
 
     @Override
-    public int update(@NonNull Uri uri, @NonNull ContentValues values, @Nullable String where,
+    public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String where,
                       @Nullable String[] bindArgs) {
         final String table = SQLiteSchema.tableOf(uri);
         if (URI_MATCH_ID == matchUri(uri)) {
             where = SQLiteOp.ID_EQ;
             bindArgs = new String[]{uri.getLastPathSegment()};
+        }
+        if (values == null) {
+            values = new ContentValues();
         }
         final StringBuilder sql = new StringBuilder()
                 .append("UPDATE ")
@@ -192,13 +206,14 @@ public class SQLiteProvider extends ContentProvider {
         }
         final int affectedRows = mClient.executeUpdateDelete(sql.toString(), Sets.toArray(bindValues, Object.class));
         if (affectedRows > 0 && shouldNotifyChange(uri)) {
-            getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork(uri));
+            Objects.requireNonNull(getContext(), CONTEXT_IS_NULL).getContentResolver()
+                    .notifyChange(uri, null, shouldSyncToNetwork(uri));
         }
         return affectedRows;
     }
 
     protected SQLiteClient createClient() {
-        return new AndroidSQLiteClient(getContext(), APP_DB, 1);
+        return new AndroidSQLiteClient(Objects.requireNonNull(getContext(), CONTEXT_IS_NULL), APP_DB, 1);
     }
 
     protected boolean shouldNotifyChange(@NonNull Uri uri) {

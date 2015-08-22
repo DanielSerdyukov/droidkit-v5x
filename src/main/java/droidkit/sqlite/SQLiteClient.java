@@ -162,6 +162,7 @@ public abstract class SQLiteClient implements Closeable {
         SQLiteSchema.createTriggers(db, criteria);
     }
 
+    @SuppressWarnings("squid:S1172")
     protected void onUpgrade(@NonNull final SQLiteDb db, int oldVersion, int newVersion) {
         SQLiteSchema.dropTables(db, new Func1<String, Boolean>() {
             @Override

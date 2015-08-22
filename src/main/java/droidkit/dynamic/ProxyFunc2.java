@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
  */
 public interface ProxyFunc2 {
 
+    @SuppressWarnings("squid:S00112")
     Object invoke(@NonNull Method method, Object[] args) throws Exception;
 
 }

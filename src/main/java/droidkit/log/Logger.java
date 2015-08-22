@@ -8,8 +8,10 @@ import android.util.Log;
  */
 public class Logger {
 
+    @SuppressWarnings("squid:S1312")
     public static final Logger NONE = new Logger();
 
+    @SuppressWarnings("squid:S1312")
     public static final Logger LOGCAT = new LogCatLogger();
 
     protected Logger() {

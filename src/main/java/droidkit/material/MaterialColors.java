@@ -5,6 +5,7 @@ import android.support.annotation.ColorInt;
 /**
  * @author Daniel Serdyukov
  */
+@SuppressWarnings("squid:S1214")
 public interface MaterialColors {
 
     @ColorInt

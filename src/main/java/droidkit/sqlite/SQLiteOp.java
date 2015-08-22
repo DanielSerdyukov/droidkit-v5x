@@ -5,6 +5,7 @@ import android.provider.BaseColumns;
 /**
  * @author Daniel Serdyukov
  */
+@SuppressWarnings("squid:S1214")
 interface SQLiteOp {
 
     String ID_EQ = BaseColumns._ID + " = ?";
