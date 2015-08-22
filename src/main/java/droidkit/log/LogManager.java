@@ -44,11 +44,10 @@ public class LogManager {
     }
 
 
-    private static abstract class Holder {
+    private abstract static class Holder {
         public static final LogManager INSTANCE = new LogManager();
 
         private Holder() {
-            //no instance
         }
     }
 

@@ -171,6 +171,7 @@ public class SQLiteProvider extends ContentProvider {
     }
 
     @Override
+    @SuppressWarnings("squid:S1226")
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String where,
                       @Nullable String[] bindArgs) {
         final String table = SQLiteSchema.tableOf(uri);

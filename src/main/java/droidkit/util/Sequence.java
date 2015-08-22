@@ -25,7 +25,7 @@ public final class Sequence {
         return (int) nextLong();
     }
 
-    private static abstract class Holder {
+    private abstract static class Holder {
 
         public static final Sequence INSTANCE = new Sequence(9000);
 

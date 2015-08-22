@@ -6,12 +6,11 @@ import android.util.Log;
 /**
  * @author Daniel Serdyukov
  */
+@SuppressWarnings("squid:S1312")
 public class Logger {
 
-    @SuppressWarnings("squid:S1312")
     public static final Logger NONE = new Logger();
 
-    @SuppressWarnings("squid:S1312")
     public static final Logger LOGCAT = new LogCatLogger();
 
     protected Logger() {

@@ -56,7 +56,7 @@ public abstract class Intents {
         }
     }
 
-    public static abstract class Common {
+    public abstract static class Common {
 
         private Common() {
         }
@@ -114,7 +114,7 @@ public abstract class Intents {
 
     }
 
-    public static abstract class Pick {
+    public abstract static class Pick {
 
         private Pick() {
         }
@@ -147,7 +147,7 @@ public abstract class Intents {
 
     }
 
-    public static abstract class Camera {
+    public abstract static class Camera {
 
         private Camera() {
         }
@@ -172,7 +172,7 @@ public abstract class Intents {
 
     }
 
-    public static abstract class Maps {
+    public abstract static class Maps {
 
         static final Uri MAPS_URI = Uri.parse("https://maps.google.com/maps");
 
@@ -219,7 +219,7 @@ public abstract class Intents {
 
     }
 
-    public static abstract class PlayStore {
+    public abstract static class PlayStore {
 
         static final String MARKET = "market";
 
@@ -308,7 +308,7 @@ public abstract class Intents {
 
     }
 
-    public static abstract class Share {
+    public abstract static class Share {
 
         private Share() {
         }
