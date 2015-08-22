@@ -131,7 +131,7 @@ public class ObjectsTest {
 
     @Test
     public void testNotNull() throws Exception {
-        Assert.assertEquals("expected", Objects.nullValue(null, "expected"));
+        Assert.assertEquals("expected", Objects.notNull(null, "expected"));
     }
 
     @Test(expected = NullPointerException.class)

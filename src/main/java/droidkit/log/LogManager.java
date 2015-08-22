@@ -40,7 +40,7 @@ public class LogManager {
 
     @NonNull
     public Logger getGlobalLogger() {
-        return Objects.nullValue(mGlobalLoggerRef.get(), Logger.LOGCAT);
+        return Objects.notNull(mGlobalLoggerRef.get(), Logger.LOGCAT);
     }
 
     @SuppressWarnings("squid:S1118")

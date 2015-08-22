@@ -2,6 +2,7 @@ package droidkit.util;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -15,10 +16,8 @@ import rx.functions.Func1;
 /**
  * @author Daniel Serdyukov
  */
-public abstract class Sets {
-
-    private Sets() {
-    }
+@SuppressWarnings("squid:S1118")
+public final class Sets {
 
     @NonNull
     public static <T> T getFirst(@NonNull Set<T> set) {
@@ -31,7 +30,7 @@ public abstract class Sets {
         if (set.isEmpty()) {
             return emptyValue;
         }
-        return Objects.nullValue(set.iterator().next(), emptyValue);
+        return set.iterator().next();
     }
 
     @NonNull
@@ -45,7 +44,7 @@ public abstract class Sets {
         if (set.isEmpty()) {
             return emptyValue;
         }
-        return Objects.nullValue(Iterables.getLast(set.iterator()), emptyValue);
+        return Iterables.getLast(set.iterator());
     }
 
     @NonNull
@@ -63,7 +62,8 @@ public abstract class Sets {
         return set.toArray((T[]) Array.newInstance(type, set.size()));
     }
 
-    private static <T> void checkNotEmpty(@NonNull Set<T> set) {
+    @VisibleForTesting
+    static <T> void checkNotEmpty(@NonNull Set<T> set) {
         if (set.isEmpty()) {
             throw new NoSuchElementException("set is empty");
         }

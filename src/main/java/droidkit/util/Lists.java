@@ -13,10 +13,8 @@ import rx.functions.Func1;
 /**
  * @author Daniel Serdyukov
  */
-public abstract class Lists {
-
-    private Lists() {
-    }
+@SuppressWarnings("squid:S1118")
+public final class Lists {
 
     @NonNull
     public static <T> T getFirst(@NonNull List<T> list) {

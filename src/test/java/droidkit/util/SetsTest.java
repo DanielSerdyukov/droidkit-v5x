@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import droidkit.content.StringValue;
@@ -18,18 +19,10 @@ public class SetsTest {
 
     private Set<String> mSet;
 
-    private Set<String> mNullFirst;
-
-    private Set<String> mNullLast;
-
     @Before
     public void setUp() throws Exception {
         mSet = new LinkedHashSet<>();
-        mNullFirst = new LinkedHashSet<>();
-        mNullLast = new LinkedHashSet<>();
         Collections.addAll(mSet, "first", "second", "last");
-        Collections.addAll(mNullFirst, null, "second", "last");
-        Collections.addAll(mNullLast, "first", "second", null);
     }
 
     @Test
@@ -38,9 +31,9 @@ public class SetsTest {
     }
 
     @Test
-    public void testGetFirstNotNull() throws Exception {
+    public void testGetFirstWithEmptyValue() throws Exception {
+        Assert.assertEquals("first", Sets.getFirst(mSet, StringValue.EMPTY));
         Assert.assertEquals(StringValue.EMPTY, Sets.getFirst(Collections.emptySet(), StringValue.EMPTY));
-        Assert.assertEquals(StringValue.EMPTY, Sets.getFirst(mNullFirst, StringValue.EMPTY));
     }
 
     @Test
@@ -49,9 +42,9 @@ public class SetsTest {
     }
 
     @Test
-    public void testGetLastNotNull() throws Exception {
+    public void testGetLastWithEmptyValue() throws Exception {
+        Assert.assertEquals("last", Sets.getLast(mSet, StringValue.EMPTY));
         Assert.assertEquals(StringValue.EMPTY, Sets.getLast(Collections.emptySet(), StringValue.EMPTY));
-        Assert.assertEquals(StringValue.EMPTY, Sets.getLast(mNullLast, StringValue.EMPTY));
     }
 
     @Test
@@ -69,6 +62,11 @@ public class SetsTest {
                 return "t_" + s;
             }
         }), String.class));
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testCheckNotEmpty() throws Exception {
+        Sets.checkNotEmpty(Collections.emptySet());
     }
 
 }

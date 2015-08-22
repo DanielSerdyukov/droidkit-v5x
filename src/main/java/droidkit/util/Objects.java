@@ -56,8 +56,8 @@ public abstract class Objects {
         return Arrays.hashCode(values);
     }
 
-    @Nullable
-    public static <T> T nullValue(@Nullable T o, @Nullable T nullValue) {
+    @NonNull
+    public static <T> T notNull(@Nullable T o, @NonNull T nullValue) {
         if (o == null) {
             return nullValue;
         }
