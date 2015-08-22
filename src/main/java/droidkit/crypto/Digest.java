@@ -28,7 +28,7 @@ public final class Digest {
 
     @NonNull
     public static String sha256String(@NonNull String data) throws DigestException {
-        return hashString(data, SHA256);
+        return Hex.toHexString(sha256(data.getBytes(Hex.UTF_8)));
     }
 
     @NonNull

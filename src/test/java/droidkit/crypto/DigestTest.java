@@ -38,4 +38,9 @@ public class DigestTest {
         Assert.assertEquals(SHA256_STRING, Digest.sha256String(ORIGINAL_STRING));
     }
 
+    @Test(expected = DigestException.class)
+    public void testUnknownAlg() throws Exception {
+        Assert.assertNotNull(Digest.hash(ORIGINAL_STRING.getBytes(), "UNKNOWN"));
+    }
+
 }

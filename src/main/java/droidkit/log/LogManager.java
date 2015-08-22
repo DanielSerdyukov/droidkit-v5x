@@ -46,9 +46,6 @@ public class LogManager {
 
     private abstract static class Holder {
         public static final LogManager INSTANCE = new LogManager();
-
-        private Holder() {
-        }
     }
 
 }
