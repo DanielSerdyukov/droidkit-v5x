@@ -1,4 +1,4 @@
-package droidkit.sqlite.bean;
+package droidkit.sqlite.bean.abc;
 
 import droidkit.annotation.SQLiteColumn;
 import droidkit.annotation.SQLiteObject;

@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.Bar;
+import droidkit.sqlite.bean.abc.Bar;
 import droidkit.sqlite.util.SQLiteTestEnv;
 
 /**

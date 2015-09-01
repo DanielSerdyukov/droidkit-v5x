@@ -9,10 +9,10 @@ import org.robolectric.annotation.Config;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.Bar;
-import droidkit.sqlite.bean.Baz;
-import droidkit.sqlite.bean.Foo;
-import droidkit.sqlite.bean.Qux;
+import droidkit.sqlite.bean.abc.Bar;
+import droidkit.sqlite.bean.abc.Baz;
+import droidkit.sqlite.bean.xyz.Foo;
+import droidkit.sqlite.bean.xyz.Qux;
 import droidkit.sqlite.util.SQLiteTestEnv;
 
 /**

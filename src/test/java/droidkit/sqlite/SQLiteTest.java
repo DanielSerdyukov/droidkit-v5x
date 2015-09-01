@@ -14,7 +14,7 @@ import java.util.List;
 
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
-import droidkit.sqlite.bean.Foo;
+import droidkit.sqlite.bean.xyz.Foo;
 import droidkit.sqlite.bean.Standard;
 import droidkit.sqlite.util.SQLiteTestEnv;
 import droidkit.util.Cursors;

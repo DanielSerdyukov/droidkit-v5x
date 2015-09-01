@@ -33,7 +33,7 @@ public class SQLiteSchemaTest {
         SCHEMA.put("standard", "CREATE TABLE standard(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE," +
                 " long INTEGER, int INTEGER, short INTEGER, string TEXT, boolean INTEGER," +
                 " double REAL, float REAL, big_decimal REAL, big_integer INTEGER, bytes BLOB," +
-                " role TEXT NOT NULL, date INTEGER, UNIQUE(string, boolean))");
+                " role TEXT NOT NULL, date INTEGER, UNIQUE(string, boolean) ON CONFLICT REPLACE)");
         SCHEMA.put("idx_standard_role", "CREATE INDEX idx_standard_role ON standard(role)");
         SCHEMA.put("idx_standard_date", "CREATE INDEX idx_standard_date ON standard(date)");
         SCHEMA.put("foo", "CREATE TABLE foo(_id INTEGER PRIMARY KEY ON CONFLICT REPLACE, text TEXT)");

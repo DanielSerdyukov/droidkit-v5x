@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import droidkit.BuildConfig;
 import droidkit.DroidkitTestRunner;
 import droidkit.concurrent.AsyncQueue;
-import droidkit.sqlite.bean.Foo;
+import droidkit.sqlite.bean.xyz.Foo;
 import droidkit.sqlite.util.SQLiteTestEnv;
 import droidkit.util.Lists;
 

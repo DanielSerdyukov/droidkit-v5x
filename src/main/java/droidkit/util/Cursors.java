@@ -5,7 +5,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -75,17 +74,17 @@ public final class Cursors {
         return null;
     }
 
-    @NotNull
+    @NonNull
     public static BigInteger getBigInteger(@NonNull Cursor cursor, @NonNull String columnName) {
         return BigInteger.valueOf(getLong(cursor, columnName));
     }
 
-    @NotNull
+    @NonNull
     public static BigDecimal getBigDecimal(@NonNull Cursor cursor, @NonNull String columnName) {
         return BigDecimal.valueOf(getDouble(cursor, columnName));
     }
 
-    @NotNull
+    @NonNull
     public static DateTime getDateTime(@NonNull Cursor cursor, @NonNull String columnName) {
         return new DateTime(getLong(cursor, columnName));
     }

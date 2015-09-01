@@ -1,18 +1,15 @@
-package droidkit.sqlite.bean;
-
-import java.util.ArrayList;
-import java.util.List;
+package droidkit.sqlite.bean.xyz;
 
 import droidkit.annotation.SQLiteColumn;
+import droidkit.annotation.SQLiteFk;
 import droidkit.annotation.SQLiteObject;
 import droidkit.annotation.SQLitePk;
-import droidkit.annotation.SQLiteRelation;
 
 /**
  * @author Daniel Serdyukov
  */
-@SQLiteObject("foo")
-public class Foo {
+@SQLiteObject("qux")
+public class Qux {
 
     @SQLitePk
     long mId;
@@ -20,8 +17,8 @@ public class Foo {
     @SQLiteColumn
     String mText;
 
-    @SQLiteRelation
-    List<Bar> mBars = new ArrayList<>();
+    @SQLiteFk(Foo.class)
+    long mFooId;
 
     public long getId() {
         return mId;
@@ -35,8 +32,12 @@ public class Foo {
         mText = text;
     }
 
-    public List<Bar> getBars() {
-        return mBars;
+    public long getFooId() {
+        return mFooId;
+    }
+
+    public void setFooId(long fooId) {
+        mFooId = fooId;
     }
 
 }
