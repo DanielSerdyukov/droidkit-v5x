@@ -1,7 +1,6 @@
 package droidkit.sqlite;
 
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
@@ -12,8 +11,8 @@ import java.util.List;
 
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
-import droidkit.io.IOUtils;
-import droidkit.os.MemoryGuard;
+import droidkit.os.AutoClose;
+import droidkit.os.Finalizer;
 import droidkit.util.Cursors;
 import rx.functions.Action1;
 
@@ -22,12 +21,7 @@ import rx.functions.Action1;
  */
 class SQLiteResult<T> extends AbstractList<T> {
 
-    private static final Action1<CursorWrapper> CLOSE_GUARD = new Action1<CursorWrapper>() {
-        @Override
-        public void call(CursorWrapper wrapper) {
-            IOUtils.closeQuietly(wrapper);
-        }
-    };
+    private static final Action1<CursorAnchor> AUTO_CLOSE = new AutoClose<>();
 
     private final SQLiteRawQuery mQuery;
 
@@ -35,22 +29,22 @@ class SQLiteResult<T> extends AbstractList<T> {
 
     private final List<T> mObjects;
 
-    private CursorWrapper mWrapper;
+    private CursorAnchor mAnchor;
 
     SQLiteResult(@NonNull SQLiteRawQuery query, @NonNull Cursor initialCursor, @NonNull Class<T> type) {
         mQuery = query;
         mType = type;
-        mWrapper = new CursorWrapper(initialCursor);
-        mObjects = new ArrayList<>(Collections.nCopies(mWrapper.getCount(), (T) null));
-        MemoryGuard.watch(this, mWrapper, CLOSE_GUARD);
+        mAnchor = new CursorAnchor(initialCursor);
+        mObjects = new ArrayList<>(Collections.nCopies(mAnchor.getCount(), (T) null));
+        Finalizer.create(this, mAnchor, AUTO_CLOSE);
     }
 
     @Override
     public T get(int location) {
-        if (mWrapper.moveToPosition(location)) {
+        if (mAnchor.moveToPosition(location)) {
             T entry = mObjects.get(location);
             if (entry == null) {
-                entry = instantiate(mWrapper);
+                entry = instantiate(mAnchor.getCursor());
                 mObjects.set(location, entry);
             }
             return entry;
@@ -62,37 +56,25 @@ class SQLiteResult<T> extends AbstractList<T> {
     public void add(int location, T object) {
         SQLite.save(object);
         mObjects.add(location, object);
-        final Cursor oldCursor = mWrapper.getWrappedCursor();
-        try {
-            mWrapper = new CursorWrapper(mQuery.cursor());
-        } finally {
-            IOUtils.closeQuietly(oldCursor);
-        }
+        mAnchor.anchor(mQuery.cursor());
     }
 
     @Override
     public T remove(int location) {
-        final Cursor oldCursor = mWrapper.getWrappedCursor();
-        try {
-            if (oldCursor.moveToPosition(location)) {
-                final T entry = mObjects.remove(location);
-                final long rowId = Cursors.getLong(oldCursor, BaseColumns._ID);
-                SQLite.where(mType).equalTo(BaseColumns._ID, rowId).clear();
-                mWrapper = new CursorWrapper(mQuery.cursor());
-                return entry;
-            }
-            throw new ArrayIndexOutOfBoundsException(location);
-        } finally {
-            IOUtils.closeQuietly(oldCursor);
+        final Cursor oldCursor = mAnchor.getCursor();
+        if (oldCursor.moveToPosition(location)) {
+            final T entry = mObjects.remove(location);
+            final long rowId = Cursors.getLong(oldCursor, BaseColumns._ID);
+            SQLite.where(mType).equalTo(BaseColumns._ID, rowId).clear();
+            mAnchor.anchor(mQuery.cursor());
+            return entry;
         }
+        throw new ArrayIndexOutOfBoundsException(location);
     }
 
     @Override
     public int size() {
-        if (mWrapper.isClosed()) {
-            return 0;
-        }
-        return mWrapper.getCount();
+        return mAnchor.getCount();
     }
 
     @NonNull
