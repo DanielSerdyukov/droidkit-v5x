@@ -9,5 +9,10 @@
     protected <methods>;
 }
 
+-keep @android.support.annotation.Keep class droidkit.**
+-keepclassmembers class droidkit.** {
+    @android.support.annotation.Keep *;
+}
+
 -dontwarn javax.**
 -dontwarn com.squareup.**

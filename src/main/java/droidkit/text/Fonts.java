@@ -1,6 +1,7 @@
 package droidkit.text;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,6 +22,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Daniel Serdyukov
  */
 public final class Fonts {
+
+    private static final String TAG = "Fonts";
 
     private static final String FONTS_DIR = "fonts";
 
@@ -34,6 +38,32 @@ public final class Fonts {
 
     public static void setFontFactory(@NonNull FontFactory factory) {
         FONT_FACTORY.compareAndSet(FONT_FACTORY.get(), factory);
+    }
+
+    @NonNull
+    @Deprecated
+    /**
+     * @deprecated since 5.2.1, will be removed in on of next release
+     */
+    public static List<String> list(@NonNull AssetManager am) {
+        try {
+            return Arrays.asList(am.list(FONTS_DIR));
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+            return Collections.emptyList();
+        }
+    }
+
+    @NonNull
+    @Deprecated
+    /**
+     * @deprecated since 5.2.1, will be removed in on of next release
+     */
+    public static Typeface get(@NonNull AssetManager am, @NonNull String font) {
+        if (list(am).contains(font)) {
+            return Typeface.createFromAsset(am, FONTS_DIR + File.separator + font);
+        }
+        return Typeface.DEFAULT;
     }
 
     @NonNull
