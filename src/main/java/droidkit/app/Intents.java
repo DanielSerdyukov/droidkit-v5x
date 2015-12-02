@@ -12,6 +12,7 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.BundleCompat;
 import android.text.TextUtils;
 
 import java.net.URLConnection;
@@ -63,7 +64,18 @@ public abstract class Intents {
 
         @NonNull
         public static Intent openUrl(@NonNull String url) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            return openUrl(url, true);
+        }
+
+        @NonNull
+        public static Intent openUrl(@NonNull String url, boolean showInChromeTabsIfSupported) {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            if (showInChromeTabsIfSupported) {
+                final Bundle bundle = new Bundle();
+                BundleCompat.putBinder(bundle, "android.support.customtabs.extra.SESSION", null);
+                intent.putExtras(bundle);
+            }
+            return intent;
         }
 
         @NonNull

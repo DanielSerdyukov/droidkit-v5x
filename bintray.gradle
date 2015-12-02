@@ -64,8 +64,8 @@ publishing {
 }
 
 bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
+    user = bintrayUser //System.getenv('BINTRAY_USER')
+    key = bintrayKey //System.getenv('BINTRAY_KEY')
     configurations = ['archives']
     publications = ['mavenAndroid']
     publish = true
