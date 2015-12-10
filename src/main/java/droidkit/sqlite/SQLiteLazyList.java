@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import droidkit.dynamic.DynamicException;
-import droidkit.dynamic.MethodLookup;
 import droidkit.os.AutoClose;
 import droidkit.os.Finalizer;
 import droidkit.util.Cursors;
@@ -19,7 +17,7 @@ import rx.functions.Action1;
 /**
  * @author Daniel Serdyukov
  */
-class SQLiteResult<T> extends AbstractList<T> {
+class SQLiteLazyList<T> extends AbstractList<T> {
 
     private static final Action1<CursorAnchor> AUTO_CLOSE = new AutoClose<>();
 
@@ -31,7 +29,7 @@ class SQLiteResult<T> extends AbstractList<T> {
 
     private CursorAnchor mAnchor;
 
-    SQLiteResult(@NonNull SQLiteRawQuery query, @NonNull Cursor initialCursor, @NonNull Class<T> type) {
+    SQLiteLazyList(@NonNull SQLiteRawQuery query, @NonNull Cursor initialCursor, @NonNull Class<T> type) {
         mQuery = query;
         mType = type;
         mAnchor = new CursorAnchor(initialCursor);
@@ -80,13 +78,7 @@ class SQLiteResult<T> extends AbstractList<T> {
     @NonNull
     @SuppressWarnings("ConstantConditions")
     private T instantiate(@NonNull Cursor cursor) {
-        try {
-            return MethodLookup.global()
-                    .find(mType.getName() + "$SQLiteHelper", "instantiate", Cursor.class)
-                    .invokeStatic(cursor);
-        } catch (DynamicException e) {
-            throw new SQLiteException("Can't instantiate object", e);
-        }
+        return SQLiteList.unpackOne(cursor, mType);
     }
 
 }

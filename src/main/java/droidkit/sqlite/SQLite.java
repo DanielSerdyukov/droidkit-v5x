@@ -75,7 +75,7 @@ public final class SQLite {
                 return cursor;
             }
         };
-        return new SQLiteResult<>(query, query.cursor(), type);
+        return new SQLiteLazyList<>(query, query.cursor(), type);
     }
 
     public static <T> T execute(@NonNull Func1<SQLiteClient, T> func) {

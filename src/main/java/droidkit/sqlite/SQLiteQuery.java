@@ -14,7 +14,10 @@ import java.util.Collections;
 import java.util.List;
 
 import droidkit.content.StringValue;
+import droidkit.io.IOUtils;
 import droidkit.util.Lists;
+import rx.Observable;
+import rx.functions.Func0;
 
 /**
  * @author Daniel Serdyukov
@@ -210,7 +213,17 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
 
     @NonNull
     public List<T> list() {
-        return new SQLiteResult<>(this, cursor(), mType);
+        final Cursor cursor = cursor();
+        try {
+            return SQLiteList.unpack(cursor, mType);
+        } finally {
+            IOUtils.closeQuietly(cursor);
+        }
+    }
+
+    @NonNull
+    public List<T> lazyList() {
+        return new SQLiteLazyList<>(this, cursor(), mType);
     }
 
     @NonNull
@@ -269,6 +282,16 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
         return new SQLiteLoader<>(SQLite.obtainContext(), this, mType);
     }
 
+    @NonNull
+    public Observable<List<T>> asObservable() {
+        return Observable.defer(new Func0<Observable<List<T>>>() {
+            @Override
+            public Observable<List<T>> call() {
+                return Observable.just(list());
+            }
+        });
+    }
+
     @Override
     public String toString() {
         return WHERE + mWhere.toString();
@@ -290,8 +313,15 @@ public class SQLiteQuery<T> implements SQLiteRawQuery, SQLiteOp {
         if (!TextUtils.isEmpty(mWhere)) {
             sql.append(WHERE).append(mWhere);
         }
-        return Double.parseDouble(SQLite.obtainClient().queryForString(sql.toString(),
-                Lists.toArray(mBindArgs, Object.class)));
+        final Cursor cursor = SQLite.obtainClient().query(sql.toString(), Lists.toArray(mBindArgs, Object.class));
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getDouble(0);
+            }
+        } finally {
+            IOUtils.closeQuietly(cursor);
+        }
+        return Double.NaN;
     }
 
 }
