@@ -1,23 +1,22 @@
 package droidkit.sqlite;
 
-import android.content.ContentResolver;
 import android.content.pm.ProviderInfo;
 import android.net.Uri;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import droidkit.dynamic.DynamicException;
 import droidkit.dynamic.MethodLookup;
 import droidkit.util.Lists;
-import droidkit.util.Maps;
-import rx.functions.Action2;
 import rx.functions.Func1;
 
 /**
@@ -35,19 +34,8 @@ public abstract class SQLiteSchema {
 
     private static final ConcurrentMap<Class<?>, Class<?>> HELPERS = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<Class<?>, Action2<ContentResolver, Uri>> NOTIFICATION_BEHAVIORS;
+    private static final List<Class<?>> MUTES = new CopyOnWriteArrayList<>();
 
-    private static final Action2<ContentResolver, Uri> DEFAULT_NOTIFICATION_BEHAVIOR;
-
-    static {
-        NOTIFICATION_BEHAVIORS = new ConcurrentHashMap<>();
-        DEFAULT_NOTIFICATION_BEHAVIOR = new Action2<ContentResolver, Uri>() {
-            @Override
-            public void call(@NonNull ContentResolver resolver, Uri uri) {
-                resolver.notifyChange(uri, null);
-            }
-        };
-    }
 
     private SQLiteSchema() {
     }
@@ -79,8 +67,9 @@ public abstract class SQLiteSchema {
     }
 
     public static void notifyChange(@NonNull Class<?> type) {
-        Maps.getNonNull(NOTIFICATION_BEHAVIORS, type, DEFAULT_NOTIFICATION_BEHAVIOR)
-                .call(SQLite.obtainResolver(), SQLiteSchema.resolveUri(type));
+        if (!MUTES.contains(type)) {
+            SQLite.obtainResolver().notifyChange(SQLiteSchema.resolveUri(type), null);
+        }
     }
 
     public static void createTables(@NonNull SQLiteDb db, @NonNull Func1<String, Boolean> criteria) {
@@ -152,6 +141,14 @@ public abstract class SQLiteSchema {
                 throw SQLite.notSQLiteObject(entry.getValue(), e);
             }
         }
+    }
+
+    static void mute(@NonNull Class<?> type) {
+        MUTES.add(type);
+    }
+
+    static void unmute(@NonNull Class<?> type) {
+        MUTES.remove(type);
     }
 
     static void attachInfo(ProviderInfo info) {

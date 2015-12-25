@@ -4,9 +4,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:2.0.0-alpha2"
+        classpath "com.android.tools.build:gradle:2.0.0-alpha3"
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.5'
-        classpath 'org.sonarqube.gradle:gradle-sonarqube-plugin:1.1'
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0'
     }
 }
@@ -94,10 +93,6 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
 
 if (System.getenv('BINTRAY_USER') || project.hasProperty('bintrayUser')) {
     apply from: 'bintray.gradle'
-}
-
-if (System.getenv('CI_BUILD_REF')) {
-    apply from: 'sonar.gradle'
 }
 
 int generateVersionCode() {

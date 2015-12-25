@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import droidkit.dynamic.DynamicException;
@@ -99,8 +100,17 @@ public final class SQLite {
         transaction(new Action0() {
             @Override
             public void call() {
-                for (final Object object : objects) {
+                final Iterator<?> iterator = objects.iterator();
+                if (iterator.hasNext()) {
+                    final Object object = iterator.next();
+                    final Class<?> type = object.getClass();
+                    SQLiteSchema.mute(type);
                     save(object);
+                    while (iterator.hasNext()) {
+                        save(iterator.next());
+                    }
+                    SQLiteSchema.unmute(type);
+                    SQLiteSchema.notifyChange(type);
                 }
             }
         });
@@ -157,7 +167,7 @@ public final class SQLite {
     }
 
     public static void notifyChange(@NonNull Class<?> type) {
-        obtainResolver().notifyChange(SQLiteSchema.resolveUri(type), null);
+        SQLiteSchema.notifyChange(type);
     }
 
     static void attach(@NonNull SQLiteClient client, @NonNull Context context) {
