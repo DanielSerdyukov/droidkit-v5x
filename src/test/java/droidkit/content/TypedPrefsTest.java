@@ -58,13 +58,40 @@ public class TypedPrefsTest {
     }
 
     @Test
+    public void testIntWithParameters() throws Exception {
+        final IntValue value1 = mSettings.increment("type1");
+        final IntValue value2 = mSettings.increment("type2");
+        Assert.assertNotNull(value1);
+        Assert.assertNotNull(value2);
+        Assert.assertEquals(IntValue.EMPTY, value1.get());
+        Assert.assertEquals(IntValue.EMPTY, value2.get());
+        value1.set(100);
+        Assert.assertEquals(100, value1.get());
+        Assert.assertEquals(IntValue.EMPTY, value2.get());
+    }
+
+    @Test
     public void testStringValue() throws Exception {
         final StringValue name = mSettings.name();
         Assert.assertNotNull(name);
         Assert.assertEquals(StringValue.EMPTY, name.get());
+        Assert.assertEquals("def", name.get("def"));
         name.set("John");
         Assert.assertEquals("John", name.get());
         Assert.assertEquals(mPrefs.getString("name", StringValue.EMPTY), name.get());
+    }
+
+    @Test
+    public void testStringWithParameters() throws Exception {
+        final StringValue value1 = mSettings.value("type1");
+        final StringValue value2 = mSettings.value("type2");
+        Assert.assertNotNull(value1);
+        Assert.assertNotNull(value2);
+        Assert.assertEquals(StringValue.EMPTY, value1.get());
+        Assert.assertEquals(StringValue.EMPTY, value2.get());
+        value1.set("value");
+        Assert.assertEquals("value", value1.get());
+        Assert.assertEquals(StringValue.EMPTY, value2.get());
     }
 
     @Test
@@ -81,6 +108,19 @@ public class TypedPrefsTest {
     }
 
     @Test
+    public void testBoolWithParameters() throws Exception {
+        final BoolValue value1 = mSettings.flag(0);
+        final BoolValue value2 = mSettings.flag(1);
+        Assert.assertNotNull(value1);
+        Assert.assertNotNull(value2);
+        Assert.assertEquals(BoolValue.EMPTY, value1.get());
+        Assert.assertEquals(BoolValue.EMPTY, value2.get());
+        value1.set(true);
+        Assert.assertEquals(true, value1.get());
+        Assert.assertEquals(BoolValue.EMPTY, value2.get());
+    }
+
+    @Test
     public void testLongValue() throws Exception {
         final LongValue time = mSettings.time();
         Assert.assertNotNull(time);
@@ -92,6 +132,19 @@ public class TypedPrefsTest {
     }
 
     @Test
+    public void testLongWithParameters() throws Exception {
+        final LongValue value1 = mSettings.cash("Mike");
+        final LongValue value2 = mSettings.cash("Josh");
+        Assert.assertNotNull(value1);
+        Assert.assertNotNull(value2);
+        Assert.assertEquals(LongValue.EMPTY, value1.get());
+        Assert.assertEquals(LongValue.EMPTY, value2.get());
+        value1.set(100L);
+        Assert.assertEquals(100L, value1.get());
+        Assert.assertEquals(LongValue.EMPTY, value2.get());
+    }
+
+    @Test
     public void testFloatValue() throws Exception {
         final FloatValue distance = mSettings.distance();
         Assert.assertNotNull(distance);
@@ -99,6 +152,19 @@ public class TypedPrefsTest {
         distance.set(100f);
         Assert.assertEquals(100f, distance.get(), 0f);
         Assert.assertEquals(mPrefs.getFloat("distance", FloatValue.EMPTY), distance.get(), 0f);
+    }
+
+    @Test
+    public void testFloatWithParameters() throws Exception {
+        final FloatValue value1 = mSettings.probability(true);
+        final FloatValue value2 = mSettings.probability(false);
+        Assert.assertNotNull(value1);
+        Assert.assertNotNull(value2);
+        Assert.assertEquals(FloatValue.EMPTY, value1.get(), 0f);
+        Assert.assertEquals(FloatValue.EMPTY, value2.get(), 0f);
+        value1.set(100f);
+        Assert.assertEquals(100f, value1.get(), 0f);
+        Assert.assertEquals(FloatValue.EMPTY, value2.get(), 0f);
     }
 
     @Test
@@ -133,6 +199,15 @@ public class TypedPrefsTest {
 
         StringSetValue lines();
 
+        IntValue increment(String type);
+
+        StringValue value(String type);
+
+        BoolValue flag(int id);
+
+        LongValue cash(String user);
+
+        FloatValue probability(boolean colored);
     }
 
     private interface Preconditions {

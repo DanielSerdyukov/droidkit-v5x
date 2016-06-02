@@ -39,7 +39,13 @@ class KeyValueProxy implements ProxyFunc2 {
 
     @Override
     public Object invoke(@NonNull Method method, Object[] args) throws Exception {
-        final String key = method.getName();
+        final StringBuilder params = new StringBuilder();
+        if (args != null) {
+            for (Object arg : args) {
+                params.append(".").append(arg.toString());
+            }
+        }
+        final String key = method.getName() + params.toString();
         final Class<?> returnType = method.getReturnType();
         final Transform transform = TRANSFORM.get(returnType);
         if (transform != null) {
