@@ -21,7 +21,11 @@ public class BoolValue extends TypedValue {
     }
 
     public boolean get() {
-        return getDelegate().getBoolean(getKey(), mDefaultValue);
+        return get(mDefaultValue);
+    }
+
+    public boolean get(boolean defaultValue) {
+        return getDelegate().getBoolean(getKey(), defaultValue);
     }
 
     public boolean toggle() {

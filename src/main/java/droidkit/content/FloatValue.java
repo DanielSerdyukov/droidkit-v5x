@@ -21,7 +21,11 @@ public class FloatValue extends TypedValue {
     }
 
     public float get() {
-        return getDelegate().getFloat(getKey(), mDefaultValue);
+        return get(mDefaultValue);
+    }
+
+    public float get(float defaultValue) {
+        return getDelegate().getFloat(getKey(), defaultValue);
     }
 
 }

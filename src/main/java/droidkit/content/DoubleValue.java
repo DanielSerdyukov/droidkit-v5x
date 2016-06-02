@@ -21,7 +21,11 @@ public class DoubleValue extends TypedValue {
     }
 
     public double get() {
-        return getDelegate().getDouble(getKey(), mDefaultValue);
+        return get(mDefaultValue);
+    }
+
+    public double get(double defaultValue) {
+        return getDelegate().getDouble(getKey(), defaultValue);
     }
 
 }

@@ -25,4 +25,9 @@ public class StringValue extends TypedValue {
         return getDelegate().getString(getKey(), mDefaultValue);
     }
 
+    @NonNull
+    public String get(@NonNull String defaultValue) {
+        return getDelegate().getString(getKey(), defaultValue);
+    }
+
 }

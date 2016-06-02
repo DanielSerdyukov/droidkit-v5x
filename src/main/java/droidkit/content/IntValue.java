@@ -21,7 +21,11 @@ public class IntValue extends TypedValue {
     }
 
     public int get() {
-        return getDelegate().getInt(getKey(), mDefaultValue);
+        return get(mDefaultValue);
+    }
+
+    public int get(int defaultValue) {
+        return getDelegate().getInt(getKey(), defaultValue);
     }
 
 }

@@ -21,7 +21,11 @@ public class LongValue extends TypedValue {
     }
 
     public long get() {
-        return getDelegate().getLong(getKey(), mDefaultValue);
+        return get(mDefaultValue);
+    }
+
+    public long get(long defaultValue) {
+        return getDelegate().getLong(getKey(), defaultValue);
     }
 
 }
